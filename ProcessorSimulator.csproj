@@ -43,6 +43,14 @@
     <Compile Include="block\CacheBlock.cs" />
     <Compile Include="block\Instruction.cs" />
     <Compile Include="block\Word.cs" />
+    <Compile Include="cache\Cache.cs" />
+    <Compile Include="core\Context.cs" />
+    <Compile Include="core\Core.cs" />
+    <Compile Include="core\DobleCore.cs" />
+    <Compile Include="core\Reservation.cs" />
+    <Compile Include="core\ThreadStatus.cs" />
+    <Compile Include="memory\Memory.cs" />
+    <Compile Include="processor\Processor.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
