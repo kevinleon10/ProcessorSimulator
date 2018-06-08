@@ -1,6 +1,6 @@
-﻿using System.Threading;
+﻿using System.Collections.Generic;
+using System.Threading;
 using ProcessorSimulator.block;
-using ProcessorSimulator.cache;
 using ProcessorSimulator.processor;
 
 namespace ProcessorSimulator.core
@@ -13,6 +13,7 @@ namespace ProcessorSimulator.core
             ContextTwo = new Context();
             RemainingThreadCyclesTwo = 0;
             ThreadStatusTwo = ThreadStatus.Stopped;
+            Reservations = new List<Reservation>();
         }
 
         public Instruction InstructionRegisterTwo { get; set; }
@@ -23,7 +24,7 @@ namespace ProcessorSimulator.core
 
         public ThreadStatus ThreadStatusTwo { get; set; }
         
-        public Reservation[] Reservations { get; set; }
+        public List<Reservation> Reservations { get; set; }
 
     }
 }

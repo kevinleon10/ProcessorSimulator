@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Net.NetworkInformation;
 using System.Threading;
 using ProcessorSimulator.core;
 
@@ -9,17 +8,17 @@ namespace ProcessorSimulator.processor
     {
         public Processor(int quantum)
         {
-            Mutex DataMutexBus = new Mutex();
-            Mutex InstructionMutexBus = new Mutex();
-            CoreOne = new Core(quantum, InstructionMutexBus, DataMutexBus, this);
-            DobleCore CoreZero = new DobleCore(quantum, InstructionMutexBus, DataMutexBus, this);
+            Mutex dataMutexBus = new Mutex();
+            Mutex instructionMutexBus = new Mutex();
+            CoreOne = new Core(quantum, instructionMutexBus, dataMutexBus, this);
+            CoreZero = new DobleCore(quantum, instructionMutexBus, dataMutexBus, this);
             Clock = 0;
             ClockBarrier = new Barrier(0);
             ContextQueue = new Queue<Context>();
             Quantum = quantum;
         }
-
-        public Core CoreZero { get; }
+        
+        public DobleCore CoreZero { get; }
 
         public Core CoreOne { get; }
 
