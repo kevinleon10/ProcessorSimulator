@@ -10,7 +10,6 @@ namespace ProcessorSimulator.core
         public Core(int cacheSize, Mutex instructionMutexBus, Mutex dataMutexBus, Processor processor)
         {
             InstructionRegister = new Instruction();
-            Context = new Context();
             InstructionCache = new Cache<Instruction>(cacheSize, instructionMutexBus);
             DataCache = new Cache<int>(cacheSize, dataMutexBus);
             RemainingThreadCycles = 0;
@@ -31,5 +30,11 @@ namespace ProcessorSimulator.core
         public ThreadStatus ThreadStatus { get; set; }
 
         public Processor Processor { get; set; }
+
+        public void StartExecution(Context context)
+        {
+            Context = context;
+            InstructionCache.
+        }
     }
 }

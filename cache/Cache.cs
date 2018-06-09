@@ -24,7 +24,7 @@ namespace ProcessorSimulator.cache
 
         public Memory Memory { get; set; }
 
-        public Block<Word<T>> GetBlock(int address)
+        public Block<T> GetBlock(int address)
         {
             //TODO agregar buscar etiqueta del bloque con la direccion
             return null;
