@@ -6,6 +6,7 @@ namespace ProcessorSimulator.memory
     {
         private Block<Instruction>[] _instructionBlocks;
         private Block<int>[] _dataBlocks;
+        private const int  DataBlocksSize = 380;
 
         public Memory(Block<Instruction>[] instructionBlocks, Block<int>[] dataBlocks)
         {
@@ -13,16 +14,16 @@ namespace ProcessorSimulator.memory
             _dataBlocks = dataBlocks;
         }
 
-        public Block<Word<int>> GetDataBlock(int address)
+        public Block<int> GetDataBlock(int address)
         {
-            //TODO hacer calculo
-            return null;
+            var position = address / 16;
+            return _dataBlocks[position];
         }
         
-        public Block<Word<Instruction>> GetInstructionBlock(int address)
+        public Block<Instruction> GetInstructionBlock(int address)
         {
-            //TODO hacer calculo
-            return null;
+            var position = (address+380) / 16;
+            return _instructionBlocks[position];
         }
         
         public void WriteDataBlock(int address)

@@ -16,7 +16,7 @@
 
         public T GetValue(int index)
         {
-            T wordData = Words[index].WordData;
+            var wordData = Words[index].WordData;
             return wordData;
         }
 

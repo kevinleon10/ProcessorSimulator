@@ -2,7 +2,7 @@
 
 namespace ProcessorSimulator.block
 {
-    public abstract class CacheBlock<T> : Block<T>
+    public class CacheBlock<T> : Block<T>
     {
         public CacheBlock()
         {
@@ -10,7 +10,7 @@ namespace ProcessorSimulator.block
             BlockState = BlockState.Invalid;
             BlockMutex = new Mutex();
         }
-        
+
         public int Label { get; set; }
 
         public BlockState BlockState { get; set; }

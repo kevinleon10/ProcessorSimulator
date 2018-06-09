@@ -1,6 +1,4 @@
-﻿using System.Runtime.Remoting;
-
-namespace ProcessorSimulator.block
+﻿namespace ProcessorSimulator.block
 {
     public class Instruction
     {
