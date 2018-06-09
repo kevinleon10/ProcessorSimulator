@@ -6,7 +6,7 @@ namespace ProcessorSimulator.block
     {
         public CacheBlock()
         {
-            Label = 0;
+            Label = -1;
             BlockState = BlockState.Invalid;
             BlockMutex = new Mutex();
         }

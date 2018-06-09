@@ -19,6 +19,5 @@
             var wordData = Words[index].WordData;
             return wordData;
         }
-
     }
 }
