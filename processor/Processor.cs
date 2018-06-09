@@ -18,15 +18,15 @@ namespace ProcessorSimulator.processor
             Quantum = quantum;
         }
         
-        public DobleCore CoreZero { get; }
+        public DobleCore CoreZero { get; set; }
 
-        public Core CoreOne { get; }
+        public Core CoreOne { get; set; }
 
-        public int Clock { get; }
+        public int Clock { get; set; }
 
-        public Barrier ClockBarrier { get; }
+        public Barrier ClockBarrier { get; set; }
 
-        public Queue<Context> ContextQueue { get; }
+        public Queue<Context> ContextQueue { get; set; }
 
         public int Quantum { get; set; }
     }
