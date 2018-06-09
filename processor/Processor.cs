@@ -10,8 +10,8 @@ namespace ProcessorSimulator.processor
         {
             Mutex dataMutexBus = new Mutex();
             Mutex instructionMutexBus = new Mutex();
-            CoreOne = new Core(quantum, instructionMutexBus, dataMutexBus, this);
-            CoreZero = new DobleCore(quantum, instructionMutexBus, dataMutexBus, this);
+            CoreOne = new Core(quantum, instructionMutexBus, dataMutexBus);
+            CoreZero = new DobleCore(quantum, instructionMutexBus, dataMutexBus);
             Clock = 0;
             ClockBarrier = new Barrier(0);
             ContextQueue = new Queue<Context>();

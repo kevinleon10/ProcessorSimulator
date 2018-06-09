@@ -4,7 +4,7 @@
     {
         public Context()
         {
-            ProgramCounter = 0;
+            ProgramCounter = 128;
             Registers = new int[32];
             ThreadId = 0;
             NumberOfCycles = 0;

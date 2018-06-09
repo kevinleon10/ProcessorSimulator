@@ -7,7 +7,7 @@ namespace ProcessorSimulator.core
 {
     public class DobleCore : Core
     {
-        public DobleCore(int cacheSize, Mutex instructionMutexBus, Mutex dataMutexBus, Processor processor) : base(cacheSize, instructionMutexBus, dataMutexBus, processor)
+        public DobleCore(int cacheSize, Mutex instructionMutexBus, Mutex dataMutexBus) : base(cacheSize, instructionMutexBus, dataMutexBus)
         {
             InstructionRegisterTwo = new Instruction();
             ContextTwo = new Context();
