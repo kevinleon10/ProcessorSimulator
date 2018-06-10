@@ -6,7 +6,6 @@ namespace ProcessorSimulator.cache
 {
     public class Cache<T>
     {
-        public const int BlockSize = 4;
         
         public Cache( int cacheSize, Mutex busMutex)
         {

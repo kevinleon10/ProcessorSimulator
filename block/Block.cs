@@ -1,10 +1,12 @@
-﻿namespace ProcessorSimulator.block
+﻿using ProcessorSimulator.common;
+
+namespace ProcessorSimulator.block
 {
     public class Block<T>
     {
         protected Block()
         {
-            Words = new Word<T>[4];
+            Words = new Word<T>[Constants.WordsInBlock];
         }
 
         protected Block(Word<T>[] words)

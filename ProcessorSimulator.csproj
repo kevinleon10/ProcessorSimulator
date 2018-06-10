@@ -44,6 +44,7 @@
     <Compile Include="block\Instruction.cs" />
     <Compile Include="block\Word.cs" />
     <Compile Include="cache\Cache.cs" />
+    <Compile Include="common\Constants.cs" />
     <Compile Include="core\Context.cs" />
     <Compile Include="core\Core.cs" />
     <Compile Include="core\DobleCore.cs" />

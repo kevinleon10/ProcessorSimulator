@@ -2,7 +2,6 @@
  using System.Threading;
 using ProcessorSimulator.block;
 using ProcessorSimulator.cache;
-using ProcessorSimulator.processor;
 
 namespace ProcessorSimulator.core
 {
@@ -10,6 +9,7 @@ namespace ProcessorSimulator.core
     {
         public Core(int cacheSize, Mutex instructionMutexBus, Mutex dataMutexBus)
         {
+            CacheSize = cacheSize;
             InstructionRegister = new Instruction();
             InstructionCache = new Cache<Instruction>(cacheSize, instructionMutexBus);
             DataCache = new Cache<int>(cacheSize, dataMutexBus);
@@ -29,11 +29,14 @@ namespace ProcessorSimulator.core
 
         public ThreadStatus ThreadStatus { get; set; }
 
+        public int CacheSize { get; set; }
+        
         public void StartExecution(Context context)
         {
             Context = context;
             int programCounter = Context.ProgramCounter;
-            Console.WriteLine(programCounter);
+            int blockNumberInCache = (programCounter / 16) % CacheSize;
+            Console.WriteLine(blockNumberInCache);
         }
     }
 }

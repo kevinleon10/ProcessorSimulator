@@ -2,22 +2,12 @@
 {
     public class Context
     {
-        public Context()
-        {
-            ProgramCounter = 128;
-            Registers = new int[32];
-            ThreadId = 0;
-            NumberOfCycles = 0;
-            HasPriority = false;
-        }
-
-        public Context(int programCounter, int[] registers, int threadId, int numberOfCycles, bool hasPriority)
+        public Context(int programCounter, int threadId)
         {
             ProgramCounter = programCounter;
-            Registers = registers;
             ThreadId = threadId;
-            NumberOfCycles = numberOfCycles;
-            HasPriority = hasPriority;
+            NumberOfCycles = 0;
+            HasPriority = false;
         }
 
         public int ProgramCounter { get; set; }

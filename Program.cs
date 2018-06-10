@@ -16,10 +16,10 @@ namespace ProcessorSimulator
 
         public static void Main(string[] args)
         {
-            Console.WriteLine("Hello world!");
-            Context context = new Context();
+            Context context = new Context(200, 1);
             Thread thread = new Thread(() => Test(context));
             thread.Start();
+            Console.WriteLine("Hello world!");
         }
     }
 }

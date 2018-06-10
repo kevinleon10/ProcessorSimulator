@@ -1,29 +1,30 @@
 ﻿using ProcessorSimulator.block;
+using ProcessorSimulator.common;
 
 namespace ProcessorSimulator.memory
 {
     public class Memory
     {
-        private Block<Instruction>[] _instructionBlocks;
-        private Block<int>[] _dataBlocks;
-        private const int  DataBlocksSize = 380;
-
         public Memory(Block<Instruction>[] instructionBlocks, Block<int>[] dataBlocks)
         {
-            _instructionBlocks = instructionBlocks;
-            _dataBlocks = dataBlocks;
+            InstructionBlocks = instructionBlocks;
+            DataBlocks = dataBlocks;
         }
+
+        public Block<Instruction>[] InstructionBlocks { get; set; }
+
+        public Block<int>[] DataBlocks { get; set; }
 
         public Block<int> GetDataBlock(int address)
         {
-            var position = address / 16;
-            return _dataBlocks[position];
+            var position = address / Constants.BytesInBlock;
+            return DataBlocks[position];
         }
         
         public Block<Instruction> GetInstructionBlock(int address)
         {
-            var position = (address+380) / 16;
-            return _instructionBlocks[position];
+            var position = (address+Constants.BlocksInMemory) / Constants.BytesInBlock;
+            return InstructionBlocks[position];
         }
         
         public void WriteDataBlock(int address)

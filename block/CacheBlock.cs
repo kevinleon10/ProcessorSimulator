@@ -1,4 +1,5 @@
 ﻿using System.Threading;
+using ProcessorSimulator.common;
 
 namespace ProcessorSimulator.block
 {
@@ -6,7 +7,7 @@ namespace ProcessorSimulator.block
     {
         public CacheBlock()
         {
-            Label = -1;
+            Label = Constants.InvalidLabel;
             BlockState = BlockState.Invalid;
             BlockMutex = new Mutex();
         }
