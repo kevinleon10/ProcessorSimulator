@@ -1,14 +1,15 @@
 ﻿using System.Collections.Generic;
 using System.Threading;
 using ProcessorSimulator.block;
+using ProcessorSimulator.cache;
 
 namespace ProcessorSimulator.core
 {
     public class DobleCore : Core
     {
-        public DobleCore(int cacheSize, Mutex instructionMutexBus, Mutex dataMutexBus) : base(cacheSize, instructionMutexBus, dataMutexBus)
+        public DobleCore(Cache<Instruction> instructionCache, Cache<int> dataCache, int cacheSize) : base(instructionCache, dataCache, cacheSize)
         {
-            InstructionRegisterTwo = new Instruction();
+            InstructionRegisterTwo = null;
             RemainingThreadCyclesTwo = 0;
             ThreadStatusTwo = ThreadStatus.Stopped;
             Reservations = new List<Reservation>();

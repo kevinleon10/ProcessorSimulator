@@ -4,12 +4,12 @@ namespace ProcessorSimulator.block
 {
     public class Block<T>
     {
-        protected Block()
+        public Block()
         {
             Words = new Word<T>[Constants.WordsInBlock];
         }
 
-        protected Block(Word<T>[] words)
+        public Block(Word<T>[] words)
         {
             this.Words = words;
         }

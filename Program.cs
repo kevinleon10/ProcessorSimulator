@@ -10,7 +10,7 @@ namespace ProcessorSimulator
         {
             Mutex dataMutex = new Mutex();
             Mutex instructionMutex = new Mutex();
-            Core core = new Core(8, dataMutex, instructionMutex);
+            Core core = new Core(null, null, 8);
             core.StartExecution(context);
         }
 
@@ -21,5 +21,6 @@ namespace ProcessorSimulator
             thread.Start();
             Console.WriteLine("Hello world!");
         }
+        
     }
 }

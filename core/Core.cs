@@ -7,12 +7,12 @@ namespace ProcessorSimulator.core
 {
     public class Core
     {
-        public Core(int cacheSize, Mutex instructionMutexBus, Mutex dataMutexBus)
+        public Core(Cache<Instruction> instructionCache, Cache<int> dataCache, int cacheSize)
         {
             CacheSize = cacheSize;
-            InstructionRegister = new Instruction();
-            InstructionCache = new Cache<Instruction>(cacheSize, instructionMutexBus);
-            DataCache = new Cache<int>(cacheSize, dataMutexBus);
+            InstructionRegister = null;
+            InstructionCache = instructionCache;
+            DataCache = dataCache;
             RemainingThreadCycles = 0;
             ThreadStatus = ThreadStatus.Stopped;
         }
