@@ -22,39 +22,45 @@
 
         public bool HasPriority { get; set; }
 
-        public void Daddi(int destiny, int source, int inmediate)
+        public void Daddi(int source, int destiny, int inmediate)
         {
             Registers[destiny] = Registers[source] + inmediate;
         }
 
-        public void Dadd(int destiny, int firstSource, int secondSource)
+        public void Dadd(int firstSource, int secondSource, int destiny)
         {
             Registers[destiny] = Registers[firstSource] + Registers[secondSource];
         }
 
-        public void Dsub(int destiny, int firstSource, int secondSource)
+        public void Dsub(int firstSource, int secondSource, int destiny)
         {
             Registers[destiny] = Registers[firstSource] - Registers[secondSource];
         }
-        
-        public void Dmul(int destiny, int firstSource, int secondSource)
+
+        public void Dmul(int firstSource, int secondSource, int destiny)
         {
             Registers[destiny] = Registers[firstSource] * Registers[secondSource];
         }
-        
-        public void Ddiv(int destiny, int firstSource, int secondSource)
+
+        public void Ddiv(int firstSource, int secondSource, int destiny)
         {
             Registers[destiny] = Registers[firstSource] / Registers[secondSource];
         }
-        
-        public bool Beqz(int source, int inmediate)
+
+        public void Beqz(int source, int inmediate)
         {
-            return Registers[source] == inmediate;
+            if (Registers[source] == 0)
+            {
+                ProgramCounter += (4 * inmediate);
+            }
         }
-        
-        public bool Bnez(int source, int inmediate)
+
+        public void Bnez(int source, int inmediate)
         {
-            return Registers[source] != inmediate;
+            if (Registers[source] != 0)
+            {
+                ProgramCounter += (4 * inmediate);
+            }
         }
 
         public void Jal(int inmediate)
@@ -66,6 +72,10 @@
         public void Jr(int source)
         {
             ProgramCounter = Registers[source];
+        }
+
+        public void Load()
+        {
         }
     }
 }
