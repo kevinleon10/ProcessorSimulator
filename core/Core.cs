@@ -1,7 +1,9 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Threading;
 using ProcessorSimulator.block;
 using ProcessorSimulator.cache;
+using ProcessorSimulator.common;
 
 namespace ProcessorSimulator.core
 {
@@ -9,7 +11,6 @@ namespace ProcessorSimulator.core
     {
         public Core(Cache<Instruction> instructionCache, Cache<int> dataCache, int cacheSize)
         {
-            CacheSize = cacheSize;
             InstructionRegister = null;
             InstructionCache = instructionCache;
             DataCache = dataCache;
@@ -29,14 +30,27 @@ namespace ProcessorSimulator.core
 
         public ThreadStatus ThreadStatus { get; set; }
 
-        public int CacheSize { get; set; }
+        private int GetBlockNumberInMemory(int address)
+        {
+            return (address / Constants.BytesInBlock);
+        }
+        
+        private int GetWordNumberInBlock(int address)
+        {
+            return (address % Constants.BytesInBlock) / Constants.WordsInBlock;
+        }
 
-        public void StartExecution(Context context)
+        public void StartExecution(Context context, bool isDoubleCore)
         {
             Context = context;
-            int programCounter = Context.ProgramCounter;
-            int blockNumberInCache = (programCounter / 16) % CacheSize;
-            Console.WriteLine(blockNumberInCache);
+            var programCounter = Context.ProgramCounter;
+            
+            //Instruction fetch
+            var blockNumberInMemory = GetBlockNumberInMemory(programCounter);
+            var wordNumberInBlock = GetWordNumberInBlock(programCounter);
+            Console.WriteLine(blockNumberInMemory);
+            Console.WriteLine(wordNumberInBlock);
+            InstructionRegister = InstructionCache.GetWord(blockNumberInMemory, wordNumberInBlock, isDoubleCore);
         }
 
         private void ExecuteInstruction(Context actualContext, Instruction actualInstruction)

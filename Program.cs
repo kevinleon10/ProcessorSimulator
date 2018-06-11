@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Threading;
+using ProcessorSimulator.block;
+using ProcessorSimulator.cache;
 using ProcessorSimulator.core;
+using ProcessorSimulator.memory;
 
 namespace ProcessorSimulator
 {
@@ -8,8 +11,11 @@ namespace ProcessorSimulator
     {
         private static void Test(Context context)
         {
-            var core = new Core(null, null, 8);
-            core.StartExecution(context);
+            Memory memory = null;
+            Cache<Instruction> instructionCache = new Cache<Instruction>(8, new Mutex(), memory);
+            Cache<int> dataCache = new Cache<int>(8, new Mutex(), memory);
+            var core = new Core(instructionCache, dataCache, 8);
+            core.StartExecution(context, false);
         }
 
         public static void Main(string[] args)

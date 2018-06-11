@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System.Security.AccessControl;
+using System.Threading;
 using ProcessorSimulator.block;
 using ProcessorSimulator.common;
 using ProcessorSimulator.memory;
@@ -10,7 +11,7 @@ namespace ProcessorSimulator.cache
         public Cache(int cacheSize, Mutex busMutex, Memory memory)
         {
             BusMutex = busMutex;
-            TableSize = cacheSize;
+            CacheSize = cacheSize;
             Memory = memory;
             
             // Fill up the block array with null values
@@ -30,17 +31,34 @@ namespace ProcessorSimulator.cache
 
         public Mutex BusMutex { get; set; }
 
-        public int TableSize { get; set; }
+        public int CacheSize { get; set; }
 
         public Memory Memory { get; set; }
         
         public CacheBlock<T>[] Blocks { get; set; }
 
-
-        public Block<T> GetBlock(int address)
+        /// <summary>
+        /// Obtain the word
+        /// </summary>
+        /// <returns>
+        /// The word resulting of the computer
+        /// </returns>
+        public T GetWord(int blockNumberInMemory, int wordNumberInBlock, bool isDoubleCore)
         {
-            //TODO agregar buscar etiqueta del bloque con la direccion
-            return null;
+            var blockNumberInCache = blockNumberInMemory % CacheSize;
+            if (isDoubleCore)
+            {
+                //TODO Resolve reservation
+            }
+            else
+            {
+                /*Mutex result;
+                while(!Mutex.TryOpenExisting("CacheBlock", out result){
+                    
+                }*/
+            }
+
+            return default(T);
         }
 
         public void WriteBlock(Block<T> block, int position)
