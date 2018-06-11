@@ -74,8 +74,14 @@
             ProgramCounter = Registers[source];
         }
 
-        public void Load()
+        public void Load(int source, int destiny)
         {
+            Registers[destiny] = source;
+        }
+
+        public int Store(int source)
+        {
+            return Registers[source];
         }
     }
 }

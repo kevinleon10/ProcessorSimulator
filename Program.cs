@@ -6,18 +6,16 @@ namespace ProcessorSimulator
 {
     internal class Program
     {
-        public static void Test(Context context)
+        private static void Test(Context context)
         {
-            Mutex dataMutex = new Mutex();
-            Mutex instructionMutex = new Mutex();
-            Core core = new Core(null, null, 8);
+            var core = new Core(null, null, 8);
             core.StartExecution(context);
         }
 
         public static void Main(string[] args)
         {
-            Context context = new Context(200, 1);
-            Thread thread = new Thread(() => Test(context));
+            var context = new Context(200, 1);
+            var thread = new Thread(() => Test(context));
             thread.Start();
             Console.WriteLine("Hello world!");
         }

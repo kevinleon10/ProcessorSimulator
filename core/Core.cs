@@ -39,36 +39,36 @@ namespace ProcessorSimulator.core
             Console.WriteLine(blockNumberInCache);
         }
 
-        private void ExecuteInstruction(Context actualContext)
+        private void ExecuteInstruction(Context actualContext, Instruction actualInstruction)
         {
-            switch (InstructionRegister.OperationCode)
+            switch (actualInstruction.OperationCode)
             {
                 case 2:
-                    actualContext.Jr(InstructionRegister.Source);
+                    actualContext.Jr(actualInstruction.Source);
                     break;
                 case 3:
-                    actualContext.Jal(InstructionRegister.Inmediate);
+                    actualContext.Jal(actualInstruction.Inmediate);
                     break;
                 case 4:
-                    actualContext.Beqz(InstructionRegister.Source, InstructionRegister.Inmediate);
+                    actualContext.Beqz(actualInstruction.Source, actualInstruction.Inmediate);
                     break;
                 case 5:
-                    actualContext.Bnez(InstructionRegister.Source, InstructionRegister.Inmediate);
+                    actualContext.Bnez(actualInstruction.Source, actualInstruction.Inmediate);
                     break;
                 case 8:
-                    actualContext.Daddi(InstructionRegister.Source, InstructionRegister.Destiny ,InstructionRegister.Inmediate);
+                    actualContext.Daddi(actualInstruction.Source, actualInstruction.Destiny ,actualInstruction.Inmediate);
                     break;
                 case 12:
-                    actualContext.Dmul(InstructionRegister.Source, InstructionRegister.Destiny ,InstructionRegister.Inmediate);
+                    actualContext.Dmul(actualInstruction.Source, actualInstruction.Destiny ,actualInstruction.Inmediate);
                     break;
                 case 14:
-                    actualContext.Ddiv(InstructionRegister.Source, InstructionRegister.Destiny ,InstructionRegister.Inmediate);
+                    actualContext.Ddiv(actualInstruction.Source, actualInstruction.Destiny ,actualInstruction.Inmediate);
                     break;
                 case 32:
-                    actualContext.Dadd(InstructionRegister.Source, InstructionRegister.Destiny ,InstructionRegister.Inmediate);
+                    actualContext.Dadd(actualInstruction.Source, actualInstruction.Destiny ,actualInstruction.Inmediate);
                     break;
                 case 34:
-                    actualContext.Dsub(InstructionRegister.Source, InstructionRegister.Destiny ,InstructionRegister.Inmediate);
+                    actualContext.Dsub(actualInstruction.Source, actualInstruction.Destiny ,actualInstruction.Inmediate);
                     break;
                 case 35:
                 // TODO LOAD

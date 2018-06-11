@@ -17,10 +17,10 @@ namespace ProcessorSimulator.cache
             Blocks = new CacheBlock<T>[cacheSize];
             for (var i = 0; i < cacheSize; i++)
             {
-                var words = new Word<T>[Constants.WordsInBlock];
+                var words = new T[Constants.WordsInBlock];
                 for (var j = 0; j < Constants.WordsInBlock; j++)
                 {
-                    words[j] = null;
+                    words[j] = default(T);
                 }
                 Blocks[i] = new CacheBlock<T>(words);
             }

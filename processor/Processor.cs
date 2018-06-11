@@ -41,10 +41,10 @@ namespace ProcessorSimulator.processor
             var dataBlock = new Block<int>[Constants.DataBlocksInMemory];
             for (var i = 0; i < Constants.DataBlocksInMemory; i++)
             {
-                var words = new Word<int>[Constants.WordsInBlock];
+                var words = new int[Constants.WordsInBlock];
                 for (var j = 0; j < Constants.WordsInBlock; j++)
                 {
-                    words[j] = new Word<int>(Constants.DefaultDataValue);
+                    words[j] = Constants.DefaultDataValue;
                 }
                 dataBlock[i] = new Block<int>(words);
             }
@@ -99,7 +99,7 @@ namespace ProcessorSimulator.processor
                                           int currentBlock, int currentWord)
         {        
             string line;
-            Word<Instruction>[] instructionArray = null;
+            Instruction[] instructionArray = null;
 
             // Read the file and display it line by line.  
             var file = new System.IO.StreamReader(filePath);  
@@ -116,10 +116,10 @@ namespace ProcessorSimulator.processor
 
                 if (instructionArray == null)
                 {
-                    instructionArray = new Word<Instruction>[Constants.WordsInBlock];
+                    instructionArray = new Instruction[Constants.WordsInBlock];
                 }
 
-                instructionArray[currentBlock++] = new Word<Instruction>(instruction);
+                instructionArray[currentBlock++] = instruction;
                 startPc += 4;
 
                 if (currentWord != Constants.WordsInBlock) continue;

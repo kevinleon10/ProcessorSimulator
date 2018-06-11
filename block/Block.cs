@@ -6,19 +6,19 @@ namespace ProcessorSimulator.block
     {
         public Block()
         {
-            Words = new Word<T>[Constants.WordsInBlock];
+            Words = new T[Constants.WordsInBlock];
         }
 
-        public Block(Word<T>[] words)
+        public Block(T[] words)
         {
             this.Words = words;
         }
 
-        public Word<T>[] Words { get; set; }
+        public T[] Words { get; set; }
 
         public T GetValue(int index)
         {
-            T wordData = Words[index].WordData;
+            T wordData = Words[index];
             return wordData;
         }
     }
