@@ -34,7 +34,7 @@ namespace ProcessorSimulator.cache
 
         public Memory Memory { get; set; }
         
-        public CacheBlock<T>[] Blocks { get; }
+        public CacheBlock<T>[] Blocks { get; set; }
 
 
         public Block<T> GetBlock(int address)
