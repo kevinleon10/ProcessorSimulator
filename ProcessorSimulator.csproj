@@ -47,7 +47,7 @@
     <Compile Include="common\Constants.cs" />
     <Compile Include="core\Context.cs" />
     <Compile Include="core\Core.cs" />
-    <Compile Include="core\DobleCore.cs" />
+    <Compile Include="core\DoubleCore.cs" />
     <Compile Include="core\Reservation.cs" />
     <Compile Include="core\ThreadStatus.cs" />
     <Compile Include="memory\Memory.cs" />
