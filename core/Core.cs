@@ -1,5 +1,5 @@
-﻿﻿using System;
- using System.Threading;
+﻿using System;
+using System.Threading;
 using ProcessorSimulator.block;
 using ProcessorSimulator.cache;
 
@@ -30,13 +30,55 @@ namespace ProcessorSimulator.core
         public ThreadStatus ThreadStatus { get; set; }
 
         public int CacheSize { get; set; }
-        
+
         public void StartExecution(Context context)
         {
             Context = context;
             int programCounter = Context.ProgramCounter;
             int blockNumberInCache = (programCounter / 16) % CacheSize;
             Console.WriteLine(blockNumberInCache);
+        }
+
+        private void ExecuteInstruction(int operationCode, int source, int destiny, int inmediate, Context actualContext)
+        {
+            switch (operationCode)
+            {
+                case 2:
+                    actualContext.Jr(source);
+                    break;
+                case 3:
+                    actualContext.Jal(inmediate);
+                    break;
+                case 4:
+                    actualContext.Beqz(source, inmediate);
+                    break;
+                case 5:
+                    actualContext.Bnez(source, inmediate);
+                    break;
+                case 8:
+                    actualContext.Daddi(source, destiny, inmediate);
+                    break;
+                case 12:
+                    actualContext.Dmul(source, destiny, inmediate);
+                    break;
+                case 14:
+                    actualContext.Ddiv(source, destiny, inmediate);
+                    break;
+                case 32:
+                    actualContext.Dadd(source, destiny, inmediate);
+                    break;
+                case 34:
+                    actualContext.Dsub(source, destiny, inmediate);
+                    break;
+                case 35:
+                    // TODO LOAD
+                case 43:
+                    // TODO STORE
+                    break;
+                default:
+                    // TODO FIN
+                    break;
+            }
         }
     }
 }

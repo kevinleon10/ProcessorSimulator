@@ -8,6 +8,7 @@
             ThreadId = threadId;
             NumberOfCycles = 0;
             HasPriority = false;
+            Registers = new int[32];
             Registers[0] = 0;
         }
 

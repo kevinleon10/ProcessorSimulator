@@ -18,7 +18,7 @@ namespace ProcessorSimulator.block
 
         public T GetValue(int index)
         {
-            var wordData = Words[index].WordData;
+            T wordData = Words[index].WordData;
             return wordData;
         }
     }
