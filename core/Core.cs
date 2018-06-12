@@ -57,32 +57,43 @@ namespace ProcessorSimulator.core
         {
             switch (actualInstruction.OperationCode)
             {
-                case 2:
-                    actualContext.Jr(actualInstruction.Source);
+                case 2: // JR
+                    actualContext.ProgramCounter = actualContext.Registers[actualInstruction.Source];
                     break;
-                case 3:
-                    actualContext.Jal(actualInstruction.Inmediate);
+                case 3: //JAL
+                    actualContext.Registers[31] = actualContext.ProgramCounter;
+                    actualContext.ProgramCounter += actualInstruction.Inmediate;
                     break;
-                case 4:
-                    actualContext.Beqz(actualInstruction.Source, actualInstruction.Inmediate);
+                case 4: // BEQZ
+                    if (actualContext.Registers[actualInstruction.Source] == 0)
+                    {
+                        actualContext.ProgramCounter += (4 * actualInstruction.Inmediate);
+                    }
                     break;
-                case 5:
-                    actualContext.Bnez(actualInstruction.Source, actualInstruction.Inmediate);
+                case 5: // BNEZ
+                    if (actualContext.Registers[actualInstruction.Source] != 0)
+                    {
+                        actualContext.ProgramCounter += (4 * actualInstruction.Inmediate);
+                    }
                     break;
-                case 8:
-                    actualContext.Daddi(actualInstruction.Source, actualInstruction.Destiny ,actualInstruction.Inmediate);
+                case 8: //DADDI
+                    actualContext.Registers[actualInstruction.Destiny] = actualContext.Registers[actualInstruction.Source] + actualInstruction.Inmediate;
                     break;
-                case 12:
-                    actualContext.Dmul(actualInstruction.Source, actualInstruction.Destiny ,actualInstruction.Inmediate);
+                case 12: //DMUL
+                    actualContext.Registers[actualInstruction.Destiny] = 
+                        actualContext.Registers[actualInstruction.Source] + actualContext.Registers[actualInstruction.Inmediate];
                     break;
-                case 14:
-                    actualContext.Ddiv(actualInstruction.Source, actualInstruction.Destiny ,actualInstruction.Inmediate);
+                case 14: //DDIV
+                    actualContext.Registers[actualInstruction.Destiny] = 
+                        actualContext.Registers[actualInstruction.Source] / actualContext.Registers[actualInstruction.Inmediate];
                     break;
-                case 32:
-                    actualContext.Dadd(actualInstruction.Source, actualInstruction.Destiny ,actualInstruction.Inmediate);
+                case 32: //DADD
+                    actualContext.Registers[actualInstruction.Destiny] = 
+                        actualContext.Registers[actualInstruction.Source] + actualContext.Registers[actualInstruction.Inmediate];
                     break;
-                case 34:
-                    actualContext.Dsub(actualInstruction.Source, actualInstruction.Destiny ,actualInstruction.Inmediate);
+                case 34: //DSUB
+                    actualContext.Registers[actualInstruction.Destiny] = 
+                        actualContext.Registers[actualInstruction.Source] - actualContext.Registers[actualInstruction.Inmediate];
                     break;
                 case 35:
                 // TODO LOAD
