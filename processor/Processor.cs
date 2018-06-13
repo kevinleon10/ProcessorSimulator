@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading;
 using ProcessorSimulator.block;
 using ProcessorSimulator.cache;
@@ -70,15 +69,11 @@ namespace ProcessorSimulator.processor
              */
             var memory = new Memory(instructionBlocks, dataBlock);
             
-            // Creates the two buses for memory access
-            var dataCacheBus = new Mutex();
-            var instructionCacheBus = new Mutex();
-            
             // Creates the four caches. Two per core
-            var dataCacheZero = new Cache<int>(Constants.CoreZeroCacheSize, dataCacheBus, memory);
-            var instructionCacheZero = new Cache<Instruction>(Constants.CoreZeroCacheSize, instructionCacheBus, memory);
-            var dataCacheOne = new Cache<int>(Constants.CoreOneCacheSize, dataCacheBus, memory);
-            var instructionCacheOne = new Cache<Instruction>(Constants.CoreOneCacheSize, instructionCacheBus, memory);
+            var dataCacheZero = new Cache<int>(Constants.CoreZeroCacheSize, memory);
+            var instructionCacheZero = new Cache<Instruction>(Constants.CoreZeroCacheSize, memory);
+            var dataCacheOne = new Cache<int>(Constants.CoreOneCacheSize, memory);
+            var instructionCacheOne = new Cache<Instruction>(Constants.CoreOneCacheSize, memory);
             
             // Set each cache with the other cache connected to it.
             dataCacheZero.OtherCache = dataCacheOne;

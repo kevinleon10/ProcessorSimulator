@@ -1,5 +1,4 @@
 ﻿using System;
-using System.ComponentModel;
 using System.Threading;
 using ProcessorSimulator.block;
 using ProcessorSimulator.cache;
@@ -34,7 +33,7 @@ namespace ProcessorSimulator.core
         {
             return (address / Constants.BytesInBlock);
         }
-        
+
         private int GetWordNumberInBlock(int address)
         {
             return (address % Constants.BytesInBlock) / Constants.WordsInBlock;
@@ -44,13 +43,13 @@ namespace ProcessorSimulator.core
         {
             Context = context;
             var programCounter = Context.ProgramCounter;
-            
+
             //Instruction fetch
             var blockNumberInMemory = GetBlockNumberInMemory(programCounter);
             var wordNumberInBlock = GetWordNumberInBlock(programCounter);
-            Console.WriteLine(blockNumberInMemory);
-            Console.WriteLine(wordNumberInBlock);
-            InstructionRegister = InstructionCache.GetWord(blockNumberInMemory, wordNumberInBlock, isDoubleCore);
+            Console.WriteLine("Block number in memory: " + blockNumberInMemory);
+            Console.WriteLine("Word number in block: " + wordNumberInBlock);
+            InstructionRegister = InstructionCache.LoadWord(blockNumberInMemory, wordNumberInBlock, isDoubleCore);
         }
 
         private void ExecuteInstruction(Context actualContext, Instruction actualInstruction)
@@ -69,31 +68,38 @@ namespace ProcessorSimulator.core
                     {
                         actualContext.ProgramCounter += (4 * actualInstruction.Inmediate);
                     }
+
                     break;
                 case 5: // BNEZ
                     if (actualContext.Registers[actualInstruction.Source] != 0)
                     {
                         actualContext.ProgramCounter += (4 * actualInstruction.Inmediate);
                     }
+
                     break;
                 case 8: //DADDI
-                    actualContext.Registers[actualInstruction.Destiny] = actualContext.Registers[actualInstruction.Source] + actualInstruction.Inmediate;
+                    actualContext.Registers[actualInstruction.Destiny] =
+                        actualContext.Registers[actualInstruction.Source] + actualInstruction.Inmediate;
                     break;
                 case 12: //DMUL
-                    actualContext.Registers[actualInstruction.Destiny] = 
-                        actualContext.Registers[actualInstruction.Source] + actualContext.Registers[actualInstruction.Inmediate];
+                    actualContext.Registers[actualInstruction.Destiny] =
+                        actualContext.Registers[actualInstruction.Source] +
+                        actualContext.Registers[actualInstruction.Inmediate];
                     break;
                 case 14: //DDIV
-                    actualContext.Registers[actualInstruction.Destiny] = 
-                        actualContext.Registers[actualInstruction.Source] / actualContext.Registers[actualInstruction.Inmediate];
+                    actualContext.Registers[actualInstruction.Destiny] =
+                        actualContext.Registers[actualInstruction.Source] /
+                        actualContext.Registers[actualInstruction.Inmediate];
                     break;
                 case 32: //DADD
-                    actualContext.Registers[actualInstruction.Destiny] = 
-                        actualContext.Registers[actualInstruction.Source] + actualContext.Registers[actualInstruction.Inmediate];
+                    actualContext.Registers[actualInstruction.Destiny] =
+                        actualContext.Registers[actualInstruction.Source] +
+                        actualContext.Registers[actualInstruction.Inmediate];
                     break;
                 case 34: //DSUB
-                    actualContext.Registers[actualInstruction.Destiny] = 
-                        actualContext.Registers[actualInstruction.Source] - actualContext.Registers[actualInstruction.Inmediate];
+                    actualContext.Registers[actualInstruction.Destiny] =
+                        actualContext.Registers[actualInstruction.Source] -
+                        actualContext.Registers[actualInstruction.Inmediate];
                     break;
                 case 35:
                 // TODO LOAD

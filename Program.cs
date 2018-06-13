@@ -12,8 +12,8 @@ namespace ProcessorSimulator
         private static void Test(Context context)
         {
             Memory memory = null;
-            Cache<Instruction> instructionCache = new Cache<Instruction>(8, new Mutex(), memory);
-            Cache<int> dataCache = new Cache<int>(8, new Mutex(), memory);
+            Cache<Instruction> instructionCache = new Cache<Instruction>(8, memory);
+            Cache<int> dataCache = new Cache<int>(8, memory);
             var core = new Core(instructionCache, dataCache, 8);
             core.StartExecution(context, false);
         }

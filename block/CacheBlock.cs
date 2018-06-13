@@ -9,13 +9,10 @@ namespace ProcessorSimulator.block
         {
             Label = Constants.InvalidLabel;
             BlockState = BlockState.Invalid;
-            BlockMutex = new Mutex();
         }
 
         public int Label { get; set; }
 
         public BlockState BlockState { get; set; }
-
-        public Mutex BlockMutex { get; set; }
     }
 }

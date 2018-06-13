@@ -1,4 +1,4 @@
-﻿using System.Security.AccessControl;
+﻿using System;
 using System.Threading;
 using ProcessorSimulator.block;
 using ProcessorSimulator.common;
@@ -6,11 +6,10 @@ using ProcessorSimulator.memory;
 
 namespace ProcessorSimulator.cache
 {
-    public class Cache<T>
+    public class Cache<T> where T : new()
     {
-        public Cache(int cacheSize, Mutex busMutex, Memory memory)
+        public Cache(int cacheSize, Memory memory)
         {
-            BusMutex = busMutex;
             CacheSize = cacheSize;
             Memory = memory;
             
@@ -29,8 +28,6 @@ namespace ProcessorSimulator.cache
 
         public Cache<T> OtherCache { get; set; }
 
-        public Mutex BusMutex { get; set; }
-
         public int CacheSize { get; set; }
 
         public Memory Memory { get; set; }
@@ -38,27 +35,67 @@ namespace ProcessorSimulator.cache
         public CacheBlock<T>[] Blocks { get; set; }
 
         /// <summary>
-        /// Obtain the word
+        /// Load a word, which can be an instruction or a data
         /// </summary>
         /// <returns>
-        /// The word resulting of the computer
+        /// The resulting word
         /// </returns>
-        public T GetWord(int blockNumberInMemory, int wordNumberInBlock, bool isDoubleCore)
+        public T LoadWord(int blockNumberInMemory, int wordNumberInBlock, bool isDoubleCore)
         {
+            var word = new T();
             var blockNumberInCache = blockNumberInMemory % CacheSize;
+            Console.WriteLine("Block number in cache: " + blockNumberInCache);
             if (isDoubleCore)
             {
                 //TODO Resolve reservation
             }
             else
             {
-                /*Mutex result;
-                while(!Mutex.TryOpenExisting("CacheBlock", out result){
-                    
-                }*/
+                var hasGottenBlock = false;
+                //while it has not gotten the block it continues asking for
+                while (!hasGottenBlock)
+                {
+                    if (Monitor.TryEnter(Blocks[blockNumberInCache]))
+                    {
+                        try
+                        {
+                            hasGottenBlock = true;
+                            //if the label matches with the block number
+                            if (Blocks[blockNumberInCache].Label == blockNumberInMemory)
+                            {
+                                //if the block status is invalid
+                                if (Blocks[blockNumberInCache].BlockState == BlockState.Invalid)
+                                {
+                                    Console.WriteLine("The current block status is invalid");
+                                    
+                                }
+                                else
+                                {
+                                    word = Blocks[blockNumberInCache].Words[wordNumberInBlock];
+                                    Console.WriteLine("I could take the block");
+                                }
+                            }
+                            else
+                            {
+                            }
+
+                            // The critical section.
+                        }
+                        finally
+                        {
+                            // Ensure that the lock is released.
+                            Monitor.Exit(Blocks[blockNumberInCache]);
+                        }
+                    }
+                    else
+                    {
+                        // The lock was not acquired.
+                        
+                    }
+                }
             }
 
-            return default(T);
+            return word;
         }
 
         public void WriteBlock(Block<T> block, int position)
