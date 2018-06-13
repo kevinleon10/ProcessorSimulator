@@ -15,7 +15,7 @@ namespace ProcessorSimulator
             Cache<Instruction> instructionCache = new Cache<Instruction>(8, memory);
             Cache<int> dataCache = new Cache<int>(8, memory);
             var core = new Core(instructionCache, dataCache, 8);
-            core.StartExecution(context, false);
+            core.StartExecution(context);
         }
 
         public static void Main(string[] args)

@@ -39,7 +39,7 @@ namespace ProcessorSimulator.core
             return (address % Constants.BytesInBlock) / Constants.WordsInBlock;
         }
 
-        public void StartExecution(Context context, bool isDoubleCore)
+        public void StartExecution(Context context)
         {
             Context = context;
             var programCounter = Context.ProgramCounter;
@@ -49,7 +49,62 @@ namespace ProcessorSimulator.core
             var wordNumberInBlock = GetWordNumberInBlock(programCounter);
             Console.WriteLine("Block number in memory: " + blockNumberInMemory);
             Console.WriteLine("Word number in block: " + wordNumberInBlock);
-            InstructionRegister = InstructionCache.LoadWord(blockNumberInMemory, wordNumberInBlock, isDoubleCore);
+            InstructionRegister = LoadInstruction(blockNumberInMemory, wordNumberInBlock);
+        }
+
+        /// <summary>
+        /// Load a instruction
+        /// </summary>
+        /// <returns>
+        /// The resulting instruction
+        /// </returns>
+        private Instruction LoadInstruction(int blockNumberInMemory, int wordNumberInBlock)
+        {
+            var word = new Instruction();
+            var blockNumberInCache = blockNumberInMemory % Constants.CoreOneCacheSize;
+            Console.WriteLine("Block number in cache: " + blockNumberInCache);
+            var hasGottenBlock = false;
+            //while it has not gotten the block it continues asking for
+            while (!hasGottenBlock)
+            {
+                if (Monitor.TryEnter(InstructionCache.Blocks[blockNumberInCache]))
+                {
+                    try
+                    {
+                        hasGottenBlock = true;
+                        //if the label matches with the block number
+                        if (InstructionCache.Blocks[blockNumberInCache].Label == blockNumberInMemory)
+                        {
+                            //if the block status is invalid
+                            if (InstructionCache.Blocks[blockNumberInCache].BlockState == BlockState.Invalid)
+                            {
+                                Console.WriteLine("The current block status is invalid");
+                            }
+                            else
+                            {
+                                word = InstructionCache.Blocks[blockNumberInCache].Words[wordNumberInBlock];
+                                Console.WriteLine("I could take the block");
+                            }
+                        }
+                        else
+                        {
+                        }
+
+                        // The critical section.
+                    }
+                    finally
+                    {
+                        // Ensure that the lock is released.
+                        Monitor.Exit(InstructionCache.Blocks[blockNumberInCache]);
+                    }
+                }
+                else
+                {
+                    // The lock was not acquired.
+                }
+            }
+
+            return word;
         }
 
         private void ExecuteInstruction(Context actualContext, Instruction actualInstruction)
