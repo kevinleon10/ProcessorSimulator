@@ -1,4 +1,4 @@
 .idea/
 bin/
-!hilillos/
+!bin/Debug/hilillos/
 obj/
