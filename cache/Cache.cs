@@ -34,6 +34,8 @@ namespace ProcessorSimulator.cache
         
         public CacheBlock<T>[] Blocks { get; set; }
         
+        public Object Bus { get; set; }
+        
         public void WriteBlock(Block<T> block, int position)
         {
             //TODO revisar si solo se escribe una palabra

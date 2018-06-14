@@ -45,11 +45,7 @@ namespace ProcessorSimulator.core
             var programCounter = Context.ProgramCounter;
 
             //Instruction fetch
-            var blockNumberInMemory = GetBlockNumberInMemory(programCounter);
-            var wordNumberInBlock = GetWordNumberInBlock(programCounter);
-            Console.WriteLine("Block number in memory: " + blockNumberInMemory);
-            Console.WriteLine("Word number in block: " + wordNumberInBlock);
-            InstructionRegister = LoadInstruction(blockNumberInMemory, wordNumberInBlock);
+            InstructionRegister = LoadInstruction(programCounter);
         }
 
         /// <summary>
@@ -58,9 +54,13 @@ namespace ProcessorSimulator.core
         /// <returns>
         /// The resulting instruction
         /// </returns>
-        private Instruction LoadInstruction(int blockNumberInMemory, int wordNumberInBlock)
+        private Instruction LoadInstruction(int  programCounter)
         {
-            var word = new Instruction();
+            var blockNumberInMemory = GetBlockNumberInMemory(programCounter);
+            var wordNumberInBlock = GetWordNumberInBlock(programCounter);
+            Console.WriteLine("Block number in memory: " + blockNumberInMemory);
+            Console.WriteLine("Word number in block: " + wordNumberInBlock);
+            var instruction = new Instruction();
             var blockNumberInCache = blockNumberInMemory % Constants.CoreOneCacheSize;
             Console.WriteLine("Block number in cache: " + blockNumberInCache);
             var hasGottenBlock = false;
@@ -73,21 +73,30 @@ namespace ProcessorSimulator.core
                     {
                         hasGottenBlock = true;
                         //if the label matches with the block number
-                        if (InstructionCache.Blocks[blockNumberInCache].Label == blockNumberInMemory)
+                        var localBlock = InstructionCache.Blocks[blockNumberInCache];
+                        if (localBlock.Label == blockNumberInMemory)
                         {
-                            //if the block status is invalid
-                            if (InstructionCache.Blocks[blockNumberInCache].BlockState == BlockState.Invalid)
-                            {
-                                Console.WriteLine("The current block status is invalid");
-                            }
-                            else
-                            {
-                                word = InstructionCache.Blocks[blockNumberInCache].Words[wordNumberInBlock];
-                                Console.WriteLine("I could take the block");
-                            }
+                            instruction = InstructionCache.Blocks[blockNumberInCache].Words[wordNumberInBlock];
+                            Console.WriteLine("I could take the block");
                         }
                         else
                         {
+                            var blockNumberInOtherCache = blockNumberInMemory % Constants.CoreZeroCacheSize;
+                            var hasGottenOtherBlock = false;
+                            while (!hasGottenOtherBlock)
+                            {
+                                if (Monitor.TryEnter(InstructionCache.OtherCache.Bus))
+                                {
+                                    try
+                                    {
+                                    }
+                                    finally
+                                    {
+                                        // Ensure that the lock is released.
+                                        Monitor.Exit(InstructionCache.OtherCache.Bus);
+                                    }
+                                }
+                            }
                         }
 
                         // The critical section.
@@ -98,13 +107,9 @@ namespace ProcessorSimulator.core
                         Monitor.Exit(InstructionCache.Blocks[blockNumberInCache]);
                     }
                 }
-                else
-                {
-                    // The lock was not acquired.
-                }
             }
 
-            return word;
+            return instruction;
         }
 
         private void ExecuteInstruction(Context actualContext, Instruction actualInstruction)

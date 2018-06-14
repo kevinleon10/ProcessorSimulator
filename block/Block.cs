@@ -1,4 +1,5 @@
-﻿using ProcessorSimulator.common;
+﻿using System;
+using ProcessorSimulator.common;
 
 namespace ProcessorSimulator.block
 {
