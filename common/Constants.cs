@@ -13,5 +13,7 @@
         public const int CoreOneCacheSize  = 4;
         public const int NumberOfThreadsToLoad = 6;
         public const int NotRunningAnyThread = -1;
+        public const string FilePath = "hilillos/";
+        public const string FileExtension = ".txt";
     }
 }

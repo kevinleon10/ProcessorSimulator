@@ -64,7 +64,7 @@ namespace ProcessorSimulator.processor
             for (var i = 0; i < Constants.NumberOfThreadsToLoad; i++)
             {
                 ContextQueue.Enqueue(new Context(pc, i));
-                var filePath = @"hilillos\" + i + ".txt";
+                var filePath = @Constants.FilePath + i + Constants.FileExtension;
                 string line;
                 
                 // Read the file and display it line by line.  
