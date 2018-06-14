@@ -1,3 +1,6 @@
 .idea/
-bin/
+bin/*
+!bin/Debug/
+bin/Debug/*
+!bin/Debug/hilillos/
 obj/
