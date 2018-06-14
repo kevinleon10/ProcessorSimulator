@@ -11,5 +11,6 @@
         public const int DefaultDataValue = 1;
         public const int CoreZeroCacheSize = 8;
         public const int CoreOneCacheSize  = 4;
+        public const int numberOfThreadsToLoad = 6;
     }
 }

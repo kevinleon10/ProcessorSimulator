@@ -7,10 +7,10 @@ namespace ProcessorSimulator.core
 {
     public class DobleCore : Core
     {
-        public DobleCore(Cache<Instruction> instructionCache, Cache<int> dataCache, int cacheSize) : base(instructionCache, dataCache, cacheSize)
+        public DobleCore(Cache<Instruction> instructionCache, Cache<int> dataCache, int quantum) : base(instructionCache, dataCache, quantum)
         {
             InstructionRegisterTwo = null;
-            RemainingThreadCyclesTwo = 0;
+            RemainingThreadCyclesTwo = quantum;
             ThreadStatusTwo = ThreadStatus.Stopped;
             Reservations = new List<Reservation>();
         }

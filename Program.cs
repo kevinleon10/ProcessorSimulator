@@ -4,6 +4,7 @@ using ProcessorSimulator.block;
 using ProcessorSimulator.cache;
 using ProcessorSimulator.core;
 using ProcessorSimulator.memory;
+using ProcessorSimulator.processor;
 
 namespace ProcessorSimulator
 {
@@ -20,9 +21,12 @@ namespace ProcessorSimulator
 
         public static void Main(string[] args)
         {
+            /*
             var context = new Context(200, 1);
             var thread = new Thread(() => Test(context));
             thread.Start();
+            */
+            var processor = new Processor(10);
             Console.WriteLine("Hello world!");
         }
         
