@@ -2,6 +2,6 @@
 {
     public enum ThreadStatus
     {
-        Running, Stopped, CacheFail, SolvedCacheFail 
+        Running, Stopped, CacheFail, SolvedCacheFail, Ended
     }
 }

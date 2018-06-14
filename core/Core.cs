@@ -8,18 +8,15 @@ namespace ProcessorSimulator.core
 {
     public class Core
     {
-        public Core(Cache<Instruction> instructionCache, Cache<int> dataCache, int quantum)
+        public Core(Cache<Instruction> instructionCache, Cache<int> dataCache)
         {
             InstructionRegister = null;
             InstructionCache = instructionCache;
             DataCache = dataCache;
-            Quantum = quantum;
-            RemainingThreadCycles = quantum;
+            RemainingThreadCycles = Constants.NotRunningAnyThread;
             ThreadStatus = ThreadStatus.Stopped;
         }
         
-        public int Quantum { get; set; }
-
         public Instruction InstructionRegister { get; set; }
 
         public Context Context { get; set; }

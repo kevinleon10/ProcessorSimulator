@@ -20,10 +20,12 @@ namespace ProcessorSimulator.processor
             InitializeStructures();
         }
 
-        private Thread coreZeroThreadA;
-        private Thread coreZeroThreadB;
-        private Thread coreOneThread;
+        public Thread CoreZeroThreadA { get; private set; }
         
+        public Thread CoreZeroThreadB { get; private set; }
+        
+        public Thread CoreOneThread { get; private set; }
+
         public DobleCore CoreZero { get; set; }
 
         public Core CoreOne { get; set; }
@@ -59,7 +61,7 @@ namespace ProcessorSimulator.processor
             var instructionBlocks = new Block<Instruction>[Constants.InstructionBlocksInMemory];
             Instruction[] instructionArray = null;
 
-            for (var i = 0; i < Constants.numberOfThreadsToLoad; i++)
+            for (var i = 0; i < Constants.NumberOfThreadsToLoad; i++)
             {
                 ContextQueue.Enqueue(new Context(pc, i));
                 var filePath = @"hilillos\" + i + ".txt";
@@ -136,63 +138,67 @@ namespace ProcessorSimulator.processor
             instructionCacheOne.OtherCache = instructionCacheZero;
             
             // Creates the two cores of the processor
-            CoreOne = new Core(instructionCacheOne, dataCacheOne, Quantum);
-            CoreZero = new DobleCore(instructionCacheZero, dataCacheZero, Quantum);    
+            CoreOne = new Core(instructionCacheOne, dataCacheOne);
+            CoreZero = new DobleCore(instructionCacheZero, dataCacheZero);    
         }
 
         public void Check()
         {
             // Check if there are threads that have ran out of the cycles
             if (CoreZero.RemainingThreadCycles == 0)
-                loadContextMainThread(CoreZero);
+            {
+                LoadContextMainThread(CoreZero);
+                // Set the other context as the one with priority
+                CoreZero.ContextTwo.HasPriority = true;
+            }
+
             if (CoreOne.RemainingThreadCycles == 0)
-                loadContextMainThread(CoreOne);
+            {
+                LoadContextMainThread(CoreOne);
+            }
+
             if (CoreZero.RemainingThreadCyclesTwo == 0)
-                loadContextSecThread(CoreZero);
+            {
+                LoadContextSecThread(CoreZero);
+                // Set the other context as the one with priority
+                CoreZero.Context.HasPriority = true;
+            }
 
             // Check if either thread in Core Zero has just resolved a Cache Fail
-            if (CoreZero.ThreadStatus == ThreadStatus.SolvedCacheFail)
+            ThreadStatus[] statuses;
+            statuses = CheckIfSolvedCacheFail(CoreZero.ThreadStatus, CoreZero.ThreadStatusTwo, CoreZero.Context,
+                CoreZeroThreadA, CoreZeroThreadB);
+            CoreZero.ThreadStatus = statuses[0];
+            CoreZero.ThreadStatusTwo = statuses[1];
+            
+            statuses = CheckIfSolvedCacheFail(CoreZero.ThreadStatusTwo, CoreZero.ThreadStatus, CoreZero.ContextTwo,
+                CoreZeroThreadB, CoreZeroThreadA);
+            CoreZero.ThreadStatusTwo = statuses[0];
+            CoreZero.ThreadStatus = statuses[1];
+            
+            // TODO Check for reservations, and resume stopped threads if the right conditions hold.
+
+            if (CoreZero.ThreadStatus == ThreadStatus.Stopped)
             {
-                // Check if there is another thread running
-                if (CoreZero.ThreadStatusTwo == ThreadStatus.Running)
-                {
-                    // Check if the thread that solved Cache Fail has priority
-                    if (CoreZero.Context.HasPriority)
-                    {
-                        // Secondary thread must be stopped
-                        CoreZero.ThreadStatusTwo = ThreadStatus.Stopped;
-                        // Suspends secundary thread
-                        coreZeroThreadB.Suspend();
-                        // Sets primary thread in the running state
-                        CoreZero.ThreadStatus = ThreadStatus.Running;
-                        // Resumes primary thread
-                        coreZeroThreadA.Resume();
-                    }
-                    else
-                    {
-                        // Primary thread has no priority, then it must be stopped
-                        CoreZero.ThreadStatus = ThreadStatus.Stopped;
-                        coreZeroThreadA.Suspend();
-                    }
-                }
-                else
-                {
-                    // If there is no secundary thread running, then the primary resumes
-                    // Sets primary thread in the running state
-                    CoreZero.ThreadStatus = ThreadStatus.Running;
-                    // Resumes primary thread
-                    coreZeroThreadA.Resume();
-                }
+                
+            }
+
+            if (CoreZero.ThreadStatusTwo == ThreadStatus.Stopped)
+            {
+                
             }
             
-            // TODO check if secundary thread solved Cache fail
             
+            // TODO Lastly check for ending threads
             
-            
+
+
         }
 
-        private void loadContextMainThread(Core core)
+        private void LoadContextMainThread(Core core)
         {
+            // If context queue is empty then keep running the same thread
+            if (ContextQueue.Count <= 0) return;
             var newContext = ContextQueue.Dequeue();
             var oldContext = core.Context;
             oldContext.HasPriority = false;
@@ -200,8 +206,10 @@ namespace ProcessorSimulator.processor
             core.Context = newContext;
         }
 
-        private void loadContextSecThread(DobleCore core)
+        private void LoadContextSecThread(DobleCore core)
         {
+            // If context queue is empty then keep running the same thread
+            if (ContextQueue.Count <= 0) return;
             var newContext = ContextQueue.Dequeue();
             var oldContext = core.ContextTwo;
             oldContext.HasPriority = false;
@@ -209,7 +217,43 @@ namespace ProcessorSimulator.processor
             core.ContextTwo = newContext;
         }
 
-        public void runSimulation()
+        private ThreadStatus[] CheckIfSolvedCacheFail(ThreadStatus baseStatus, ThreadStatus otherStatus, Context baseContext,
+                    Thread baseThread, Thread otherThread)
+        {
+            if (baseStatus == ThreadStatus.SolvedCacheFail)
+            {
+                // Check if there is another thread running
+                if (otherStatus == ThreadStatus.Running)
+                {
+                    // Check if the thread that solved Cache Fail has priority
+                    if (baseContext.HasPriority)
+                    {
+                        // Secondary thread must be stopped
+                        otherStatus = ThreadStatus.Stopped;
+                        // Suspends secundary thread
+                        otherThread.Suspend();
+                        // Sets primary thread in the running state
+                        baseStatus = ThreadStatus.Running;
+                    }
+                    else
+                    {
+                        // Primary thread has no priority, then it must be stopped
+                        baseStatus = ThreadStatus.Stopped;
+                        baseThread.Suspend();
+                    }
+                }
+                else
+                {
+                    // If there is no secundary thread running, then the primary resumes
+                    // Sets primary thread in the running state
+                    baseStatus = ThreadStatus.Running;
+                }
+            }
+            ThreadStatus[] threadStatuses = {baseStatus, otherStatus};
+            return threadStatuses;
+        }
+        
+        public void RunSimulation()
         {
             
         }
