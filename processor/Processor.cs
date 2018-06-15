@@ -64,7 +64,7 @@ namespace ProcessorSimulator.processor
             for (var i = 0; i < Constants.NumberOfThreadsToLoad; i++)
             {
                 ContextQueue.Enqueue(new Context(pc, i));
-                var filePath = @Constants.FilePath + i + Constants.FileExtension;
+                var filePath = Constants.FilePath + i + Constants.FileExtension;
                 string line;
                 
                 // Read the file and display it line by line.  
@@ -165,8 +165,7 @@ namespace ProcessorSimulator.processor
             }
 
             // Check if either thread in Core Zero has just resolved a Cache Fail
-            ThreadStatus[] statuses;
-            statuses = CheckIfSolvedCacheFail(CoreZero.ThreadStatus, CoreZero.ThreadStatusTwo, CoreZero.Context,
+            var statuses = CheckIfSolvedCacheFail(CoreZero.ThreadStatus, CoreZero.ThreadStatusTwo, CoreZero.Context,
                 CoreZeroThreadA, CoreZeroThreadB);
             CoreZero.ThreadStatus = statuses[0];
             CoreZero.ThreadStatusTwo = statuses[1];
@@ -176,23 +175,94 @@ namespace ProcessorSimulator.processor
             CoreZero.ThreadStatusTwo = statuses[0];
             CoreZero.ThreadStatus = statuses[1];
             
-            // TODO Check for reservations, and resume stopped threads if the right conditions hold.
-
-            if (CoreZero.ThreadStatus == ThreadStatus.Stopped)
+            
+            // Check for reservations, and resume waiting threads if the right conditions hold.
+            if (CoreZero.ThreadStatus == ThreadStatus.Waiting)
             {
-                
+                var thStatuses = checkForWaitingThreads(CoreZero.Context, CoreZero.ThreadStatusTwo, CoreZeroThreadA, CoreZeroThreadB);
+                if (thStatuses != null)
+                {
+                    CoreZero.ThreadStatus = thStatuses[0];
+                    CoreZero.ThreadStatusTwo = thStatuses[1];
+                }
             }
 
-            if (CoreZero.ThreadStatusTwo == ThreadStatus.Stopped)
+            if (CoreZero.ThreadStatusTwo == ThreadStatus.Waiting)
             {
-                
+                var thStatuses = checkForWaitingThreads(CoreZero.ContextTwo, CoreZero.ThreadStatus, CoreZeroThreadB, CoreZeroThreadA);
+                if (thStatuses != null)
+                {
+                    CoreZero.ThreadStatus = thStatuses[0];
+                    CoreZero.ThreadStatusTwo = thStatuses[1];
+                }
             }
             
+            // TODO Check for Cache failed threads
             
             // TODO Lastly check for ending threads
             
 
 
+        }
+
+        private ThreadStatus[] checkForWaitingThreads(Context context, ThreadStatus oStatus, Thread threadA, Thread threadB)
+        {
+            ThreadStatus baseStatus;
+            ThreadStatus oThreadStatus;
+            var reservations = CoreZero.Reservations;
+            Reservation waitingCause = null;
+            foreach (var reservation in reservations)
+            {
+                // Here we find out the resource the thread was waiting for
+                if (reservation.ThreadId != context.ThreadId) continue;
+                waitingCause = reservation;
+                break;
+            }
+
+            // If the reservation that caused to the thread to wait is still there then we can not resume yet.
+            if (FindBlockingReservation(waitingCause)) return null;
+            
+            // Waiting reservation is now absent, we then resume the thread.
+            // If the other thread is running but we have priority
+            if (context.HasPriority)
+            {
+                oThreadStatus = ThreadStatus.Stopped;
+                threadB.Suspend();
+                baseStatus = ThreadStatus.Running;
+                threadA.Resume();
+            }
+            else
+            {
+                baseStatus = ThreadStatus.Stopped;
+                oThreadStatus = oStatus;
+            }
+            ThreadStatus[] statuses = {baseStatus, oThreadStatus};
+            return statuses;
+        }
+
+        private bool FindBlockingReservation(Reservation waitingReservation)
+        {
+            var usingBus = waitingReservation.IsUsingBus;
+            var inDataCache = waitingReservation.IsInDateCache;
+            var blockNum = waitingReservation.BlockLabel;
+            var found = false;
+            var reservations = CoreZero.Reservations;
+            foreach (var reservation in reservations)
+            {
+                if (usingBus && reservation.IsUsingBus)
+                {
+                    // We then check if they are using the same cache
+                    if (inDataCache != reservation.IsInDateCache) continue;
+                    found = true;
+                    break;
+                }
+
+                // Check if block labels match
+                if (blockNum != reservation.BlockLabel || inDataCache != reservation.IsInDateCache) continue;
+                found = true;
+                break;
+            }
+            return found;
         }
 
         private void LoadContextMainThread(Core core)
