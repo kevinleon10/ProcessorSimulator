@@ -45,16 +45,14 @@ namespace ProcessorSimulator.core
         {
             Context = context;
             var programCounter = Context.ProgramCounter;
-
-            //Instruction fetch
-            InstructionRegister = LoadInstruction(programCounter);
             
             //Execute every instruction in the thread until it obtains an end instruction
-            while (ExecuteInstruction(InstructionRegister))
+            do
             {
-                programCounter += Constants.BytesInWord;
+                //Instruction fetch
                 InstructionRegister = LoadInstruction(programCounter);
-            }
+                programCounter += Constants.BytesInWord;
+            } while (ExecuteInstruction(InstructionRegister));
 
         }
 
