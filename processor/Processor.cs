@@ -8,16 +8,33 @@ using ProcessorSimulator.memory;
 
 namespace ProcessorSimulator.processor
 {
-    public class Processor
+    public sealed class Processor
     {
-        public Processor(int quantum)
+        private static readonly Processor instance = new Processor();
+
+        // Explicit static constructor to tell C# compiler
+        // not to mark type as beforefieldinit
+        static Processor()
+        {
+        }
+
+        private Processor()
         {
             Clock = 0;
             ClockBarrier = new Barrier(3);
             ProcessorBarrier = new Barrier(3);
             ContextQueue = new Queue<Context>();
-            Quantum = quantum;
+            Quantum = 0;
             InitializeStructures();
+        }
+
+        //Singleton instance
+        public static Processor Instance
+        {
+            get
+            {
+                return instance;
+            }
         }
 
         public Thread CoreZeroThreadA { get; private set; }
@@ -123,13 +140,14 @@ namespace ProcessorSimulator.processor
              * At this point the instruction block is ready.
              * Now, initialize the Memory structure.
              */
-            var memory = new Memory(instructionBlocks, dataBlocks);
+            Memory.Instance.InstructionBlocks = instructionBlocks;
+            Memory.Instance.DataBlocks = dataBlocks;
             
             // Creates the four caches. Two per core
-            var dataCacheZero = new Cache<int>(Constants.CoreZeroCacheSize, memory);
-            var instructionCacheZero = new Cache<Instruction>(Constants.CoreZeroCacheSize, memory);
-            var dataCacheOne = new Cache<int>(Constants.CoreOneCacheSize, memory);
-            var instructionCacheOne = new Cache<Instruction>(Constants.CoreOneCacheSize, memory);
+            var dataCacheZero = new Cache<int>(Constants.CoreZeroCacheSize);
+            var instructionCacheZero = new Cache<Instruction>(Constants.CoreZeroCacheSize);
+            var dataCacheOne = new Cache<int>(Constants.CoreOneCacheSize);
+            var instructionCacheOne = new Cache<Instruction>(Constants.CoreOneCacheSize);
             
             // Set each cache with the other cache connected to it.
             dataCacheZero.OtherCache = dataCacheOne;

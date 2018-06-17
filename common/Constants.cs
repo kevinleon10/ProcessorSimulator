@@ -1,6 +1,6 @@
 ﻿namespace ProcessorSimulator.common
 {
-    public class Constants
+    public static class Constants
     {
         public const int InvalidLabel = -1;
         public const int WordsInBlock = 4;
@@ -13,6 +13,7 @@
         public const int CoreOneCacheSize  = 4;
         public const int NumberOfThreadsToLoad = 6;
         public const int NotRunningAnyThread = -1;
+        public const int CyclesMemory = 40;
         public const string FilePath = "hilillos/";
         public const string FileExtension = ".txt";
     }

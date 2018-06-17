@@ -8,12 +8,13 @@ using ProcessorSimulator.processor;
 
 namespace ProcessorSimulator
 {
-    internal class Program
+    internal static class Program
     {
         public static void Main(string[] args)
         {
-            var processor = new Processor(10);
+            Processor.Instance.Quantum = 10;
             Console.WriteLine("Hello world!");
+            Console.WriteLine(Processor.Instance.Quantum);
         }
         
     }

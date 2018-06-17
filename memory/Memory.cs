@@ -3,12 +3,27 @@ using ProcessorSimulator.common;
 
 namespace ProcessorSimulator.memory
 {
-    public class Memory
+    public sealed class Memory
     {
-        public Memory(Block<Instruction>[] instructionBlocks, Block<int>[] dataBlocks)
+        private static readonly Memory instance = new Memory();
+
+        // Explicit static constructor to tell C# compiler
+        // not to mark type as beforefieldinit
+        static Memory()
         {
-            InstructionBlocks = instructionBlocks;
-            DataBlocks = dataBlocks;
+        }
+
+        private Memory()
+        {
+        }
+
+        //Singleton instance
+        public static Memory Instance
+        {
+            get
+            {
+                return instance;
+            }
         }
 
         public Block<Instruction>[] InstructionBlocks { get; set; }
@@ -23,7 +38,7 @@ namespace ProcessorSimulator.memory
         
         public Block<Instruction> GetInstructionBlock(int address)
         {
-            var position = (address+Constants.BlocksInMemory) / Constants.BytesInBlock;
+            var position = (address-(Constants.DataBlocksInMemory*Constants.BytesInBlock)) / Constants.BytesInBlock;
             return InstructionBlocks[position];
         }
         

@@ -3,6 +3,8 @@ using System.Threading;
 using ProcessorSimulator.block;
 using ProcessorSimulator.cache;
 using ProcessorSimulator.common;
+using ProcessorSimulator.memory;
+using ProcessorSimulator.processor;
 
 namespace ProcessorSimulator.core
 {
@@ -61,7 +63,7 @@ namespace ProcessorSimulator.core
             Console.WriteLine("Block number in memory: " + blockNumberInMemory);
             Console.WriteLine("Word number in block: " + wordNumberInBlock);
             var instruction = new Instruction();
-            var blockNumberInCache = blockNumberInMemory % Constants.CoreOneCacheSize;
+            var blockNumberInCache = blockNumberInMemory % InstructionCache.CacheSize;
             Console.WriteLine("Block number in cache: " + blockNumberInCache);
             var hasGottenBlock = false;
             //while it has not gotten the block it continues asking for
@@ -73,27 +75,60 @@ namespace ProcessorSimulator.core
                     {
                         hasGottenBlock = true;
                         //if the label matches with the block number
-                        var localBlock = InstructionCache.Blocks[blockNumberInCache];
-                        if (localBlock.Label == blockNumberInMemory)
+                        if (InstructionCache.Blocks[blockNumberInCache].Label == blockNumberInMemory)
                         {
                             instruction = InstructionCache.Blocks[blockNumberInCache].Words[wordNumberInBlock];
                             Console.WriteLine("I could take the block");
                         }
                         else
                         {
-                            var blockNumberInOtherCache = blockNumberInMemory % Constants.CoreZeroCacheSize;
-                            var hasGottenOtherBlock = false;
-                            while (!hasGottenOtherBlock)
+                            var blockNumberInOtherCache = blockNumberInMemory % InstructionCache.OtherCache.CacheSize;
+                            var hasGottenBus = false;
+                            while (!hasGottenBus)
                             {
-                                if (Monitor.TryEnter(InstructionCache.OtherCache.Bus))
+                                if (Monitor.TryEnter(InstructionBus.Instance))
                                 {
                                     try
                                     {
+                                        hasGottenBus = true;
+                                        Processor.Instance.ClockBarrier.SignalAndWait();
+                                        var hasGottenOtherBlock = false;
+                                        while (!hasGottenOtherBlock)
+                                        {
+                                            if (Monitor.TryEnter(InstructionCache.OtherCache.Blocks[blockNumberInOtherCache]))
+                                            {
+                                                try
+                                                {
+                                                    hasGottenOtherBlock = true;
+                                                    Processor.Instance.ClockBarrier.SignalAndWait();
+                                                    if (InstructionCache.OtherCache.Blocks[blockNumberInOtherCache].Label == blockNumberInMemory)
+                                                    {
+                                                        InstructionCache.Blocks[blockNumberInCache].Words[wordNumberInBlock] = InstructionCache.OtherCache.Blocks[blockNumberInOtherCache].Words[wordNumberInBlock];
+                                                        instruction = InstructionCache.Blocks[blockNumberInCache].Words[wordNumberInBlock];
+                                                        Processor.Instance.ClockBarrier.SignalAndWait();
+                                                        Console.WriteLine("I could take the block from the other cache");
+                                                    }
+                                                    else
+                                                    {
+                                                        InstructionCache.Blocks[blockNumberInCache].Words = Memory.Instance.GetInstructionBlock(programCounter).Words;
+                                                        instruction = InstructionCache.Blocks[blockNumberInCache].Words[wordNumberInBlock];
+                                                        for (int i = 0; i < Constants.CyclesMemory; i++)
+                                                        {
+                                                            Processor.Instance.ClockBarrier.SignalAndWait();
+                                                        }
+                                                    }
+                                                }
+                                                finally
+                                                {
+                                                    Monitor.Exit(InstructionCache.OtherCache.Blocks[blockNumberInOtherCache]);
+                                                }
+                                            }
+                                        }
                                     }
                                     finally
                                     {
                                         // Ensure that the lock is released.
-                                        Monitor.Exit(InstructionCache.OtherCache.Bus);
+                                        Monitor.Exit(InstructionBus.Instance);
                                     }
                                 }
                             }

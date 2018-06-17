@@ -43,6 +43,8 @@
     <Compile Include="block\CacheBlock.cs" />
     <Compile Include="block\Instruction.cs" />
     <Compile Include="cache\Cache.cs" />
+    <Compile Include="cache\DataBus.cs" />
+    <Compile Include="cache\InstructionBus.cs" />
     <Compile Include="common\Constants.cs" />
     <Compile Include="core\Context.cs" />
     <Compile Include="core\Core.cs" />

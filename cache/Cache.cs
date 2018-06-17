@@ -8,10 +8,9 @@ namespace ProcessorSimulator.cache
 {
     public class Cache<T>
     {
-        public Cache(int cacheSize, Memory memory)
+        public Cache(int cacheSize)
         {
             CacheSize = cacheSize;
-            Memory = memory;
             
             // Fill up the block array with null values
             Blocks = new CacheBlock<T>[cacheSize];
@@ -29,17 +28,7 @@ namespace ProcessorSimulator.cache
         public Cache<T> OtherCache { get; set; }
 
         public int CacheSize { get; set; }
-
-        public Memory Memory { get; set; }
         
         public CacheBlock<T>[] Blocks { get; set; }
-        
-        public Object Bus { get; set; }
-        
-        public void WriteBlock(Block<T> block, int position)
-        {
-            //TODO revisar si solo se escribe una palabra
-        }
-
     }
 }
