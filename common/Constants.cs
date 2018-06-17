@@ -1,9 +1,12 @@
-﻿namespace ProcessorSimulator.common
+﻿using System.Security.Policy;
+
+namespace ProcessorSimulator.common
 {
     public static class Constants
     {
         public const int InvalidLabel = -1;
         public const int WordsInBlock = 4;
+        public const int BytesInWord = 4;
         public const int BytesInBlock = 16;
         public const int BlocksInMemory = 64;
         public const int DataBlocksInMemory = 24;
