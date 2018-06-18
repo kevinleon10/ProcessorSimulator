@@ -363,5 +363,24 @@ namespace ProcessorSimulator.core
 
             return wordData;
         }
+
+        private void StoreData(int address)
+        {
+            var blockNumberInMemory = GetBlockNumberInMemory(address);
+            var wordNumberInBlock = GetWordNumberInBlock(address);
+            Console.WriteLine("Block number in memory: " + blockNumberInMemory);
+            Console.WriteLine("Word number in block: " + wordNumberInBlock);
+            var wordData = 0;
+            var blockNumberInCache = blockNumberInMemory % DataCache.CacheSize;
+            Console.WriteLine("Block number in cache: " + blockNumberInCache);
+            var hasFinishedLoad = false;
+            while (!hasFinishedLoad)
+            {
+                if (// Reservada)
+                {
+                    
+                }
+            }
+        }
     }
 }
