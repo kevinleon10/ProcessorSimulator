@@ -10,10 +10,9 @@ namespace ProcessorSimulator.processor
 {
     public sealed class Processor
     {
-        
         private static volatile Processor _instance = null;
         private static readonly object Padlock = new object();
- 
+
         private Processor()
         {
             Clock = 0;
@@ -30,21 +29,21 @@ namespace ProcessorSimulator.processor
             {
                 if (_instance == null)
                 {
-                    lock(Padlock)
+                    lock (Padlock)
                     {
                         if (_instance == null)
                             _instance = new Processor();
                     }
                 }
- 
+
                 return _instance;
             }
         }
 
         public Thread CoreZeroThreadA { get; private set; }
-        
+
         public Thread CoreZeroThreadB { get; private set; }
-        
+
         public Thread CoreOneThread { get; private set; }
 
         public DobleCore CoreZero { get; set; }
@@ -58,9 +57,9 @@ namespace ProcessorSimulator.processor
         public Queue<Context> ContextQueue { get; set; }
 
         public int Quantum { get; set; }
-        
+
         public Barrier ProcessorBarrier { get; set; }
-        
+
         private void InitializeStructures()
         {
             /** Initialize the data block of main Memory **/
@@ -72,9 +71,10 @@ namespace ProcessorSimulator.processor
                 {
                     words[j] = Constants.DefaultDataValue;
                 }
+
                 dataBlocks[i] = new Block<int>(words);
             }
-            
+
             /* Now we initialize the instruction block of main memory and we fill up the context queue*/
             var pc = 0;
             var blockNum = 0;
@@ -87,12 +87,12 @@ namespace ProcessorSimulator.processor
                 ContextQueue.Enqueue(new Context(pc, i));
                 var filePath = Constants.FilePath + i + Constants.FileExtension;
                 string line;
-                
+
                 // Read the file and display it line by line.  
                 var file = new System.IO.StreamReader(filePath);
                 const char delimiter = ' '; // Whitespace.
-                while((line = file.ReadLine()) != null)  
-                {  
+                while ((line = file.ReadLine()) != null)
+                {
                     // Get instruction from line
                     var numberStrings = line.Split(delimiter);
                     var opCode = int.Parse(numberStrings[0]);
@@ -113,7 +113,7 @@ namespace ProcessorSimulator.processor
                     instructionBlocks[blockNum++] = new Block<Instruction>(instructionArray);
                     wordNum = 0;
                     instructionArray = null;
-                }  
+                }
 
                 file.Close();
             }
@@ -126,6 +126,7 @@ namespace ProcessorSimulator.processor
                 {
                     instructionArray[i] = new Instruction();
                 }
+
                 instructionBlocks[blockNum++] = new Block<Instruction>(instructionArray);
             }
 
@@ -137,6 +138,7 @@ namespace ProcessorSimulator.processor
                 {
                     instructionArray[j] = new Instruction();
                 }
+
                 instructionBlocks[i] = new Block<Instruction>(instructionArray);
             }
 
@@ -146,22 +148,22 @@ namespace ProcessorSimulator.processor
              */
             Memory.Instance.InstructionBlocks = instructionBlocks;
             Memory.Instance.DataBlocks = dataBlocks;
-            
+
             // Creates the four caches. Two per core
             var dataCacheZero = new Cache<int>(Constants.CoreZeroCacheSize);
             var instructionCacheZero = new Cache<Instruction>(Constants.CoreZeroCacheSize);
             var dataCacheOne = new Cache<int>(Constants.CoreOneCacheSize);
             var instructionCacheOne = new Cache<Instruction>(Constants.CoreOneCacheSize);
-            
+
             // Set each cache with the other cache connected to it.
             dataCacheZero.OtherCache = dataCacheOne;
             dataCacheOne.OtherCache = dataCacheZero;
             instructionCacheZero.OtherCache = instructionCacheOne;
             instructionCacheOne.OtherCache = instructionCacheZero;
-            
+
             // Creates the two cores of the processor
             CoreOne = new Core(instructionCacheOne, dataCacheOne);
-            CoreZero = new DobleCore(instructionCacheZero, dataCacheZero);    
+            CoreZero = new DobleCore(instructionCacheZero, dataCacheZero);
         }
 
         public void Check()
@@ -191,17 +193,18 @@ namespace ProcessorSimulator.processor
                 CoreZeroThreadA, CoreZeroThreadB);
             CoreZero.ThreadStatus = statuses[0];
             CoreZero.ThreadStatusTwo = statuses[1];
-            
+
             statuses = CheckIfSolvedCacheFail(CoreZero.ThreadStatusTwo, CoreZero.ThreadStatus, CoreZero.ContextTwo,
                 CoreZeroThreadB, CoreZeroThreadA);
             CoreZero.ThreadStatusTwo = statuses[0];
             CoreZero.ThreadStatus = statuses[1];
-            
-            
+
+
             // Check for reservations, and resume waiting threads if the right conditions hold.
             if (CoreZero.ThreadStatus == ThreadStatus.Waiting)
             {
-                var thStatuses = checkForWaitingThreads(CoreZero.Context, CoreZero.ThreadStatusTwo, CoreZeroThreadA, CoreZeroThreadB);
+                var thStatuses = checkForWaitingThreads(CoreZero.Context, CoreZero.ThreadStatusTwo, CoreZeroThreadA,
+                    CoreZeroThreadB);
                 if (thStatuses != null)
                 {
                     CoreZero.ThreadStatus = thStatuses[0];
@@ -211,23 +214,22 @@ namespace ProcessorSimulator.processor
 
             if (CoreZero.ThreadStatusTwo == ThreadStatus.Waiting)
             {
-                var thStatuses = checkForWaitingThreads(CoreZero.ContextTwo, CoreZero.ThreadStatus, CoreZeroThreadB, CoreZeroThreadA);
+                var thStatuses = checkForWaitingThreads(CoreZero.ContextTwo, CoreZero.ThreadStatus, CoreZeroThreadB,
+                    CoreZeroThreadA);
                 if (thStatuses != null)
                 {
                     CoreZero.ThreadStatus = thStatuses[0];
                     CoreZero.ThreadStatusTwo = thStatuses[1];
                 }
             }
-            
+
             // TODO Check for Cache failed threads
-            
+
             // TODO Lastly check for ending threads
-            
-
-
         }
 
-        private ThreadStatus[] checkForWaitingThreads(Context context, ThreadStatus oStatus, Thread threadA, Thread threadB)
+        private ThreadStatus[] checkForWaitingThreads(Context context, ThreadStatus oStatus, Thread threadA,
+            Thread threadB)
         {
             ThreadStatus baseStatus;
             ThreadStatus oThreadStatus;
@@ -243,7 +245,7 @@ namespace ProcessorSimulator.processor
 
             // If the reservation that caused to the thread to wait is still there then we can not resume yet.
             if (FindBlockingReservation(waitingCause)) return null;
-            
+
             // Waiting reservation is now absent, we then resume the thread.
             // If the other thread is running but we have priority
             if (context.HasPriority)
@@ -258,6 +260,7 @@ namespace ProcessorSimulator.processor
                 baseStatus = ThreadStatus.Stopped;
                 oThreadStatus = oStatus;
             }
+
             ThreadStatus[] statuses = {baseStatus, oThreadStatus};
             return statuses;
         }
@@ -284,6 +287,7 @@ namespace ProcessorSimulator.processor
                 found = true;
                 break;
             }
+
             return found;
         }
 
@@ -309,8 +313,9 @@ namespace ProcessorSimulator.processor
             core.ContextTwo = newContext;
         }
 
-        private ThreadStatus[] CheckIfSolvedCacheFail(ThreadStatus baseStatus, ThreadStatus otherStatus, Context baseContext,
-                    Thread baseThread, Thread otherThread)
+        private ThreadStatus[] CheckIfSolvedCacheFail(ThreadStatus baseStatus, ThreadStatus otherStatus,
+            Context baseContext,
+            Thread baseThread, Thread otherThread)
         {
             if (baseStatus == ThreadStatus.SolvedCacheFail)
             {
@@ -341,15 +346,13 @@ namespace ProcessorSimulator.processor
                     baseStatus = ThreadStatus.Running;
                 }
             }
+
             ThreadStatus[] threadStatuses = {baseStatus, otherStatus};
             return threadStatuses;
         }
-        
+
         public void RunSimulation()
         {
-            
         }
-
     }
-    
 }

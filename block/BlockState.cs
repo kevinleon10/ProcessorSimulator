@@ -2,6 +2,8 @@
 {
     public enum BlockState
     {
-        Shared, Invalid, Modified
+        Shared,
+        Invalid,
+        Modified
     }
 }

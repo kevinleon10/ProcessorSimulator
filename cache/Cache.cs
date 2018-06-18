@@ -11,7 +11,7 @@ namespace ProcessorSimulator.cache
         public Cache(int cacheSize)
         {
             CacheSize = cacheSize;
-            
+
             // Fill up the block array with null values
             Blocks = new CacheBlock<T>[cacheSize];
             for (var i = 0; i < cacheSize; i++)
@@ -21,14 +21,15 @@ namespace ProcessorSimulator.cache
                 {
                     words[j] = default(T);
                 }
+
                 Blocks[i] = new CacheBlock<T>(words);
             }
-        }    
+        }
 
         public Cache<T> OtherCache { get; set; }
 
         public int CacheSize { get; set; }
-        
+
         public CacheBlock<T>[] Blocks { get; set; }
     }
 }

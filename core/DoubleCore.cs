@@ -22,8 +22,7 @@ namespace ProcessorSimulator.core
         public int RemainingThreadCyclesTwo { get; set; }
 
         public ThreadStatus ThreadStatusTwo { get; set; }
-        
-        public List<Reservation> Reservations { get; set; }
 
+        public List<Reservation> Reservations { get; set; }
     }
 }

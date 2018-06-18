@@ -4,22 +4,24 @@
     {
         private static volatile InstructionBus _instance = null;
         private static readonly object Padlock = new object();
- 
-        private InstructionBus() {}
- 
+
+        private InstructionBus()
+        {
+        }
+
         public static InstructionBus Instance
         {
             get
             {
                 if (_instance == null)
                 {
-                    lock(Padlock)
+                    lock (Padlock)
                     {
                         if (_instance == null)
                             _instance = new InstructionBus();
                     }
                 }
- 
+
                 return _instance;
             }
         }

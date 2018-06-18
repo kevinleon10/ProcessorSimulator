@@ -31,26 +31,22 @@ namespace ProcessorSimulator.memory
 
         public Block<int>[] DataBlocks { get; set; }
 
-        public Block<int> GetDataBlock(int address)
+        public Block<int> LoadDataBlock(int address)
         {
             var position = address / Constants.BytesInBlock;
             return DataBlocks[position];
         }
         
-        public Block<Instruction> GetInstructionBlock(int address)
+        public Block<Instruction> LoadInstructionBlock(int address)
         {
-            var position = (address-(Constants.DataBlocksInMemory*Constants.BytesInBlock)) / Constants.BytesInBlock;
+            var position = (address-Constants.BytesInMemoryDataBlocks) / Constants.BytesInBlock;
             return InstructionBlocks[position];
         }
         
-        public void WriteDataBlock(int address)
+        public void StoreDataBlock(int address, int[] words)
         {
-            //TODO hacer operacion
-        }
-        
-        public void WriteInstructionBlock(int address)
-        {
-            //TODO hacer operacion
+            var position = address / Constants.BytesInBlock;
+            DataBlocks[position].Words = words;
         }
     }
 }

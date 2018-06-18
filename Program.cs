@@ -16,6 +16,5 @@ namespace ProcessorSimulator
             Console.WriteLine("Hello world!");
             Console.WriteLine(Processor.Instance.Quantum);
         }
-        
     }
 }

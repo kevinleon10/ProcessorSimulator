@@ -5,7 +5,7 @@ namespace ProcessorSimulator.block
 {
     public class CacheBlock<T> : Block<T>
     {
-        public CacheBlock(T[] words) :base(words)
+        public CacheBlock(T[] words) : base(words)
         {
             Label = Constants.InvalidLabel;
             BlockState = BlockState.Invalid;
