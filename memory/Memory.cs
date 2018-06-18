@@ -5,24 +5,25 @@ namespace ProcessorSimulator.memory
 {
     public sealed class Memory
     {
-        private static readonly Memory instance = new Memory();
-
-        // Explicit static constructor to tell C# compiler
-        // not to mark type as beforefieldinit
-        static Memory()
-        {
-        }
-
-        private Memory()
-        {
-        }
-
-        //Singleton instance
+        private static volatile Memory _instance = null;
+        private static readonly object Padlock = new object();
+ 
+        private Memory() {}
+ 
         public static Memory Instance
         {
             get
             {
-                return instance;
+                if (_instance == null)
+                {
+                    lock(Padlock)
+                    {
+                        if (_instance == null)
+                            _instance = new Memory();
+                    }
+                }
+ 
+                return _instance;
             }
         }
 

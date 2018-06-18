@@ -10,14 +10,10 @@ namespace ProcessorSimulator.processor
 {
     public sealed class Processor
     {
-        private static readonly Processor instance = new Processor();
-
-        // Explicit static constructor to tell C# compiler
-        // not to mark type as beforefieldinit
-        static Processor()
-        {
-        }
-
+        
+        private static volatile Processor _instance = null;
+        private static readonly object Padlock = new object();
+ 
         private Processor()
         {
             Clock = 0;
@@ -28,12 +24,20 @@ namespace ProcessorSimulator.processor
             InitializeStructures();
         }
 
-        //Singleton instance
         public static Processor Instance
         {
             get
             {
-                return instance;
+                if (_instance == null)
+                {
+                    lock(Padlock)
+                    {
+                        if (_instance == null)
+                            _instance = new Processor();
+                    }
+                }
+ 
+                return _instance;
             }
         }
 

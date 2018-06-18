@@ -2,23 +2,25 @@
 {
     public sealed class InstructionBus
     {
-        private static readonly InstructionBus instance = new InstructionBus();
-
-        // Explicit static constructor to tell C# compiler
-        // not to mark type as beforefieldinit
-        static InstructionBus()
-        {
-        }
-
-        private InstructionBus()
-        {
-        }
-
+        private static volatile InstructionBus _instance = null;
+        private static readonly object Padlock = new object();
+ 
+        private InstructionBus() {}
+ 
         public static InstructionBus Instance
         {
             get
             {
-                return instance;
+                if (_instance == null)
+                {
+                    lock(Padlock)
+                    {
+                        if (_instance == null)
+                            _instance = new InstructionBus();
+                    }
+                }
+ 
+                return _instance;
             }
         }
     }

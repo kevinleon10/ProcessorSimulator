@@ -2,23 +2,25 @@
 {
     public sealed class DataBus
     {
-        private static readonly DataBus instance = new DataBus();
-
-        // Explicit static constructor to tell C# compiler
-        // not to mark type as beforefieldinit
-        static DataBus()
-        {
-        }
-
-        private DataBus()
-        {
-        }
-
+        private static volatile DataBus _instance = null;
+        private static readonly object Padlock = new object();
+ 
+        private DataBus() {}
+ 
         public static DataBus Instance
         {
             get
             {
-                return instance;
+                if (_instance == null)
+                {
+                    lock(Padlock)
+                    {
+                        if (_instance == null)
+                            _instance = new DataBus();
+                    }
+                }
+ 
+                return _instance;
             }
         }
     }
