@@ -21,7 +21,25 @@ namespace ProcessorSimulator.processor
             ContextQueue = new Queue<Context>();
             Quantum = 0;
             contextList = new List<Context>();
+            CoreZeroThreadA = new Thread(StartMainThreadCoreZero);
+            CoreZeroThreadB = new Thread(StartSecThreadCoreZero);
+            CoreOneThread = new Thread(StartCoreOne);
             InitializeStructures();
+        }
+
+        private void StartMainThreadCoreZero()
+        {
+            CoreZero.StartExecution(CoreZero.Context); // TODO Cambiar cuando hayan cambiado startExecution 
+        }
+
+        private void StartSecThreadCoreZero()
+        {
+            // TODO Falta startExecution de la clase Double Core
+        }
+
+        private void StartCoreOne()
+        {
+            CoreOne.StartExecution(CoreOne.Context); // TODO Cambiar cuando hayan cambiado startExecution
         }
 
         public static Processor Instance
@@ -174,20 +192,15 @@ namespace ProcessorSimulator.processor
             // Check if there are threads that have ended execution
             if (CoreZero.ThreadStatus == ThreadStatus.Ended)
             {
-                var haveThreadsLeft = LoadNewContextMainThread(CoreZero);
-                if (!haveThreadsLeft)
-                {
-                    CoreZero.ThreadStatus = ThreadStatus.Dead;
-                    CoreZeroThreadA.Suspend();
-                }
+                LoadNewContextMainThread(CoreZero, CoreZeroThreadA);
             }
             if (CoreOne.ThreadStatus == ThreadStatus.Ended)
             {
-                LoadNewContextMainThread(CoreOne);
+                LoadNewContextMainThread(CoreOne, CoreOneThread);
             }
             if (CoreZero.ThreadStatusTwo == ThreadStatus.Ended)
             {
-                LoadNewContextMainThread(CoreZero);
+                LoadNewContextSecThread(CoreZero, CoreZeroThreadB);
             }
             
             
@@ -198,18 +211,17 @@ namespace ProcessorSimulator.processor
                 // Set the other context as the one with priority
                 CoreZero.ContextTwo.HasPriority = true;
             }
-
             if (CoreOne.RemainingThreadCycles == 0)
             {
                 SwapContextMainThread(CoreOne);
             }
-
             if (CoreZero.RemainingThreadCyclesTwo == 0)
             {
                 SwapContextSecThread(CoreZero);
                 // Set the other context as the one with priority
                 CoreZero.Context.HasPriority = true;
             }
+            
 
             // Check if either thread in Core Zero has just resolved a Cache Fail
             var statuses = CheckIfSolvedCacheFail(CoreZero.ThreadStatus, CoreZero.ThreadStatusTwo, CoreZero.Context,
@@ -226,7 +238,7 @@ namespace ProcessorSimulator.processor
             // Check for reservations, and resume waiting threads if the right conditions hold.
             if (CoreZero.ThreadStatus == ThreadStatus.Waiting)
             {
-                var thStatuses = checkForWaitingThreads(CoreZero.Context, CoreZero.ThreadStatusTwo, CoreZeroThreadA,
+                var thStatuses = CheckForWaitingThreads(CoreZero.Context, CoreZero.ThreadStatusTwo, CoreZeroThreadA,
                     CoreZeroThreadB);
                 if (thStatuses != null)
                 {
@@ -234,10 +246,9 @@ namespace ProcessorSimulator.processor
                     CoreZero.ThreadStatusTwo = thStatuses[1];
                 }
             }
-
             if (CoreZero.ThreadStatusTwo == ThreadStatus.Waiting)
             {
-                var thStatuses = checkForWaitingThreads(CoreZero.ContextTwo, CoreZero.ThreadStatus, CoreZeroThreadB,
+                var thStatuses = CheckForWaitingThreads(CoreZero.ContextTwo, CoreZero.ThreadStatus, CoreZeroThreadB,
                     CoreZeroThreadA);
                 if (thStatuses != null)
                 {
@@ -246,30 +257,65 @@ namespace ProcessorSimulator.processor
                 }
             }
 
-            // TODO Check for Cache failed threads
+            // If there is a Cache fail in the main thread of core zero we might have to start another thread
+            if (CoreZero.ThreadStatus == ThreadStatus.CacheFail)
+            {
+                // Check if there is no other thread running, and there are available threads in the context queue
+                if (CoreZero.ThreadStatusTwo == ThreadStatus.Dead && ContextQueue.Count > 0)
+                {
+                    CoreZero.ContextTwo = ContextQueue.Dequeue();
+                    CoreZero.ContextTwo.NumberOfCycles = Quantum;
+                    CoreZero.ThreadStatusTwo = ThreadStatus.Running;
+                    CoreZeroThreadB.Start();
+                    ClockBarrier.AddParticipant();
+                    ProcessorBarrier.AddParticipant();
+                }
+            }
         }
 
-        private bool LoadNewContextMainThread(Core core)
+        private void LoadNewContextMainThread(Core core, Thread thread)
         {
             var oldContext = core.Context;
             contextList.Add(oldContext); // Adds the ending context for statistic purposes
-            if (ContextQueue.Count == 0)    return false;
-            var newContext = ContextQueue.Dequeue();
-            newContext.NumberOfCycles = Quantum;
-            core.Context = newContext; // Assigns a new context to the core
-            return true;
+            var newContext = GetNewContext();
+            if (newContext != null)
+            {
+                core.Context = newContext;
+            }
+            else
+            {
+                // No more threads to run, so high level threads finishes execution 
+                core.ThreadStatus = ThreadStatus.Dead;
+                FinalizeHighLevelThread(thread);
+            }
         }
 
-        private bool LoadNewContextSecThread(DobleCore core)
+        private void LoadNewContextSecThread(DobleCore core, Thread thread)
         {
-            var newContext = ContextQueue.Dequeue();
-            newContext.NumberOfCycles = Quantum;
-            contextList.Add(core.ContextTwo); // Adds the ending context for statistic purposes
-            core.ContextTwo = newContext; // Assigns a new context to the core
-            return true;
+            var oldContext = core.ContextTwo;
+            contextList.Add(oldContext); // Adds the ending context for statistic purposes
+            var newContext = GetNewContext();
+            if (newContext != null)
+            {
+                core.ContextTwo = newContext;
+            }
+            else
+            {
+                // No more threads to run, so high level threads finishes execution 
+                core.ThreadStatusTwo = ThreadStatus.Dead;
+                FinalizeHighLevelThread(thread);
+            }
         }
 
-        private ThreadStatus[] checkForWaitingThreads(Context context, ThreadStatus oStatus, Thread threadA,
+        private Context GetNewContext()
+        {
+            if (ContextQueue.Count == 0)    return null;
+            var newContext = ContextQueue.Dequeue();
+            newContext.NumberOfCycles = Quantum;
+            return newContext;
+        }
+
+        private ThreadStatus[] CheckForWaitingThreads(Context context, ThreadStatus oStatus, Thread threadA,
             Thread threadB)
         {
             ThreadStatus baseStatus;
@@ -292,9 +338,9 @@ namespace ProcessorSimulator.processor
             if (context.HasPriority)
             {
                 oThreadStatus = ThreadStatus.Stopped;
-                threadB.Suspend();
+                StopHighLevelThread(threadB);
                 baseStatus = ThreadStatus.Running;
-                threadA.Resume();
+                ResumeHighLevelThread(threadA);
             }
             else
             {
@@ -374,7 +420,7 @@ namespace ProcessorSimulator.processor
                         // Secondary thread must be stopped
                         otherStatus = ThreadStatus.Stopped;
                         // Suspends secundary thread
-                        otherThread.Suspend();
+                        StopHighLevelThread(otherThread);
                         // Sets primary thread in the running state
                         baseStatus = ThreadStatus.Running;
                     }
@@ -382,7 +428,7 @@ namespace ProcessorSimulator.processor
                     {
                         // Primary thread has no priority, then it must be stopped
                         baseStatus = ThreadStatus.Stopped;
-                        baseThread.Suspend();
+                        ResumeHighLevelThread(baseThread);
                     }
                 }
                 else
@@ -397,8 +443,38 @@ namespace ProcessorSimulator.processor
             return threadStatuses;
         }
 
+        private void StopHighLevelThread(Thread thread)
+        {
+            thread.Suspend();
+            ClockBarrier.RemoveParticipant();
+            ProcessorBarrier.RemoveParticipant();
+        }
+
+        private void ResumeHighLevelThread(Thread thread)
+        {
+            thread.Resume();
+            ClockBarrier.AddParticipant();
+            ProcessorBarrier.AddParticipant();
+        }
+
+        private void FinalizeHighLevelThread(Thread thread)
+        {
+            thread.Abort();
+            ClockBarrier.RemoveParticipant();
+            ProcessorBarrier.RemoveParticipant();
+        }
+
         public void RunSimulation()
         {
+            CoreZeroThreadA.Start();
+            CoreOneThread.Start();
+            while (ClockBarrier.ParticipantCount > 1)
+            {
+                ClockBarrier.SignalAndWait();
+                Check();
+                ProcessorBarrier.SignalAndWait();
+            }
+            // TODO Imprimir estadisticas y otras cosas
         }
     }
 }
