@@ -54,7 +54,6 @@ namespace ProcessorSimulator.processor
                             _instance = new Processor();
                     }
                 }
-
                 return _instance;
             }
         }
@@ -193,6 +192,8 @@ namespace ProcessorSimulator.processor
             if (CoreZero.ThreadStatus == ThreadStatus.Ended)
             {
                 LoadNewContextMainThread(CoreZero, CoreZeroThreadA);
+                // Set the other context as the one with priority
+                CoreZero.ContextTwo.HasPriority = true;
             }
             if (CoreOne.ThreadStatus == ThreadStatus.Ended)
             {
@@ -201,6 +202,8 @@ namespace ProcessorSimulator.processor
             if (CoreZero.ThreadStatusTwo == ThreadStatus.Ended)
             {
                 LoadNewContextSecThread(CoreZero, CoreZeroThreadB);
+                // Set the other context as the one with priority
+                CoreZero.Context.HasPriority = true;
             }
             
             
@@ -464,17 +467,49 @@ namespace ProcessorSimulator.processor
             ProcessorBarrier.RemoveParticipant();
         }
 
-        public void RunSimulation()
+        public void RunSimulation(bool slowMotion)
         {
             CoreZeroThreadA.Start();
             CoreOneThread.Start();
             while (ClockBarrier.ParticipantCount > 1)
             {
                 ClockBarrier.SignalAndWait();
+                if (slowMotion && Clock % Constants.SlowMotionCycles == 0)
+                {
+                    System.Console.WriteLine("**********************************************************");
+                    System.Console.WriteLine("Clock : " + Clock);
+                    System.Console.WriteLine("Core Zero Main thread number: " + CoreZero.Context.ThreadId);
+                    System.Console.WriteLine("Core Zero Sec thread number: " + CoreZero.ContextTwo.ThreadId);
+                    System.Console.WriteLine("Core One thread number: " + CoreOne.Context.ThreadId);
+                    System.Console.WriteLine("***********************************************************");
+                }
+                Clock++;
                 Check();
                 ProcessorBarrier.SignalAndWait();
             }
-            // TODO Imprimir estadisticas y otras cosas
-        }
+            
+            // At this point the simulation has ended
+            // First display the data contents of main memory
+            System.Console.WriteLine("Displaying Main Memory:");
+            System.Console.Write(Memory.Instance.ToString());
+            System.Console.WriteLine("***********************************************************");
+
+            // Now display Data Caches
+            System.Console.WriteLine("Displaying Data Cache from Core Zero:");
+            System.Console.Write(CoreZero.DataCache.ToString());
+            System.Console.WriteLine("***********************************************************");
+
+            System.Console.WriteLine("Displaying Data Cache from Core One:");
+            System.Console.Write(CoreOne.DataCache.ToString());
+            System.Console.WriteLine("***********************************************************");
+            
+            // Finally display the statistics of each thread
+            System.Console.WriteLine("Displaying statistics for each thread:");
+            foreach (var context in contextList)
+            {
+                System.Console.WriteLine(context.ToString());
+                System.Console.WriteLine("***********************************************************");
+            }
+        }        
     }
 }

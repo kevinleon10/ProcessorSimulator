@@ -1,4 +1,5 @@
-﻿using ProcessorSimulator.block;
+﻿using System.Text;
+using ProcessorSimulator.block;
 using ProcessorSimulator.common;
 
 namespace ProcessorSimulator.memory
@@ -47,6 +48,17 @@ namespace ProcessorSimulator.memory
         {
             var position = address / Constants.BytesInBlock;
             DataBlocks[position].Words = words;
+        }
+
+        public override string ToString()
+        {
+            // Gathers the data blocks of the memory instance.
+            var builder = new StringBuilder();
+            for (var i = 0; i < DataBlocks.Length; i++)
+            {
+                builder.AppendLine("Block number: " + i + " : " + DataBlocks[i]);
+            }
+            return builder.ToString();
         }
     }
 }

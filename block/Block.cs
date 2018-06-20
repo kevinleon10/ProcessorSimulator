@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Linq;
+using System.Text;
 using ProcessorSimulator.common;
 
 namespace ProcessorSimulator.block
@@ -12,7 +14,7 @@ namespace ProcessorSimulator.block
 
         public Block(T[] words)
         {
-            this.Words = words;
+            Words = words;
         }
 
         public T[] Words { get; set; }
@@ -21,6 +23,13 @@ namespace ProcessorSimulator.block
         {
             T wordData = Words[index];
             return wordData;
+        }
+
+        public override string ToString()
+        {
+            var builder = new StringBuilder();
+            builder = Words.Aggregate(builder, (current, t) => current.Append(" " + t + " "));
+            return builder.ToString();
         }
     }
 }

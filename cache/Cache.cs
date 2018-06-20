@@ -1,8 +1,6 @@
-﻿using System;
-using System.Threading;
+﻿using System.Text;
 using ProcessorSimulator.block;
 using ProcessorSimulator.common;
-using ProcessorSimulator.memory;
 
 namespace ProcessorSimulator.cache
 {
@@ -31,5 +29,15 @@ namespace ProcessorSimulator.cache
         public int CacheSize { get; set; }
 
         public CacheBlock<T>[] Blocks { get; set; }
+
+        public override string ToString()
+        {
+            var builder = new StringBuilder();
+            for (var i = 0; i < Blocks.Length; i++)
+            {
+                builder.AppendLine("Block number: " + i + " : " + Blocks[i]);
+            }
+            return builder.ToString();
+        }
     }
 }
