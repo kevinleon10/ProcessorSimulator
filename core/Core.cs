@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics.Eventing.Reader;
 using System.Threading;
 using ProcessorSimulator.block;
 using ProcessorSimulator.cache;
@@ -93,7 +92,7 @@ namespace ProcessorSimulator.core
                             Processor.Instance.ClockBarrier.SignalAndWait();
                             Processor.Instance.ProcessorBarrier.SignalAndWait();
                             Context.NumberOfCycles++;
-                            Context.NumberOfCycles--;
+                            RemainingThreadCycles--;
                             Console.WriteLine("I could take the block");
                         }
                         else
@@ -137,7 +136,7 @@ namespace ProcessorSimulator.core
                                                         Processor.Instance.ClockBarrier.SignalAndWait();
                                                         Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                         Context.NumberOfCycles++;
-                                                        Context.NumberOfCycles--;
+                                                        RemainingThreadCycles--;
                                                         Console.WriteLine(
                                                             "I could take the block from the other cache");
                                                     }
@@ -157,7 +156,7 @@ namespace ProcessorSimulator.core
                                                         Processor.Instance.ClockBarrier.SignalAndWait();
                                                         Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                         Context.NumberOfCycles++;
-                                                        Context.NumberOfCycles--;
+                                                        RemainingThreadCycles--;
                                                     }
                                                 }
                                                 finally
@@ -291,7 +290,7 @@ namespace ProcessorSimulator.core
                             Processor.Instance.ClockBarrier.SignalAndWait();
                             Processor.Instance.ProcessorBarrier.SignalAndWait();
                             Context.NumberOfCycles++;
-                            Context.NumberOfCycles--;
+                            RemainingThreadCycles--;
                             hasFinishedLoad = true;
                             Console.WriteLine("I could take the block");
                         }
@@ -352,7 +351,7 @@ namespace ProcessorSimulator.core
                                                 Processor.Instance.ClockBarrier.SignalAndWait();
                                                 Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                 Context.NumberOfCycles++;
-                                                Context.NumberOfCycles--;
+                                                RemainingThreadCycles--;
                                                 Console.WriteLine("I could take the block from the other cache");
                                             }
                                             else // It will bring it from memory
@@ -371,7 +370,7 @@ namespace ProcessorSimulator.core
                                                 Processor.Instance.ClockBarrier.SignalAndWait();
                                                 Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                 Context.NumberOfCycles++;
-                                                Context.NumberOfCycles--;
+                                                RemainingThreadCycles--;
                                             }
                                         }
                                         finally
@@ -427,7 +426,7 @@ namespace ProcessorSimulator.core
                             Processor.Instance.ClockBarrier.SignalAndWait();
                             Processor.Instance.ProcessorBarrier.SignalAndWait();
                             Context.NumberOfCycles++;
-                            Context.NumberOfCycles--;
+                            RemainingThreadCycles--;
                             hasFinishedStore = true;
                             Console.WriteLine("I could write the block");
                         }
@@ -479,7 +478,7 @@ namespace ProcessorSimulator.core
                                                 Processor.Instance.ClockBarrier.SignalAndWait();
                                                 Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                 Context.NumberOfCycles++;
-                                                Context.NumberOfCycles--;
+                                                RemainingThreadCycles--;
                                                 hasFinishedStore = true;
                                                 Console.WriteLine("I could write the block");
                                             }
@@ -520,7 +519,7 @@ namespace ProcessorSimulator.core
                                                     Processor.Instance.ClockBarrier.SignalAndWait();
                                                     Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                     Context.NumberOfCycles++;
-                                                    Context.NumberOfCycles--;
+                                                    RemainingThreadCycles--;
                                                     hasFinishedStore = true;
                                                     Console.WriteLine("I could write the block");
                                                 }
