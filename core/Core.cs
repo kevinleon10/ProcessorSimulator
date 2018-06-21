@@ -92,6 +92,7 @@ namespace ProcessorSimulator.core
                             Processor.Instance.ClockBarrier.SignalAndWait();
                             Processor.Instance.ProcessorBarrier.SignalAndWait();
                             Context.NumberOfCycles++;
+                            RemainingThreadCycles--;
                             Console.WriteLine("I could take the block");
                         }
                         else
