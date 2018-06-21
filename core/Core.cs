@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.Eventing.Reader;
 using System.Threading;
 using ProcessorSimulator.block;
 using ProcessorSimulator.cache;
@@ -45,13 +46,13 @@ namespace ProcessorSimulator.core
         {
             Context = context;
             var programCounter = Context.ProgramCounter;
-            
+
 
             //First instruction fetch
             InstructionRegister = LoadInstruction(programCounter);
 
             //Execute every instruction in the thread until it obtains an end instruction
-            while (InstructionRegister.OperationCode != (int)Operation.END)
+            while (InstructionRegister.OperationCode != (int) Operation.END)
             {
                 programCounter += Constants.BytesInWord;
                 ExecuteInstruction(InstructionRegister);
@@ -110,8 +111,6 @@ namespace ProcessorSimulator.core
                                         hasTakenBus = true;
                                         Processor.Instance.ClockBarrier.SignalAndWait();
                                         Processor.Instance.ProcessorBarrier.SignalAndWait();
-                                        Context.NumberOfCycles++;
-                                        Context.NumberOfCycles--;
                                         var hasTakenOtherCacheBlock = false;
                                         // While it has not gotten the other cache block it continues asking for
                                         while (!hasTakenOtherCacheBlock)
@@ -125,8 +124,6 @@ namespace ProcessorSimulator.core
                                                     hasTakenOtherCacheBlock = true;
                                                     Processor.Instance.ClockBarrier.SignalAndWait();
                                                     Processor.Instance.ProcessorBarrier.SignalAndWait();
-                                                    Context.NumberOfCycles++;
-                                                    Context.NumberOfCycles--;
 
                                                     // If the label matches with the block number it will be replaced the current block
                                                     if (InstructionCache.OtherCache.Blocks[blockNumberInOtherCache]
@@ -155,9 +152,12 @@ namespace ProcessorSimulator.core
                                                         {
                                                             Processor.Instance.ClockBarrier.SignalAndWait();
                                                             Processor.Instance.ProcessorBarrier.SignalAndWait();
-                                                            Context.NumberOfCycles++;
-                                                            Context.NumberOfCycles--;
                                                         }
+
+                                                        Processor.Instance.ClockBarrier.SignalAndWait();
+                                                        Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                        Context.NumberOfCycles++;
+                                                        Context.NumberOfCycles--;
                                                     }
                                                 }
                                                 finally
@@ -193,18 +193,19 @@ namespace ProcessorSimulator.core
 
         private void ExecuteInstruction(Instruction actualInstruction)
         {
+            int address;
             switch (actualInstruction.OperationCode)
             {
-                case (int)Operation.JR:
+                case (int) Operation.JR:
                     Context.ProgramCounter = Context.Registers[actualInstruction.Source];
                     break;
 
-                case (int)Operation.JAL:
+                case (int) Operation.JAL:
                     Context.Registers[31] = Context.ProgramCounter;
                     Context.ProgramCounter += actualInstruction.Inmediate;
                     break;
 
-                case (int)Operation.BEQZ:
+                case (int) Operation.BEQZ:
                     if (Context.Registers[actualInstruction.Source] == 0)
                     {
                         Context.ProgramCounter += (4 * actualInstruction.Inmediate);
@@ -212,7 +213,7 @@ namespace ProcessorSimulator.core
 
                     break;
 
-                case (int)Operation.BNEZ:
+                case (int) Operation.BNEZ:
                     if (Context.Registers[actualInstruction.Source] != 0)
                     {
                         Context.ProgramCounter += (4 * actualInstruction.Inmediate);
@@ -220,37 +221,39 @@ namespace ProcessorSimulator.core
 
                     break;
 
-                case (int)Operation.DADDI:
+                case (int) Operation.DADDI:
                     Context.Registers[actualInstruction.Destiny] =
                         Context.Registers[actualInstruction.Source] + actualInstruction.Inmediate;
                     break;
-                case (int)Operation.DMUL:
+                case (int) Operation.DMUL:
                     Context.Registers[actualInstruction.Destiny] =
                         Context.Registers[actualInstruction.Source] +
                         Context.Registers[actualInstruction.Inmediate];
                     break;
-                case (int)Operation.DDIV:
+                case (int) Operation.DDIV:
                     Context.Registers[actualInstruction.Destiny] =
                         Context.Registers[actualInstruction.Source] /
                         Context.Registers[actualInstruction.Inmediate];
                     break;
-                case (int)Operation.DADD:
+                case (int) Operation.DADD:
                     Context.Registers[actualInstruction.Destiny] =
                         Context.Registers[actualInstruction.Source] +
                         Context.Registers[actualInstruction.Inmediate];
                     break;
-                case (int)Operation.DSUB:
+                case (int) Operation.DSUB:
                     Context.Registers[actualInstruction.Destiny] =
                         Context.Registers[actualInstruction.Source] -
                         Context.Registers[actualInstruction.Inmediate];
                     break;
-                case (int)Operation.LW:
-                    var address = Context.Registers[actualInstruction.Source] +
-                                  Context.Registers[actualInstruction.Inmediate];
+                case (int) Operation.LW:
+                    address = Context.Registers[actualInstruction.Source] +
+                              Context.Registers[actualInstruction.Inmediate];
                     Context.Registers[actualInstruction.Destiny] = LoadData(address);
                     break;
-                case (int)Operation.SW:
-                    // TODO STORE
+                case (int) Operation.SW:
+                    address = Context.Registers[actualInstruction.Source] +
+                              Context.Registers[actualInstruction.Inmediate];
+                    StoreData(address, Context.Registers[actualInstruction.Destiny]);
                     break;
             }
         }
@@ -280,10 +283,11 @@ namespace ProcessorSimulator.core
                     try
                     {
                         // If the label matches with the block number and it is not invalid
-                        if (DataCache.Blocks[blockNumberInCache].Label == blockNumberInMemory &&
-                            DataCache.Blocks[blockNumberInCache].BlockState != BlockState.Invalid)
+                        var block = DataCache.Blocks[blockNumberInCache];
+                        if (block.Label == blockNumberInMemory &&
+                            block.BlockState != BlockState.Invalid)
                         {
-                            wordData = DataCache.Blocks[blockNumberInCache].Words[wordNumberInBlock];
+                            wordData = block.Words[wordNumberInBlock];
                             Processor.Instance.ClockBarrier.SignalAndWait();
                             Processor.Instance.ProcessorBarrier.SignalAndWait();
                             Context.NumberOfCycles++;
@@ -300,11 +304,10 @@ namespace ProcessorSimulator.core
                                 {
                                     Processor.Instance.ClockBarrier.SignalAndWait();
                                     Processor.Instance.ProcessorBarrier.SignalAndWait();
-                                    Context.NumberOfCycles++;
-                                    Context.NumberOfCycles--;
                                     // If the label does not match with the block number and it is invalid it wil store the block in memory
-                                    if (DataCache.Blocks[blockNumberInCache].Label != blockNumberInMemory &&
-                                        DataCache.Blocks[blockNumberInCache].BlockState == BlockState.Invalid)
+                                    block = DataCache.Blocks[blockNumberInCache];
+                                    if (block.Label != blockNumberInMemory &&
+                                        block.BlockState == BlockState.Invalid)
                                     {
                                         Memory.Instance.StoreDataBlock(address,
                                             DataCache.Blocks[blockNumberInCache].Words);
@@ -313,8 +316,6 @@ namespace ProcessorSimulator.core
                                         {
                                             Processor.Instance.ClockBarrier.SignalAndWait();
                                             Processor.Instance.ProcessorBarrier.SignalAndWait();
-                                            Context.NumberOfCycles++;
-                                            Context.NumberOfCycles--;
                                         }
                                     }
 
@@ -326,25 +327,21 @@ namespace ProcessorSimulator.core
                                         {
                                             Processor.Instance.ClockBarrier.SignalAndWait();
                                             Processor.Instance.ProcessorBarrier.SignalAndWait();
-                                            Context.NumberOfCycles++;
-                                            Context.NumberOfCycles--;
                                             // If the label matches with the block number it will be replaced the current block
-                                            var currentOtherCacheBlock =
-                                                DataCache.OtherCache.Blocks[blockNumberInOtherCache];
-                                            if (currentOtherCacheBlock.Label ==
+                                            block = DataCache.OtherCache.Blocks[blockNumberInOtherCache];
+                                            if (block.Label ==
                                                 blockNumberInMemory &&
-                                                currentOtherCacheBlock.BlockState ==
+                                                block.BlockState ==
                                                 BlockState.Modified)
                                             {
-                                                DataCache.OtherCache.Blocks[blockNumberInOtherCache].BlockState = BlockState.Shared;
-                                                Memory.Instance.StoreDataBlock(address, currentOtherCacheBlock.Words);
+                                                DataCache.OtherCache.Blocks[blockNumberInOtherCache].BlockState =
+                                                    BlockState.Shared;
+                                                Memory.Instance.StoreDataBlock(address, block.Words);
                                                 // Add forty cycles
                                                 for (var i = 0; i < Constants.CyclesMemory; i++)
                                                 {
                                                     Processor.Instance.ClockBarrier.SignalAndWait();
                                                     Processor.Instance.ProcessorBarrier.SignalAndWait();
-                                                    Context.NumberOfCycles++;
-                                                    Context.NumberOfCycles--;
                                                 }
 
                                                 DataCache.Blocks[blockNumberInCache].Words =
@@ -368,9 +365,8 @@ namespace ProcessorSimulator.core
                                                 {
                                                     Processor.Instance.ClockBarrier.SignalAndWait();
                                                     Processor.Instance.ProcessorBarrier.SignalAndWait();
-                                                    Context.NumberOfCycles++;
-                                                    Context.NumberOfCycles--;
                                                 }
+
                                                 hasFinishedLoad = true;
                                                 Processor.Instance.ClockBarrier.SignalAndWait();
                                                 Processor.Instance.ProcessorBarrier.SignalAndWait();
@@ -406,22 +402,153 @@ namespace ProcessorSimulator.core
             return wordData;
         }
 
-        private void StoreData(int address)
+        private void StoreData(int address, int newData)
         {
             var blockNumberInMemory = GetBlockNumberInMemory(address);
             var wordNumberInBlock = GetWordNumberInBlock(address);
             Console.WriteLine("Block number in memory: " + blockNumberInMemory);
             Console.WriteLine("Word number in block: " + wordNumberInBlock);
-            var wordData = 0;
             var blockNumberInCache = blockNumberInMemory % DataCache.CacheSize;
             Console.WriteLine("Block number in cache: " + blockNumberInCache);
-            var hasFinishedLoad = false;
-            while (!hasFinishedLoad)
+            var hasFinishedStore = false;
+            while (!hasFinishedStore)
             {
-                /*if (// Reservada)
+                // Try lock
+                if (Monitor.TryEnter(DataCache.Blocks[blockNumberInCache]))
                 {
-                    
-                }*/
+                    try
+                    {
+                        // If the label matches with the block number and it is already modified
+                        var block = DataCache.Blocks[blockNumberInCache];
+                        if (block.Label == blockNumberInMemory &&
+                            block.BlockState == BlockState.Modified)
+                        {
+                            DataCache.Blocks[blockNumberInCache].Words[wordNumberInBlock] = newData;
+                            Processor.Instance.ClockBarrier.SignalAndWait();
+                            Processor.Instance.ProcessorBarrier.SignalAndWait();
+                            Context.NumberOfCycles++;
+                            Context.NumberOfCycles--;
+                            hasFinishedStore = true;
+                            Console.WriteLine("I could write the block");
+                        }
+                        else // It tryes to get the bus
+                        {
+                            // Try lock
+                            if (Monitor.TryEnter(DataBus.Instance))
+                            {
+                                try
+                                {
+                                    Processor.Instance.ClockBarrier.SignalAndWait();
+                                    Processor.Instance.ProcessorBarrier.SignalAndWait();
+
+                                    // If the label does not match with the block number and it is modified it will store the block in memory
+                                    block = DataCache.Blocks[blockNumberInCache];
+                                    if (block.Label != blockNumberInMemory &&
+                                        block.BlockState == BlockState.Modified)
+                                    {
+                                        Memory.Instance.StoreDataBlock(address,
+                                            block.Words);
+                                        // Add forty cycles
+                                        for (var i = 0; i < Constants.CyclesMemory; i++)
+                                        {
+                                            Processor.Instance.ClockBarrier.SignalAndWait();
+                                            Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                        }
+                                    }
+
+                                    var blockNumberInOtherCache = blockNumberInMemory % DataCache.OtherCache.CacheSize;
+                                    // Try lock
+                                    if (Monitor.TryEnter(DataCache.OtherCache.Blocks[blockNumberInOtherCache]))
+                                    {
+                                        try
+                                        {
+                                            Processor.Instance.ClockBarrier.SignalAndWait();
+                                            Processor.Instance.ProcessorBarrier.SignalAndWait();
+
+                                            //If it is shared it will invalidate other cache block
+                                            block = DataCache.Blocks[blockNumberInOtherCache];
+                                            if (block.BlockState == BlockState.Shared &&
+                                                block.Label == blockNumberInMemory)
+                                            {
+                                                DataCache.OtherCache.Blocks[blockNumberInOtherCache].BlockState =
+                                                    BlockState.Invalid;
+                                                Context.NumberOfCycles += 2;
+                                                Context.NumberOfCycles -= 2;
+                                                DataCache.Blocks[blockNumberInCache].Words[wordNumberInBlock] = newData;
+                                                DataCache.Blocks[blockNumberInCache].BlockState = BlockState.Modified;
+                                                Processor.Instance.ClockBarrier.SignalAndWait();
+                                                Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                Context.NumberOfCycles++;
+                                                Context.NumberOfCycles--;
+                                                hasFinishedStore = true;
+                                                Console.WriteLine("I could write the block");
+                                            }
+                                            //If it is invalid or it is another label
+                                            else if (block.BlockState == BlockState.Invalid ||
+                                                     block.Label != blockNumberInMemory)
+                                            {
+                                                // If the label matches with the block number and it is modified it will be replaced the current block
+                                                block =
+                                                    DataCache.OtherCache.Blocks[blockNumberInOtherCache];
+                                                if (block.Label ==
+                                                    blockNumberInMemory &&
+                                                    block.BlockState ==
+                                                    BlockState.Modified)
+                                                {
+                                                    DataCache.OtherCache.Blocks[blockNumberInOtherCache].BlockState =
+                                                        BlockState.Shared;
+                                                    Memory.Instance.StoreDataBlock(address, block.Words);
+                                                    // Add forty cycles
+                                                    for (var i = 0; i < Constants.CyclesMemory; i++)
+                                                    {
+                                                        Processor.Instance.ClockBarrier.SignalAndWait();
+                                                        Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                    }
+
+                                                    DataCache.Blocks[blockNumberInCache].Words =
+                                                        Memory.Instance.LoadDataBlock(address).Words;
+                                                    DataCache.Blocks[blockNumberInCache].Words[wordNumberInBlock] =
+                                                        newData;
+                                                    DataCache.Blocks[blockNumberInCache].BlockState = BlockState.Shared;
+
+                                                    //Just for follow the process
+                                                    DataCache.OtherCache.Blocks[blockNumberInOtherCache].BlockState =
+                                                        BlockState.Invalid;
+                                                    DataCache.Blocks[blockNumberInCache].BlockState =
+                                                        BlockState.Modified;
+
+                                                    Processor.Instance.ClockBarrier.SignalAndWait();
+                                                    Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                    Context.NumberOfCycles++;
+                                                    Context.NumberOfCycles--;
+                                                    hasFinishedStore = true;
+                                                    Console.WriteLine("I could write the block");
+                                                }
+                                            }
+                                        }
+                                        finally
+                                        {
+                                            // Ensure that the lock is released.
+                                            Monitor.Exit(DataCache.OtherCache.Blocks[blockNumberInOtherCache]);
+                                        }
+                                    }
+                                }
+                                finally
+                                {
+                                    // Ensure that the lock is released.
+                                    Monitor.Exit(DataBus.Instance);
+                                }
+                            }
+                        }
+
+                        // The critical section.
+                    }
+                    finally
+                    {
+                        // Ensure that the lock is released.
+                        Monitor.Exit(DataCache.Blocks[blockNumberInCache]);
+                    }
+                }
             }
         }
     }
