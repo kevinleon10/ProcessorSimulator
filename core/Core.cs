@@ -45,6 +45,7 @@ namespace ProcessorSimulator.core
         {
             Context = context;
             var programCounter = Context.ProgramCounter;
+            
 
             //First instruction fetch
             InstructionRegister = LoadInstruction(programCounter);
@@ -88,6 +89,10 @@ namespace ProcessorSimulator.core
                         if (InstructionCache.Blocks[blockNumberInCache].Label == blockNumberInMemory)
                         {
                             instruction = InstructionCache.Blocks[blockNumberInCache].Words[wordNumberInBlock];
+                            Processor.Instance.ClockBarrier.SignalAndWait();
+                            Processor.Instance.ProcessorBarrier.SignalAndWait();
+                            Context.NumberOfCycles++;
+                            Context.NumberOfCycles--;
                             Console.WriteLine("I could take the block");
                         }
                         else
@@ -104,6 +109,9 @@ namespace ProcessorSimulator.core
                                     {
                                         hasTakenBus = true;
                                         Processor.Instance.ClockBarrier.SignalAndWait();
+                                        Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                        Context.NumberOfCycles++;
+                                        Context.NumberOfCycles--;
                                         var hasTakenOtherCacheBlock = false;
                                         // While it has not gotten the other cache block it continues asking for
                                         while (!hasTakenOtherCacheBlock)
@@ -116,6 +124,9 @@ namespace ProcessorSimulator.core
                                                 {
                                                     hasTakenOtherCacheBlock = true;
                                                     Processor.Instance.ClockBarrier.SignalAndWait();
+                                                    Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                    Context.NumberOfCycles++;
+                                                    Context.NumberOfCycles--;
 
                                                     // If the label matches with the block number it will be replaced the current block
                                                     if (InstructionCache.OtherCache.Blocks[blockNumberInOtherCache]
@@ -127,6 +138,9 @@ namespace ProcessorSimulator.core
                                                         instruction = InstructionCache.Blocks[blockNumberInCache]
                                                             .Words[wordNumberInBlock];
                                                         Processor.Instance.ClockBarrier.SignalAndWait();
+                                                        Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                        Context.NumberOfCycles++;
+                                                        Context.NumberOfCycles--;
                                                         Console.WriteLine(
                                                             "I could take the block from the other cache");
                                                     }
@@ -140,6 +154,9 @@ namespace ProcessorSimulator.core
                                                         for (var i = 0; i < Constants.CyclesMemory; i++)
                                                         {
                                                             Processor.Instance.ClockBarrier.SignalAndWait();
+                                                            Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                            Context.NumberOfCycles++;
+                                                            Context.NumberOfCycles--;
                                                         }
                                                     }
                                                 }
@@ -267,6 +284,10 @@ namespace ProcessorSimulator.core
                             DataCache.Blocks[blockNumberInCache].BlockState != BlockState.Invalid)
                         {
                             wordData = DataCache.Blocks[blockNumberInCache].Words[wordNumberInBlock];
+                            Processor.Instance.ClockBarrier.SignalAndWait();
+                            Processor.Instance.ProcessorBarrier.SignalAndWait();
+                            Context.NumberOfCycles++;
+                            Context.NumberOfCycles--;
                             hasFinishedLoad = true;
                             Console.WriteLine("I could take the block");
                         }
@@ -278,6 +299,9 @@ namespace ProcessorSimulator.core
                                 try
                                 {
                                     Processor.Instance.ClockBarrier.SignalAndWait();
+                                    Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                    Context.NumberOfCycles++;
+                                    Context.NumberOfCycles--;
                                     // If the label does not match with the block number and it is invalid it wil store the block in memory
                                     if (DataCache.Blocks[blockNumberInCache].Label != blockNumberInMemory &&
                                         DataCache.Blocks[blockNumberInCache].BlockState == BlockState.Invalid)
@@ -288,6 +312,9 @@ namespace ProcessorSimulator.core
                                         for (var i = 0; i < Constants.CyclesMemory; i++)
                                         {
                                             Processor.Instance.ClockBarrier.SignalAndWait();
+                                            Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                            Context.NumberOfCycles++;
+                                            Context.NumberOfCycles--;
                                         }
                                     }
 
@@ -298,6 +325,9 @@ namespace ProcessorSimulator.core
                                         try
                                         {
                                             Processor.Instance.ClockBarrier.SignalAndWait();
+                                            Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                            Context.NumberOfCycles++;
+                                            Context.NumberOfCycles--;
                                             // If the label matches with the block number it will be replaced the current block
                                             var currentOtherCacheBlock =
                                                 DataCache.OtherCache.Blocks[blockNumberInOtherCache];
@@ -312,6 +342,9 @@ namespace ProcessorSimulator.core
                                                 for (var i = 0; i < Constants.CyclesMemory; i++)
                                                 {
                                                     Processor.Instance.ClockBarrier.SignalAndWait();
+                                                    Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                    Context.NumberOfCycles++;
+                                                    Context.NumberOfCycles--;
                                                 }
 
                                                 DataCache.Blocks[blockNumberInCache].Words =
@@ -320,6 +353,9 @@ namespace ProcessorSimulator.core
                                                     .Words[wordNumberInBlock];
                                                 hasFinishedLoad = true;
                                                 Processor.Instance.ClockBarrier.SignalAndWait();
+                                                Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                Context.NumberOfCycles++;
+                                                Context.NumberOfCycles--;
                                                 Console.WriteLine("I could take the block from the other cache");
                                             }
                                             else // It will bring it from memory
@@ -331,9 +367,15 @@ namespace ProcessorSimulator.core
                                                 for (var i = 0; i < Constants.CyclesMemory; i++)
                                                 {
                                                     Processor.Instance.ClockBarrier.SignalAndWait();
+                                                    Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                    Context.NumberOfCycles++;
+                                                    Context.NumberOfCycles--;
                                                 }
                                                 hasFinishedLoad = true;
                                                 Processor.Instance.ClockBarrier.SignalAndWait();
+                                                Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                Context.NumberOfCycles++;
+                                                Context.NumberOfCycles--;
                                             }
                                         }
                                         finally
