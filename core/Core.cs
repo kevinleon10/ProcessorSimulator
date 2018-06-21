@@ -124,7 +124,8 @@ namespace ProcessorSimulator.core
                                                     hasTakenOtherCacheBlock = true;
                                                     Processor.Instance.ClockBarrier.SignalAndWait();
                                                     Processor.Instance.ProcessorBarrier.SignalAndWait();
-
+                                                    InstructionCache.Blocks[blockNumberInCache].Label =
+                                                        blockNumberInMemory;
                                                     // If the label matches with the block number it will be replaced the current block
                                                     if (InstructionCache.OtherCache.Blocks[blockNumberInOtherCache]
                                                             .Label == blockNumberInMemory)
@@ -146,8 +147,6 @@ namespace ProcessorSimulator.core
                                                     {
                                                         InstructionCache.Blocks[blockNumberInCache].Words =
                                                             Memory.Instance.LoadInstructionBlock(programCounter).Words;
-                                                        InstructionCache.Blocks[blockNumberInCache].Label =
-                                                            blockNumberInMemory;
                                                         instruction = InstructionCache.Blocks[blockNumberInCache]
                                                             .Words[wordNumberInBlock];
                                                         // Add forty cycles
@@ -340,6 +339,7 @@ namespace ProcessorSimulator.core
                                                 hasTakenOtherBlock = true;
                                                 Processor.Instance.ClockBarrier.SignalAndWait();
                                                 Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                DataCache.Blocks[blockNumberInCache].Label = blockNumberInMemory;
                                                 // If the label matches with the block number it will be replaced the current block
                                                 block = DataCache.OtherCache.Blocks[blockNumberInOtherCache];
                                                 if (block.Label ==
@@ -382,10 +382,10 @@ namespace ProcessorSimulator.core
                                                     }
 
                                                     hasFinishedLoad = true;
-                                                    Processor.Instance.ClockBarrier.SignalAndWait();
-                                                    Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                     Context.NumberOfCycles++;
                                                     RemainingThreadCycles--;
+                                                    Processor.Instance.ClockBarrier.SignalAndWait();
+                                                    Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                 }
                                             }
                                             finally
