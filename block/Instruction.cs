@@ -4,7 +4,7 @@
     {
         public Instruction()
         {
-            OperationCode = 63;
+            OperationCode = 0;
             Source = 0;
             Destiny = 0;
             Inmediate = 0;

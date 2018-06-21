@@ -12,7 +12,10 @@ namespace ProcessorSimulator.core
             NumberOfCycles = 0;
             HasPriority = false;
             Registers = new int[Constants.NumberOfRegisters];
-            Registers[0] = 0;
+            for (int i = 0; i < Registers.Length; i++)
+            {
+                Registers[i] = 0;
+            }
         }
 
         public int ProgramCounter { get; set; }
