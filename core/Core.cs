@@ -146,6 +146,8 @@ namespace ProcessorSimulator.core
                                                     {
                                                         InstructionCache.Blocks[blockNumberInCache].Words =
                                                             Memory.Instance.LoadInstructionBlock(programCounter).Words;
+                                                        InstructionCache.Blocks[blockNumberInCache].Label =
+                                                            blockNumberInMemory;
                                                         instruction = InstructionCache.Blocks[blockNumberInCache]
                                                             .Words[wordNumberInBlock];
                                                         // Add forty cycles
@@ -348,22 +350,23 @@ namespace ProcessorSimulator.core
                                                     DataCache.OtherCache.Blocks[blockNumberInOtherCache].BlockState =
                                                         BlockState.Shared;
                                                     Memory.Instance.StoreDataBlock(address, block.Words);
+                                                    DataCache.Blocks[blockNumberInCache].Words =
+                                                        block.Words;
+                                                    DataCache.Blocks[blockNumberInCache].BlockState = BlockState.Shared;
+                                                    wordData = DataCache.Blocks[blockNumberInCache]
+                                                        .Words[wordNumberInBlock];
                                                     // Add forty cycles
                                                     for (var i = 0; i < Constants.CyclesMemory; i++)
                                                     {
                                                         Processor.Instance.ClockBarrier.SignalAndWait();
                                                         Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                     }
-
-                                                    DataCache.Blocks[blockNumberInCache].Words =
-                                                        Memory.Instance.LoadDataBlock(address).Words;
-                                                    wordData = DataCache.Blocks[blockNumberInCache]
-                                                        .Words[wordNumberInBlock];
-                                                    hasFinishedLoad = true;
-                                                    Processor.Instance.ClockBarrier.SignalAndWait();
-                                                    Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                     Context.NumberOfCycles++;
                                                     RemainingThreadCycles--;
+                                                    ThreadStatus = ThreadStatus.SolvedCacheFail;
+                                                    Processor.Instance.ClockBarrier.SignalAndWait();
+                                                    Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                    hasFinishedLoad = true;
                                                     Console.WriteLine("I could take the block from the other cache");
                                                 }
                                                 else // It will bring it from memory
