@@ -50,7 +50,7 @@ namespace ProcessorSimulator.core
             InstructionRegister = LoadInstruction(programCounter);
 
             //Execute every instruction in the thread until it obtains an end instruction
-            while (InstructionRegister.OperationCode != Constants.EndOperationCode)
+            while (InstructionRegister.OperationCode != (int)Operation.END)
             {
                 programCounter += Constants.BytesInWord;
                 ExecuteInstruction(InstructionRegister);
@@ -178,16 +178,16 @@ namespace ProcessorSimulator.core
         {
             switch (actualInstruction.OperationCode)
             {
-                case Constants.JROperationCode:
+                case (int)Operation.JR:
                     Context.ProgramCounter = Context.Registers[actualInstruction.Source];
                     break;
 
-                case Constants.JALOperationCode:
+                case (int)Operation.JAL:
                     Context.Registers[31] = Context.ProgramCounter;
                     Context.ProgramCounter += actualInstruction.Inmediate;
                     break;
 
-                case Constants.BEQZOperationCode:
+                case (int)Operation.BEQZ:
                     if (Context.Registers[actualInstruction.Source] == 0)
                     {
                         Context.ProgramCounter += (4 * actualInstruction.Inmediate);
@@ -195,7 +195,7 @@ namespace ProcessorSimulator.core
 
                     break;
 
-                case Constants.BNEZOperationCode:
+                case (int)Operation.BNEZ:
                     if (Context.Registers[actualInstruction.Source] != 0)
                     {
                         Context.ProgramCounter += (4 * actualInstruction.Inmediate);
@@ -203,36 +203,36 @@ namespace ProcessorSimulator.core
 
                     break;
 
-                case Constants.DADDIOperationCode:
+                case (int)Operation.DADDI:
                     Context.Registers[actualInstruction.Destiny] =
                         Context.Registers[actualInstruction.Source] + actualInstruction.Inmediate;
                     break;
-                case Constants.DMULOperationCode:
+                case (int)Operation.DMUL:
                     Context.Registers[actualInstruction.Destiny] =
                         Context.Registers[actualInstruction.Source] +
                         Context.Registers[actualInstruction.Inmediate];
                     break;
-                case Constants.DDIVOperationCode:
+                case (int)Operation.DDIV:
                     Context.Registers[actualInstruction.Destiny] =
                         Context.Registers[actualInstruction.Source] /
                         Context.Registers[actualInstruction.Inmediate];
                     break;
-                case Constants.DADDOperationCode:
+                case (int)Operation.DADD:
                     Context.Registers[actualInstruction.Destiny] =
                         Context.Registers[actualInstruction.Source] +
                         Context.Registers[actualInstruction.Inmediate];
                     break;
-                case Constants.DSUBOperationCode:
+                case (int)Operation.DSUB:
                     Context.Registers[actualInstruction.Destiny] =
                         Context.Registers[actualInstruction.Source] -
                         Context.Registers[actualInstruction.Inmediate];
                     break;
-                case Constants.LWOperationCode:
+                case (int)Operation.LW:
                     var address = Context.Registers[actualInstruction.Source] +
                                   Context.Registers[actualInstruction.Inmediate];
                     Context.Registers[actualInstruction.Destiny] = LoadData(address);
                     break;
-                case Constants.SWOperationCode:
+                case (int)Operation.SW:
                     // TODO STORE
                     break;
             }
@@ -376,10 +376,10 @@ namespace ProcessorSimulator.core
             var hasFinishedLoad = false;
             while (!hasFinishedLoad)
             {
-                if (// Reservada)
+                /*if (// Reservada)
                 {
                     
-                }
+                }*/
             }
         }
     }
