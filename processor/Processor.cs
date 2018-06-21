@@ -284,6 +284,7 @@ namespace ProcessorSimulator.processor
             if (newContext != null)
             {
                 core.Context = newContext;
+                core.RemainingThreadCycles = Quantum; // Sets the quantum as the remaining cycles for the new thread
             }
             else
             {
@@ -301,6 +302,7 @@ namespace ProcessorSimulator.processor
             if (newContext != null)
             {
                 core.ContextTwo = newContext;
+                core.RemainingThreadCyclesTwo = Quantum; // Sets the quantum as the remaining cycles for the new thread
             }
             else
             {
@@ -314,7 +316,6 @@ namespace ProcessorSimulator.processor
         {
             if (ContextQueue.Count == 0)    return null;
             var newContext = ContextQueue.Dequeue();
-            newContext.NumberOfCycles = Quantum;
             return newContext;
         }
 
@@ -392,7 +393,7 @@ namespace ProcessorSimulator.processor
                 ContextQueue.Enqueue(oldContext);
                 core.Context = newContext;
             }
-            core.Context.NumberOfCycles = Quantum; // Restores remaining cycles to the quantum value.
+            core.RemainingThreadCycles = Quantum; // Restores remaining cycles to the quantum value.
         }
 
         private void SwapContextSecThread(DobleCore core)
@@ -406,7 +407,7 @@ namespace ProcessorSimulator.processor
                 ContextQueue.Enqueue(oldContext);
                 core.ContextTwo = newContext;
             }
-            core.ContextTwo.NumberOfCycles = Quantum; // Restores remaining cycles to the quantum value.
+            core.RemainingThreadCyclesTwo = Quantum; // Restores remaining cycles to the quantum value.
         }
 
         private ThreadStatus[] CheckIfSolvedCacheFail(ThreadStatus baseStatus, ThreadStatus otherStatus,
