@@ -19,11 +19,11 @@ namespace ProcessorSimulator.core
             ThreadStatus = ThreadStatus.Stopped;
         }
 
-        public Instruction InstructionRegister { get; set; }
+        protected Instruction InstructionRegister { get; set; }
 
         public Context Context { get; set; }
 
-        public Cache<Instruction> InstructionCache { get; set; }
+        protected Cache<Instruction> InstructionCache { get; set; }
 
         public Cache<int> DataCache { get; set; }
 
@@ -31,12 +31,12 @@ namespace ProcessorSimulator.core
 
         public ThreadStatus ThreadStatus { get; set; }
 
-        private int GetBlockNumberInMemory(int address)
+        protected int GetBlockNumberInMemory(int address)
         {
             return (address / Constants.BytesInBlock);
         }
 
-        private int GetWordNumberInBlock(int address)
+        protected int GetWordNumberInBlock(int address)
         {
             return (address % Constants.BytesInBlock) / Constants.WordsInBlock;
         }
@@ -211,7 +211,7 @@ namespace ProcessorSimulator.core
             return instruction;
         }
 
-        private void ExecuteInstruction(Instruction actualInstruction)
+        protected void ExecuteInstruction(Instruction actualInstruction)
         {
             int address;
             switch (actualInstruction.OperationCode)
