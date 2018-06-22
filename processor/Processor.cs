@@ -23,8 +23,8 @@ namespace ProcessorSimulator.processor
             contextList = new List<Context>();
             //CoreZeroThreadA = new Thread(StartMainThreadCoreZero);
             //CoreZeroThreadB = new Thread(StartSecThreadCoreZero);
-            CoreOneThread = new Thread(StartCoreOne);
             InitializeStructures();
+            CoreOneThread = new Thread(StartCoreOne);
         }
         
         public static Processor Instance
