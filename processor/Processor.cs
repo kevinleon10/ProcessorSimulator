@@ -25,6 +25,7 @@ namespace ProcessorSimulator.processor
             //CoreZeroThreadB = new Thread(StartSecThreadCoreZero);
             InitializeStructures();
             CoreOneThread = new Thread(StartCoreOne);
+            CoreOneThread.Start();
         }
         
         public static Processor Instance
@@ -55,7 +56,7 @@ namespace ProcessorSimulator.processor
 
         private void StartCoreOne()
         {
-            CoreOne.StartExecution(CoreOne.Context); // TODO Cambiar cuando hayan cambiado startExecution
+            CoreOne.StartExecution(GetNewContext()); // TODO Cambiar cuando hayan cambiado startExecution
         }
 
         public Thread CoreZeroThreadA { get; private set; }

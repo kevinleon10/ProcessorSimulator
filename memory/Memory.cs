@@ -40,7 +40,7 @@ namespace ProcessorSimulator.memory
         
         public Block<Instruction> LoadInstructionBlock(int address)
         {
-            var position = (address-Constants.BytesInMemoryDataBlocks) / Constants.BytesInBlock;
+            var position = address / Constants.BytesInBlock;
             return InstructionBlocks[position];
         }
         
