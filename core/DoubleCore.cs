@@ -28,15 +28,16 @@ namespace ProcessorSimulator.core
         public ThreadStatus ThreadStatusTwo { get; set; }
 
         public List<Reservation> Reservations { get; set; }
-
-        public int LoadData(int address)
+        
+        public override int LoadData(int address)
         {
+            Console.WriteLine("LOAAAAAAAAAAAD");
             return address;
         }
 
         private void StoreData(int address, int newData)
         {
-            
+            Console.WriteLine("STOREEEEEEEE");
         }
     }
 }
