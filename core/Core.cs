@@ -303,11 +303,11 @@ namespace ProcessorSimulator.core
                     try
                     {
                         // If the label matches with the block number and it is not invalid
-                        var block = DataCache.Blocks[blockNumberInCache];
-                        if (block.Label == blockNumberInMemory &&
-                            block.BlockState != BlockState.Invalid)
+                        var currentBlock = DataCache.Blocks[blockNumberInCache];
+                        if (currentBlock.Label == blockNumberInMemory &&
+                            currentBlock.BlockState != BlockState.Invalid)
                         {
-                            wordData = block.Words[wordNumberInBlock];
+                            wordData = currentBlock.Words[wordNumberInBlock];
                             Context.NumberOfCycles++;
                             RemainingThreadCycles--;
                             //Processor.Instance.ClockBarrier.SignalAndWait();
@@ -326,12 +326,11 @@ namespace ProcessorSimulator.core
                                     //Processor.Instance.ClockBarrier.SignalAndWait();
                                     //Processor.Instance.ProcessorBarrier.SignalAndWait();
                                     // If the label does not match with the block number and it is modified it will store the block in memory
-                                    block = DataCache.Blocks[blockNumberInCache];
-                                    if (block.Label != blockNumberInMemory &&
-                                        block.BlockState == BlockState.Modified)
+                                    if (currentBlock.Label != blockNumberInMemory &&
+                                        currentBlock.BlockState == BlockState.Modified)
                                     {
                                         Memory.Instance.StoreDataBlock(address,
-                                            block.Words);
+                                            currentBlock.Words);
                                         // Add forty cycles
                                         /*for (var i = 0; i < Constants.CyclesMemory; i++)
                                         {
@@ -354,15 +353,15 @@ namespace ProcessorSimulator.core
                                                 //Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                 DataCache.Blocks[blockNumberInCache].Label = blockNumberInMemory;
                                                 // If the label matches with the block number it will be replaced the current block
-                                                block = DataCache.OtherCache.Blocks[blockNumberInOtherCache];
-                                                if (block.Label ==
+                                                var otherCacheBlock = DataCache.OtherCache.Blocks[blockNumberInOtherCache];
+                                                if (otherCacheBlock.Label ==
                                                     blockNumberInMemory &&
-                                                    block.BlockState ==
+                                                    otherCacheBlock.BlockState ==
                                                     BlockState.Modified)
                                                 {
                                                     DataCache.OtherCache.Blocks[blockNumberInOtherCache].BlockState =
                                                         BlockState.Shared;
-                                                    Memory.Instance.StoreDataBlock(address, block.Words);
+                                                    Memory.Instance.StoreDataBlock(address, otherCacheBlock.Words);
                                                     DataCache.Blocks[blockNumberInCache].Words =
                                                         Memory.Instance.LoadDataBlock(address);
                                                     DataCache.Blocks[blockNumberInCache].BlockState = BlockState.Shared;
@@ -463,9 +462,9 @@ namespace ProcessorSimulator.core
                     try
                     {
                         // If the label matches with the block number and it is already modified
-                        var block = DataCache.Blocks[blockNumberInCache];
-                        if (block.Label == blockNumberInMemory &&
-                            block.BlockState == BlockState.Modified)
+                        var currentBlock = DataCache.Blocks[blockNumberInCache];
+                        if (currentBlock.Label == blockNumberInMemory &&
+                            currentBlock.BlockState == BlockState.Modified)
                         {
                             DataCache.Blocks[blockNumberInCache].Words[wordNumberInBlock] = newData;
                             Context.NumberOfCycles++;
@@ -486,11 +485,12 @@ namespace ProcessorSimulator.core
                                     //Processor.Instance.ProcessorBarrier.SignalAndWait();
 
                                     // If the label does not match with the block number and it is modified it will store the block in memory
-                                    if (block.Label != blockNumberInMemory &&
-                                        block.BlockState == BlockState.Modified)
+                                    if (currentBlock.Label != blockNumberInMemory &&
+                                        currentBlock.BlockState == BlockState.Modified)
                                     {
-                                        Memory.Instance.StoreDataBlock(address,
-                                            block.Words);
+                                        var newAddress = currentBlock.Label * Constants.BytesInBlock;
+                                        Memory.Instance.StoreDataBlock(newAddress,
+                                            currentBlock.Words);
                                         // Add forty cycles
                                         /*for (var i = 0; i < Constants.CyclesMemory; i++)
                                         {
@@ -513,8 +513,8 @@ namespace ProcessorSimulator.core
                                                 //Processor.Instance.ProcessorBarrier.SignalAndWait();
 
                                                 //If it is shared it will invalidate other cache block
-                                                if (block.BlockState == BlockState.Shared &&
-                                                    block.Label == blockNumberInMemory && DataCache.OtherCache.Blocks[blockNumberInOtherCache].Label == blockNumberInMemory)
+                                                if (currentBlock.BlockState == BlockState.Shared &&
+                                                    currentBlock.Label == blockNumberInMemory && DataCache.OtherCache.Blocks[blockNumberInOtherCache].Label == blockNumberInMemory)
                                                 {
                                                     DataCache.OtherCache.Blocks[blockNumberInOtherCache].BlockState =
                                                         BlockState.Invalid;
@@ -530,23 +530,23 @@ namespace ProcessorSimulator.core
                                                     Console.WriteLine("I could write the block");
                                                 }
                                                 //If it is invalid or it is another label
-                                                else if (block.BlockState == BlockState.Invalid ||
-                                                         block.Label != blockNumberInMemory)
+                                                else if (currentBlock.BlockState == BlockState.Invalid ||
+                                                         currentBlock.Label != blockNumberInMemory)
                                                 {
                                                     ThreadStatus = ThreadStatus.CacheFail;
                                                     DataCache.Blocks[blockNumberInCache].Label = blockNumberInMemory;
                                                     // If the label matches with the block number and it is modified it will be replaced with the current block
-                                                    block =
+                                                    var otherCacheBlock =
                                                         DataCache.OtherCache.Blocks[blockNumberInOtherCache];
-                                                    if (block.Label ==
+                                                    if (otherCacheBlock.Label ==
                                                         blockNumberInMemory &&
-                                                        block.BlockState ==
+                                                        otherCacheBlock.BlockState ==
                                                         BlockState.Modified)
                                                     {
                                                         DataCache.OtherCache.Blocks[blockNumberInOtherCache]
                                                                 .BlockState =
                                                             BlockState.Shared;
-                                                        Memory.Instance.StoreDataBlock(address, block.Words);
+                                                        Memory.Instance.StoreDataBlock(address, otherCacheBlock.Words);
                                                         DataCache.Blocks[blockNumberInCache].Words =
                                                             Memory.Instance.LoadDataBlock(address);
                                                         DataCache.Blocks[blockNumberInCache].BlockState =
@@ -573,9 +573,9 @@ namespace ProcessorSimulator.core
                                                         hasFinishedStore = true;
                                                         Console.WriteLine("I could write the block");
                                                     }
-                                                    else if (block.Label ==
+                                                    else if (otherCacheBlock.Label ==
                                                              blockNumberInMemory &&
-                                                             block.BlockState ==
+                                                             otherCacheBlock.BlockState ==
                                                              BlockState.Shared)
                                                     {
                                                         DataCache.OtherCache.Blocks[blockNumberInOtherCache].BlockState
