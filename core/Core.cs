@@ -418,7 +418,7 @@ namespace ProcessorSimulator.core
                                                 // Ensure that the lock is released.
                                                 if(Monitor.IsEntered(DataCache.OtherCache.Blocks[blockNumberInOtherCache])){
                                                     Monitor.Exit(
-                                                        InstructionCache.OtherCache.Blocks[blockNumberInOtherCache]);
+                                                        DataCache.OtherCache.Blocks[blockNumberInOtherCache]);
                                                 }
                                             }
                                         }
@@ -619,7 +619,7 @@ namespace ProcessorSimulator.core
                                                     else //it has to bring it from memory
                                                     {
                                                         //Release the lock in other cache because it is not needed
-                                                        Monitor.Exit(InstructionCache.OtherCache.Blocks[blockNumberInOtherCache]);
+                                                        Monitor.Exit(DataCache.OtherCache.Blocks[blockNumberInOtherCache]);
                                                         DataCache.Blocks[blockNumberInCache].Words =
                                                             Memory.Instance.LoadDataBlock(address);
                                                         /*for (var i = 0; i < Constants.CyclesMemory; i++)
@@ -646,7 +646,7 @@ namespace ProcessorSimulator.core
                                                 // Ensure that the lock is released.
                                                 if(Monitor.IsEntered(DataCache.OtherCache.Blocks[blockNumberInOtherCache])){
                                                     Monitor.Exit(
-                                                        InstructionCache.OtherCache.Blocks[blockNumberInOtherCache]);
+                                                        DataCache.OtherCache.Blocks[blockNumberInOtherCache]);
                                                 }
                                             }
                                         }
