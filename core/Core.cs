@@ -289,7 +289,7 @@ namespace ProcessorSimulator.core
         /// <returns>
         /// The resulting data
         /// </returns>
-        private int LoadData(int address)
+        protected virtual int LoadData(int address)
         {
             var blockNumberInMemory = GetBlockNumberInMemory(address);
             var wordNumberInBlock = GetWordNumberInBlock(address);
@@ -460,7 +460,7 @@ namespace ProcessorSimulator.core
             return wordData;
         }
 
-        private void StoreData(int address, int newData)
+        protected virtual void StoreData(int address, int newData)
         {
             var blockNumberInMemory = GetBlockNumberInMemory(address);
             var wordNumberInBlock = GetWordNumberInBlock(address);
