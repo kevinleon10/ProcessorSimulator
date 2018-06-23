@@ -69,11 +69,8 @@ namespace ProcessorSimulator.core
         {
             var blockNumberInMemory = GetBlockNumberInMemory(Context.ProgramCounter);
             var wordNumberInBlock = GetWordNumberInBlock(Context.ProgramCounter);
-            Console.WriteLine("Block number in memory: " + blockNumberInMemory);
-            Console.WriteLine("Word number in block: " + wordNumberInBlock);
             var instruction = new Instruction();
             var blockNumberInCache = blockNumberInMemory % InstructionCache.CacheSize;
-            Console.WriteLine("Block number in cache: " + blockNumberInCache);
             var hasTakenBlock = false;
             // While it has not gotten the block it continues asking for
             while (!hasTakenBlock)
@@ -92,7 +89,6 @@ namespace ProcessorSimulator.core
                             RemainingThreadCycles--;
                             //Processor.Instance.ClockBarrier.SignalAndWait();
                             //Processor.Instance.ProcessorBarrier.SignalAndWait();
-                            Console.WriteLine("I could take the instruction block");
                         }
                         else
                         {
@@ -140,8 +136,6 @@ namespace ProcessorSimulator.core
                                                         ThreadStatus = ThreadStatus.SolvedCacheFail;
                                                         //Processor.Instance.ClockBarrier.SignalAndWait();
                                                         //Processor.Instance.ProcessorBarrier.SignalAndWait();
-                                                        Console.WriteLine(
-                                                            "I could take the instruction block from the other cache");
                                                     }
                                                     else // It has to bring it from memory
                                                     {
@@ -166,8 +160,6 @@ namespace ProcessorSimulator.core
                                                         ThreadStatus = ThreadStatus.SolvedCacheFail;
                                                         //Processor.Instance.ClockBarrier.SignalAndWait();
                                                         //Processor.Instance.ProcessorBarrier.SignalAndWait();
-                                                        Console.WriteLine(
-                                                            "I could take the instruction block from memory");
                                                     }
                                                 }
                                                 finally
@@ -283,7 +275,7 @@ namespace ProcessorSimulator.core
                     }
                     else
                     {
-                        Console.WriteLine("ERROR: The Load cannot be executed, address doesn't exist");
+                        Console.WriteLine("ERROR: The Load cannot be executed, address doesn't exist.");
                     }
 
                     break;
@@ -295,12 +287,12 @@ namespace ProcessorSimulator.core
                     }
                     else
                     {
-                        Console.WriteLine("ERROR: The Store cannot be executed, address doesn't exist");
+                        Console.WriteLine("ERROR: The Store cannot be executed, address doesn't exist.");
                     }
 
                     break;
                 default:
-                    Console.WriteLine("Instruction " + actualInstruction.OperationCode + " has not been recognised");
+                    Console.WriteLine("Instruction " + actualInstruction.OperationCode + " has not been recognised.");
                     break;
                     break;
             }
@@ -316,11 +308,8 @@ namespace ProcessorSimulator.core
         {
             var blockNumberInMemory = GetBlockNumberInMemory(address);
             var wordNumberInBlock = GetWordNumberInBlock(address);
-            Console.WriteLine("Block number in memory: " + blockNumberInMemory);
-            Console.WriteLine("Word number in block: " + wordNumberInBlock);
             var wordData = 0;
             var blockNumberInCache = blockNumberInMemory % DataCache.CacheSize;
-            Console.WriteLine("Block number in cache: " + blockNumberInCache);
             var hasFinishedLoad = false;
             // Wwhile it has not finished the load it continues trying
             while (!hasFinishedLoad)
@@ -341,7 +330,6 @@ namespace ProcessorSimulator.core
                             //Processor.Instance.ClockBarrier.SignalAndWait();
                             //Processor.Instance.ProcessorBarrier.SignalAndWait();
                             hasFinishedLoad = true;
-                            Console.WriteLine("I could take the block");
                         }
                         else // It tryes to get the bus
                         {
@@ -357,8 +345,7 @@ namespace ProcessorSimulator.core
                                     if (currentBlock.Label != blockNumberInMemory &&
                                         currentBlock.BlockState == BlockState.Modified)
                                     {
-                                        var newAddress = currentBlock.Label * Constants.BytesInBlock;
-                                        Memory.Instance.StoreDataBlock(newAddress,
+                                        Memory.Instance.StoreDataBlock(currentBlock.Label,
                                             currentBlock.Words);
                                         // Add forty cycles
                                         /*for (var i = 0; i < Constants.CyclesMemory; i++)
@@ -391,7 +378,7 @@ namespace ProcessorSimulator.core
                                                 {
                                                     DataCache.OtherCache.Blocks[blockNumberInOtherCache].BlockState =
                                                         BlockState.Shared;
-                                                    Memory.Instance.StoreDataBlock(address, otherCacheBlock.Words);
+                                                    Memory.Instance.StoreDataBlock(blockNumberInMemory, otherCacheBlock.Words);
                                                     DataCache.Blocks[blockNumberInCache].Words =
                                                         Memory.Instance.LoadDataBlock(blockNumberInMemory);
                                                     DataCache.Blocks[blockNumberInCache].BlockState = BlockState.Shared;
@@ -410,7 +397,6 @@ namespace ProcessorSimulator.core
                                                     //Processor.Instance.ClockBarrier.SignalAndWait();
                                                     //Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                     hasFinishedLoad = true;
-                                                    Console.WriteLine("I could take the block from the other cache");
                                                 }
                                                 else // It will bring it from memory
                                                 {
@@ -433,7 +419,6 @@ namespace ProcessorSimulator.core
                                                     //Processor.Instance.ClockBarrier.SignalAndWait();
                                                     //Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                     hasFinishedLoad = true;
-                                                    Console.WriteLine("I could take the block from memory");
                                                 }
                                             }
                                             finally
@@ -489,10 +474,7 @@ namespace ProcessorSimulator.core
         {
             var blockNumberInMemory = GetBlockNumberInMemory(address);
             var wordNumberInBlock = GetWordNumberInBlock(address);
-            Console.WriteLine("Block number in memory: " + blockNumberInMemory);
-            Console.WriteLine("Word number in block: " + wordNumberInBlock);
             var blockNumberInCache = blockNumberInMemory % DataCache.CacheSize;
-            Console.WriteLine("Block number in cache: " + blockNumberInCache);
             var hasFinishedStore = false;
             while (!hasFinishedStore)
             {
@@ -512,7 +494,6 @@ namespace ProcessorSimulator.core
                             //Processor.Instance.ClockBarrier.SignalAndWait();
                             //Processor.Instance.ProcessorBarrier.SignalAndWait();
                             hasFinishedStore = true;
-                            Console.WriteLine("I could write the block");
                         }
                         else // It tries to get the bus
                         {
@@ -528,8 +509,7 @@ namespace ProcessorSimulator.core
                                     if (currentBlock.Label != blockNumberInMemory &&
                                         currentBlock.BlockState == BlockState.Modified)
                                     {
-                                        var newAddress = currentBlock.Label * Constants.BytesInBlock;
-                                        Memory.Instance.StoreDataBlock(newAddress,
+                                        Memory.Instance.StoreDataBlock(currentBlock.Label,
                                             currentBlock.Words);
                                         // Add forty cycles
                                         /*for (var i = 0; i < Constants.CyclesMemory; i++)
@@ -569,7 +549,6 @@ namespace ProcessorSimulator.core
                                                     //Processor.Instance.ClockBarrier.SignalAndWait();
                                                     //Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                     hasFinishedStore = true;
-                                                    Console.WriteLine("I could write the block");
                                                 }
                                                 //If it is invalid or it is another label
                                                 else if (currentBlock.BlockState == BlockState.Invalid ||
@@ -588,7 +567,7 @@ namespace ProcessorSimulator.core
                                                         DataCache.OtherCache.Blocks[blockNumberInOtherCache]
                                                                 .BlockState =
                                                             BlockState.Shared;
-                                                        Memory.Instance.StoreDataBlock(address, otherCacheBlock.Words);
+                                                        Memory.Instance.StoreDataBlock(blockNumberInMemory, otherCacheBlock.Words);
                                                         DataCache.Blocks[blockNumberInCache].Words =
                                                             Memory.Instance.LoadDataBlock(blockNumberInMemory);
                                                         DataCache.Blocks[blockNumberInCache].BlockState =
@@ -613,7 +592,6 @@ namespace ProcessorSimulator.core
                                                         //Processor.Instance.ClockBarrier.SignalAndWait();
                                                         //Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                         hasFinishedStore = true;
-                                                        Console.WriteLine("I could write the block");
                                                     }
                                                     else if (otherCacheBlock.Label ==
                                                              blockNumberInMemory &&
@@ -639,7 +617,6 @@ namespace ProcessorSimulator.core
                                                         //Processor.Instance.ClockBarrier.SignalAndWait();
                                                         //Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                         hasFinishedStore = true;
-                                                        Console.WriteLine("I could write the block");
                                                     }
                                                     else //it has to bring it from memory
                                                     {
@@ -663,7 +640,6 @@ namespace ProcessorSimulator.core
                                                         //Processor.Instance.ClockBarrier.SignalAndWait();
                                                         //Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                         hasFinishedStore = true;
-                                                        Console.WriteLine("I could write the block");
                                                     }
                                                 }
                                             }
