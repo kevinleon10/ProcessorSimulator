@@ -554,7 +554,7 @@ namespace ProcessorSimulator.core
                                                     DataCache.Blocks[blockNumberInCache].Label = blockNumberInMemory;
                                                     // If the label matches with the block number and it is modified it will be replaced with the current block
                                                     var otherCacheBlock =
-                                                        DataCache.OtherCache.Blocks[blockNumberInOtherCache];
+                                                        DataCache.OtherCache.Blocks[blockNumberInOtherCache]; // CUIDADO
                                                     if (otherCacheBlock.Label ==
                                                         blockNumberInMemory &&
                                                         otherCacheBlock.BlockState ==
