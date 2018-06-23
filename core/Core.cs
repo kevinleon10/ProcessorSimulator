@@ -65,7 +65,7 @@ namespace ProcessorSimulator.core
         /// <returns>
         /// The resulting instruction
         /// </returns>
-        private Instruction LoadInstruction()
+        protected Instruction LoadInstruction()
         {
             var blockNumberInMemory = GetBlockNumberInMemory(Context.ProgramCounter);
             var wordNumberInBlock = GetWordNumberInBlock(Context.ProgramCounter);
@@ -330,7 +330,8 @@ namespace ProcessorSimulator.core
                                     if (currentBlock.Label != blockNumberInMemory &&
                                         currentBlock.BlockState == BlockState.Modified)
                                     {
-                                        Memory.Instance.StoreDataBlock(address,
+                                        var newAddress = currentBlock.Label * Constants.BytesInBlock;
+                                        Memory.Instance.StoreDataBlock(newAddress,
                                             currentBlock.Words);
                                         // Add forty cycles
                                         /*for (var i = 0; i < Constants.CyclesMemory; i++)
