@@ -115,7 +115,7 @@ namespace ProcessorSimulator.core
                                                         BlockState.Shared;
                                                     Memory.Instance.StoreDataBlock(address, block.Words);
                                                     DataCache.Blocks[blockNumberInCache].Words =
-                                                        Memory.Instance.LoadDataBlock(address).Words;
+                                                        Memory.Instance.LoadDataBlock(address);
                                                     DataCache.Blocks[blockNumberInCache].BlockState = BlockState.Shared;
                                                     wordData = DataCache.Blocks[blockNumberInCache]
                                                         .Words[wordNumberInBlock];
@@ -137,7 +137,7 @@ namespace ProcessorSimulator.core
                                                 else // It will bring it from memory
                                                 {
                                                     DataCache.Blocks[blockNumberInCache].Words =
-                                                        Memory.Instance.LoadDataBlock(address).Words;
+                                                        Memory.Instance.LoadDataBlock(address);
                                                     wordData = DataCache.Blocks[blockNumberInCache]
                                                         .Words[wordNumberInBlock];
                                                     for (var i = 0; i < Constants.CyclesMemory; i++)
@@ -299,7 +299,7 @@ namespace ProcessorSimulator.core
                                                             BlockState.Shared;
                                                         Memory.Instance.StoreDataBlock(address, block.Words);
                                                         DataCache.Blocks[blockNumberInCache].Words =
-                                                            Memory.Instance.LoadDataBlock(address).Words;
+                                                            Memory.Instance.LoadDataBlock(address);
                                                         DataCache.Blocks[blockNumberInCache].BlockState =
                                                             BlockState.Shared;
                                                         // Add forty cycles
@@ -332,7 +332,7 @@ namespace ProcessorSimulator.core
                                                         DataCache.OtherCache.Blocks[blockNumberInOtherCache].BlockState
                                                             = BlockState.Invalid;
                                                         DataCache.Blocks[blockNumberInCache].Words =
-                                                            Memory.Instance.LoadDataBlock(address).Words;
+                                                            Memory.Instance.LoadDataBlock(address);
                                                         for (var i = 0; i < Constants.CyclesMemory; i++)
                                                         {
                                                             Processor.Instance.ClockBarrier.SignalAndWait();
@@ -354,7 +354,7 @@ namespace ProcessorSimulator.core
                                                     else
                                                     {
                                                         DataCache.Blocks[blockNumberInCache].Words =
-                                                            Memory.Instance.LoadDataBlock(address).Words;
+                                                            Memory.Instance.LoadDataBlock(address);
                                                         for (var i = 0; i < Constants.CyclesMemory; i++)
                                                         {
                                                             Processor.Instance.ClockBarrier.SignalAndWait();

@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Linq.Expressions;
+using System.Text;
 using ProcessorSimulator.block;
 using ProcessorSimulator.common;
 
@@ -31,23 +32,38 @@ namespace ProcessorSimulator.memory
         public Block<Instruction>[] InstructionBlocks { get; set; }
 
         public Block<int>[] DataBlocks { get; set; }
-
-        public Block<int> LoadDataBlock(int address)
+        
+        public Instruction[] LoadInstructionBlock(int address)
         {
+            var instructions = new Instruction[Constants.WordsInBlock];
             var position = address / Constants.BytesInBlock;
-            return DataBlocks[position];
+            for (var i=0; i<InstructionBlocks[position].Words.Length; ++i)
+            {
+                instructions[i] = InstructionBlocks[position].Words[i];
+            }
+            return instructions;
         }
         
-        public Block<Instruction> LoadInstructionBlock(int address)
+        public int[] LoadDataBlock(int address)
         {
+            var words = new int[Constants.WordsInBlock];
             var position = address / Constants.BytesInBlock;
-            return InstructionBlocks[position];
+            for (var i=0; i<DataBlocks[position].Words.Length; ++i)
+            {
+                words[i] = DataBlocks[position].Words[i];
+            }
+            return words;
         }
         
         public void StoreDataBlock(int address, int[] words)
         {
+            var newWords = new int[Constants.WordsInBlock];
+            for (var i=0; i<words.Length; ++i)
+            {
+                newWords[i] = words[i];
+            }
             var position = address / Constants.BytesInBlock;
-            DataBlocks[position].Words = words;
+            DataBlocks[position].Words = newWords;
         }
 
         public override string ToString()
