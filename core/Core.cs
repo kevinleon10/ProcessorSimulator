@@ -130,8 +130,9 @@ namespace ProcessorSimulator.core
                                                             .Label == blockNumberInMemory)
                                                     {
                                                         InstructionCache.Blocks[blockNumberInCache]
-                                                            .Words = Memory.Instance.LoadInstructionBlock(blockNumberInMemory
-                                                            );
+                                                            .Words = Memory.Instance.LoadInstructionBlock(
+                                                            blockNumberInMemory
+                                                        );
                                                         instruction = InstructionCache.Blocks[blockNumberInCache]
                                                             .Words[wordNumberInBlock];
                                                         Context.NumberOfCycles++;
@@ -145,7 +146,9 @@ namespace ProcessorSimulator.core
                                                     else // It has to bring it from memory
                                                     {
                                                         //Release the lock in other cache because it is not needed
-                                                        Monitor.Exit(InstructionCache.OtherCache.Blocks[blockNumberInOtherCache]);
+                                                        Monitor.Exit(
+                                                            InstructionCache.OtherCache.Blocks[
+                                                                blockNumberInOtherCache]);
                                                         InstructionCache.Blocks[blockNumberInCache].Words =
                                                             Memory.Instance.LoadInstructionBlock(
                                                                 blockNumberInMemory);
@@ -170,9 +173,12 @@ namespace ProcessorSimulator.core
                                                 finally
                                                 {
                                                     // Ensure that the lock is released.
-                                                    if(Monitor.IsEntered(InstructionCache.OtherCache.Blocks[blockNumberInOtherCache])){
+                                                    if (Monitor.IsEntered(
+                                                        InstructionCache.OtherCache.Blocks[blockNumberInOtherCache]))
+                                                    {
                                                         Monitor.Exit(
-                                                        InstructionCache.OtherCache.Blocks[blockNumberInOtherCache]);
+                                                            InstructionCache.OtherCache.Blocks[
+                                                                blockNumberInOtherCache]);
                                                     }
                                                 }
                                             }
@@ -271,7 +277,7 @@ namespace ProcessorSimulator.core
                     break;
                 case (int) Operation.LW:
                     address = Context.Registers[actualInstruction.Source] + actualInstruction.Inmediate;
-                    if (address < Constants.BytesInMemoryDataBlocks)
+                    if (address >= 0 && address < Constants.BytesInMemoryDataBlocks)
                     {
                         Context.Registers[actualInstruction.Destiny] = LoadData(address);
                     }
@@ -279,10 +285,11 @@ namespace ProcessorSimulator.core
                     {
                         Console.WriteLine("ERROR: The Load cannot be executed, address doesn't exist");
                     }
+
                     break;
                 case (int) Operation.SW:
                     address = Context.Registers[actualInstruction.Source] + actualInstruction.Inmediate;
-                    if (address < Constants.BytesInMemoryDataBlocks)
+                    if (address >= 0 && address < Constants.BytesInMemoryDataBlocks)
                     {
                         StoreData(address, Context.Registers[actualInstruction.Destiny]);
                     }
@@ -290,6 +297,7 @@ namespace ProcessorSimulator.core
                     {
                         Console.WriteLine("ERROR: The Store cannot be executed, address doesn't exist");
                     }
+
                     break;
                 default:
                     Console.WriteLine("Instruction " + actualInstruction.OperationCode + " has not been recognised");
@@ -431,7 +439,9 @@ namespace ProcessorSimulator.core
                                             finally
                                             {
                                                 // Ensure that the lock is released.
-                                                if(Monitor.IsEntered(DataCache.OtherCache.Blocks[blockNumberInOtherCache])){
+                                                if (Monitor.IsEntered(
+                                                    DataCache.OtherCache.Blocks[blockNumberInOtherCache]))
+                                                {
                                                     Monitor.Exit(
                                                         DataCache.OtherCache.Blocks[blockNumberInOtherCache]);
                                                 }
@@ -634,7 +644,8 @@ namespace ProcessorSimulator.core
                                                     else //it has to bring it from memory
                                                     {
                                                         //Release the lock in other cache because it is not needed
-                                                        Monitor.Exit(DataCache.OtherCache.Blocks[blockNumberInOtherCache]);
+                                                        Monitor.Exit(
+                                                            DataCache.OtherCache.Blocks[blockNumberInOtherCache]);
                                                         DataCache.Blocks[blockNumberInCache].Words =
                                                             Memory.Instance.LoadDataBlock(blockNumberInMemory);
                                                         /*for (var i = 0; i < Constants.CyclesMemory; i++)
@@ -659,7 +670,9 @@ namespace ProcessorSimulator.core
                                             finally
                                             {
                                                 // Ensure that the lock is released.
-                                                if(Monitor.IsEntered(DataCache.OtherCache.Blocks[blockNumberInOtherCache])){
+                                                if (Monitor.IsEntered(
+                                                    DataCache.OtherCache.Blocks[blockNumberInOtherCache]))
+                                                {
                                                     Monitor.Exit(
                                                         DataCache.OtherCache.Blocks[blockNumberInOtherCache]);
                                                 }
