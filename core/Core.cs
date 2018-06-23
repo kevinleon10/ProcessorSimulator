@@ -92,7 +92,7 @@ namespace ProcessorSimulator.core
                             RemainingThreadCycles--;
                             //Processor.Instance.ClockBarrier.SignalAndWait();
                             //Processor.Instance.ProcessorBarrier.SignalAndWait();
-                            Console.WriteLine("I could take the block");
+                            Console.WriteLine("I could take the instruction block");
                         }
                         else
                         {
@@ -140,21 +140,23 @@ namespace ProcessorSimulator.core
                                                         //Processor.Instance.ClockBarrier.SignalAndWait();
                                                         //Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                         Console.WriteLine(
-                                                            "I could take the block from the other cache");
+                                                            "I could take the instruction block from the other cache");
                                                     }
                                                     else // It has to bring it from memory
                                                     {
+                                                        //Release the lock in other cache because it is not needed
+                                                        Monitor.Exit(InstructionCache.OtherCache.Blocks[blockNumberInOtherCache]);
                                                         InstructionCache.Blocks[blockNumberInCache].Words =
                                                             Memory.Instance.LoadInstructionBlock(
                                                                 Context.ProgramCounter);
                                                         instruction = InstructionCache.Blocks[blockNumberInCache]
                                                             .Words[wordNumberInBlock];
                                                         // Add forty cycles
-                                                        for (var i = 0; i < Constants.CyclesMemory; i++)
+                                                        /*for (var i = 0; i < Constants.CyclesMemory; i++)
                                                         {
                                                             //Processor.Instance.ClockBarrier.SignalAndWait();
                                                             //Processor.Instance.ProcessorBarrier.SignalAndWait();
-                                                        }
+                                                        }*/
 
                                                         Context.NumberOfCycles++;
                                                         RemainingThreadCycles--;
@@ -162,14 +164,16 @@ namespace ProcessorSimulator.core
                                                         //Processor.Instance.ClockBarrier.SignalAndWait();
                                                         //Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                         Console.WriteLine(
-                                                            "I could take the block from memory");
+                                                            "I could take the instruction block from memory");
                                                     }
                                                 }
                                                 finally
                                                 {
                                                     // Ensure that the lock is released.
-                                                    Monitor.Exit(
+                                                    if(Monitor.IsEntered(InstructionCache.OtherCache.Blocks[blockNumberInOtherCache])){
+                                                        Monitor.Exit(
                                                         InstructionCache.OtherCache.Blocks[blockNumberInOtherCache]);
+                                                    }
                                                 }
                                             }
                                             else
@@ -387,8 +391,11 @@ namespace ProcessorSimulator.core
                                                 }
                                                 else // It will bring it from memory
                                                 {
+                                                    //Release the lock in other cache because it is not needed
+                                                    Monitor.Exit(DataCache.OtherCache.Blocks[blockNumberInOtherCache]);
                                                     DataCache.Blocks[blockNumberInCache].Words =
                                                         Memory.Instance.LoadDataBlock(address);
+                                                    DataCache.Blocks[blockNumberInCache].BlockState = BlockState.Shared;
                                                     wordData = DataCache.Blocks[blockNumberInCache]
                                                         .Words[wordNumberInBlock];
                                                     /*for (var i = 0; i < Constants.CyclesMemory; i++)
@@ -399,15 +406,20 @@ namespace ProcessorSimulator.core
 
                                                     Context.NumberOfCycles++;
                                                     RemainingThreadCycles--;
+                                                    ThreadStatus = ThreadStatus.SolvedCacheFail;
                                                     //Processor.Instance.ClockBarrier.SignalAndWait();
                                                     //Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                     hasFinishedLoad = true;
+                                                    Console.WriteLine("I could take the block from memory");
                                                 }
                                             }
                                             finally
                                             {
                                                 // Ensure that the lock is released.
-                                                Monitor.Exit(DataCache.OtherCache.Blocks[blockNumberInOtherCache]);
+                                                if(Monitor.IsEntered(DataCache.OtherCache.Blocks[blockNumberInOtherCache])){
+                                                    Monitor.Exit(
+                                                        InstructionCache.OtherCache.Blocks[blockNumberInOtherCache]);
+                                                }
                                             }
                                         }
                                         else
@@ -604,8 +616,10 @@ namespace ProcessorSimulator.core
                                                         hasFinishedStore = true;
                                                         Console.WriteLine("I could write the block");
                                                     }
-                                                    else
+                                                    else //it has to bring it from memory
                                                     {
+                                                        //Release the lock in other cache because it is not needed
+                                                        Monitor.Exit(InstructionCache.OtherCache.Blocks[blockNumberInOtherCache]);
                                                         DataCache.Blocks[blockNumberInCache].Words =
                                                             Memory.Instance.LoadDataBlock(address);
                                                         /*for (var i = 0; i < Constants.CyclesMemory; i++)
@@ -630,7 +644,10 @@ namespace ProcessorSimulator.core
                                             finally
                                             {
                                                 // Ensure that the lock is released.
-                                                Monitor.Exit(DataCache.OtherCache.Blocks[blockNumberInOtherCache]);
+                                                if(Monitor.IsEntered(DataCache.OtherCache.Blocks[blockNumberInOtherCache])){
+                                                    Monitor.Exit(
+                                                        InstructionCache.OtherCache.Blocks[blockNumberInOtherCache]);
+                                                }
                                             }
                                         }
                                         else
