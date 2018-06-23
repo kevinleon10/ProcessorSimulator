@@ -1,4 +1,6 @@
-﻿namespace ProcessorSimulator.block
+﻿using System;
+
+namespace ProcessorSimulator.block
 {
     public class Instruction
     {
@@ -25,5 +27,12 @@
         public int Destiny { get; set; }
 
         public int Inmediate { get; set; }
+
+        public override string ToString()
+        {
+            var instruction = "OP: " + OperationCode + ", Source: " + Source + ", Destiny: " + Destiny +
+                              ", Inmediate: " + Inmediate + ".";
+            return instruction;
+        }
     }
 }

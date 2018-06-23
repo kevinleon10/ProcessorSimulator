@@ -275,7 +275,7 @@ namespace ProcessorSimulator.core
                     }
                     else
                     {
-                        Console.WriteLine("ERROR: The Load cannot be executed, address doesn't exist.");
+                        Console.WriteLine(Constants.AddressError + actualInstruction.ToString());
                     }
 
                     break;
@@ -287,7 +287,7 @@ namespace ProcessorSimulator.core
                     }
                     else
                     {
-                        Console.WriteLine("ERROR: The Store cannot be executed, address doesn't exist.");
+                        Console.WriteLine(Constants.AddressError + actualInstruction.ToString());
                     }
 
                     break;
@@ -378,7 +378,8 @@ namespace ProcessorSimulator.core
                                                 {
                                                     DataCache.OtherCache.Blocks[blockNumberInOtherCache].BlockState =
                                                         BlockState.Shared;
-                                                    Memory.Instance.StoreDataBlock(blockNumberInMemory, otherCacheBlock.Words);
+                                                    Memory.Instance.StoreDataBlock(blockNumberInMemory,
+                                                        otherCacheBlock.Words);
                                                     DataCache.Blocks[blockNumberInCache].Words =
                                                         Memory.Instance.LoadDataBlock(blockNumberInMemory);
                                                     DataCache.Blocks[blockNumberInCache].BlockState = BlockState.Shared;
@@ -567,7 +568,8 @@ namespace ProcessorSimulator.core
                                                         DataCache.OtherCache.Blocks[blockNumberInOtherCache]
                                                                 .BlockState =
                                                             BlockState.Shared;
-                                                        Memory.Instance.StoreDataBlock(blockNumberInMemory, otherCacheBlock.Words);
+                                                        Memory.Instance.StoreDataBlock(blockNumberInMemory,
+                                                            otherCacheBlock.Words);
                                                         DataCache.Blocks[blockNumberInCache].Words =
                                                             Memory.Instance.LoadDataBlock(blockNumberInMemory);
                                                         DataCache.Blocks[blockNumberInCache].BlockState =

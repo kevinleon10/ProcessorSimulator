@@ -20,5 +20,8 @@
         public const int SlowMotionCycles = 20;
         public const string FilePath = "hilillos/";
         public const string FileExtension = ".txt";
+        
+        // ERRORS
+        public const string AddressError = "ERROR: Bad memory address reference in the following instruction: ";
     }
 }
