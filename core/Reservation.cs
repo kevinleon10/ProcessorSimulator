@@ -1,4 +1,6 @@
-﻿namespace ProcessorSimulator.core
+﻿using ProcessorSimulator.common;
+
+namespace ProcessorSimulator.core
 {
     public class Reservation
     {
@@ -7,16 +9,17 @@
             IsWaiting = false;
             IsUsingBus = false;
             IsInDateCache = false;
-            BlockLabel = 0;
+            BlockLabel = Constants.InvalidLabel;
+            ThreadId = Constants.InvalidLabel;
         }
 
-        public Reservation(bool isWaiting, bool isUsingBus, bool isInDateCache, int blockLabel, int tID)
+        public Reservation(bool isWaiting, bool isUsingBus, bool isInDateCache, int blockLabel, int threadId)
         {
             IsWaiting = isWaiting;
             IsUsingBus = isUsingBus;
             IsInDateCache = isInDateCache;
             BlockLabel = blockLabel;
-            ThreadId = tID;
+            ThreadId = threadId;
         }
 
         public int ThreadId { get; private set; }

@@ -277,6 +277,7 @@ namespace ProcessorSimulator.core
                     else
                     {
                         Console.WriteLine(Constants.AddressError + actualInstruction.ToString());
+                        Thread.Sleep(1000000000);
                     }
 
                     break;
@@ -289,6 +290,7 @@ namespace ProcessorSimulator.core
                     else
                     {
                         Console.WriteLine(Constants.AddressError + actualInstruction.ToString());
+                        Thread.Sleep(1000000000);
                     }
 
                     break;

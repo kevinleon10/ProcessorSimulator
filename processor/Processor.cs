@@ -24,9 +24,8 @@ namespace ProcessorSimulator.processor
             CoreZeroThreadA = new Thread(StartMainThreadCoreZero);
             //CoreZeroThreadB = new Thread(StartSecThreadCoreZero);
             InitializeStructures();
-            GetNewContext();
             CoreOneThread = new Thread(StartCoreOne);
-            CoreOneThread.Start();
+            //CoreOneThread.Start();
             CoreZeroThreadA.Start();
         }
         
