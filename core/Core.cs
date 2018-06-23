@@ -57,6 +57,7 @@ namespace ProcessorSimulator.core
                 //Instruction fetch
                 InstructionRegister = LoadInstruction();
             }
+            ThreadStatus = ThreadStatus.Ended;
         }
 
         /// <summary>
