@@ -271,14 +271,29 @@ namespace ProcessorSimulator.core
                     break;
                 case (int) Operation.LW:
                     address = Context.Registers[actualInstruction.Source] + actualInstruction.Inmediate;
-                    Context.Registers[actualInstruction.Destiny] = LoadData(address);
+                    if (address < Constants.BytesInMemoryDataBlocks)
+                    {
+                        Context.Registers[actualInstruction.Destiny] = LoadData(address);
+                    }
+                    else
+                    {
+                        Console.WriteLine("ERROR: The Load cannot be executed, address doesn't exist");
+                    }
                     break;
                 case (int) Operation.SW:
                     address = Context.Registers[actualInstruction.Source] + actualInstruction.Inmediate;
-                    StoreData(address, Context.Registers[actualInstruction.Destiny]);
+                    if (address < Constants.BytesInMemoryDataBlocks)
+                    {
+                        StoreData(address, Context.Registers[actualInstruction.Destiny]);
+                    }
+                    else
+                    {
+                        Console.WriteLine("ERROR: The Store cannot be executed, address doesn't exist");
+                    }
                     break;
                 default:
                     Console.WriteLine("Instruction " + actualInstruction.OperationCode + " has not been recognised");
+                    break;
                     break;
             }
         }
