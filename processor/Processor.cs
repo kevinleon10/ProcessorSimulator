@@ -21,12 +21,12 @@ namespace ProcessorSimulator.processor
             ContextQueue = new Queue<Context>();
             Quantum = 0;
             contextList = new List<Context>();
-            //CoreZeroThreadA = new Thread(StartMainThreadCoreZero);
+            CoreZeroThreadA = new Thread(StartMainThreadCoreZero);
             //CoreZeroThreadB = new Thread(StartSecThreadCoreZero);
             InitializeStructures();
-            CoreOneThread = new Thread(StartCoreOne);
-            CoreOneThread.Start();
-            //CoreZeroThreadA.Start();
+            //CoreOneThread = new Thread(StartCoreOne);
+            //CoreOneThread.Start();
+            CoreZeroThreadA.Start();
         }
         
         public static Processor Instance
@@ -47,7 +47,7 @@ namespace ProcessorSimulator.processor
 
         private void StartMainThreadCoreZero()
         {
-            /CoreZero.StartExecution(GetNewContext()); // TODO Cambiar cuando hayan cambiado startExecution 
+            CoreZero.StartExecution(GetNewContext()); // TODO Cambiar cuando hayan cambiado startExecution 
         }
 
         private void StartSecThreadCoreZero()
