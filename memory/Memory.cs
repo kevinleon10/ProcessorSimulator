@@ -33,10 +33,9 @@ namespace ProcessorSimulator.memory
 
         public Block<int>[] DataBlocks { get; set; }
         
-        public Instruction[] LoadInstructionBlock(int address)
+        public Instruction[] LoadInstructionBlock(int position)
         {
             var instructions = new Instruction[Constants.WordsInBlock];
-            var position = address / Constants.BytesInBlock;
             for (var i=0; i<InstructionBlocks[position].Words.Length; ++i)
             {
                 instructions[i] = InstructionBlocks[position].Words[i];
@@ -44,10 +43,9 @@ namespace ProcessorSimulator.memory
             return instructions;
         }
         
-        public int[] LoadDataBlock(int address)
+        public int[] LoadDataBlock(int position)
         {
             var words = new int[Constants.WordsInBlock];
-            var position = address / Constants.BytesInBlock;
             for (var i=0; i<DataBlocks[position].Words.Length; ++i)
             {
                 words[i] = DataBlocks[position].Words[i];
@@ -55,14 +53,13 @@ namespace ProcessorSimulator.memory
             return words;
         }
         
-        public void StoreDataBlock(int address, int[] words)
+        public void StoreDataBlock(int position, int[] words)
         {
             var newWords = new int[Constants.WordsInBlock];
             for (var i=0; i<words.Length; ++i)
             {
                 newWords[i] = words[i];
             }
-            var position = address / Constants.BytesInBlock;
             DataBlocks[position].Words = newWords;
         }
 

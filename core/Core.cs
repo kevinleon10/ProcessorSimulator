@@ -65,7 +65,7 @@ namespace ProcessorSimulator.core
         /// <returns>
         /// The resulting instruction
         /// </returns>
-        protected Instruction LoadInstruction()
+        private Instruction LoadInstruction()
         {
             var blockNumberInMemory = GetBlockNumberInMemory(Context.ProgramCounter);
             var wordNumberInBlock = GetWordNumberInBlock(Context.ProgramCounter);
@@ -130,8 +130,8 @@ namespace ProcessorSimulator.core
                                                             .Label == blockNumberInMemory)
                                                     {
                                                         InstructionCache.Blocks[blockNumberInCache]
-                                                            .Words = Memory.Instance.LoadInstructionBlock(
-                                                            Context.ProgramCounter);
+                                                            .Words = Memory.Instance.LoadInstructionBlock(blockNumberInMemory
+                                                            );
                                                         instruction = InstructionCache.Blocks[blockNumberInCache]
                                                             .Words[wordNumberInBlock];
                                                         Context.NumberOfCycles++;
@@ -148,7 +148,7 @@ namespace ProcessorSimulator.core
                                                         Monitor.Exit(InstructionCache.OtherCache.Blocks[blockNumberInOtherCache]);
                                                         InstructionCache.Blocks[blockNumberInCache].Words =
                                                             Memory.Instance.LoadInstructionBlock(
-                                                                Context.ProgramCounter);
+                                                                blockNumberInMemory);
                                                         instruction = InstructionCache.Blocks[blockNumberInCache]
                                                             .Words[wordNumberInBlock];
                                                         // Add forty cycles
@@ -215,7 +215,7 @@ namespace ProcessorSimulator.core
             return instruction;
         }
 
-        protected void ExecuteInstruction(Instruction actualInstruction)
+        private void ExecuteInstruction(Instruction actualInstruction)
         {
             int address;
             switch (actualInstruction.OperationCode)
@@ -370,7 +370,7 @@ namespace ProcessorSimulator.core
                                                         BlockState.Shared;
                                                     Memory.Instance.StoreDataBlock(address, otherCacheBlock.Words);
                                                     DataCache.Blocks[blockNumberInCache].Words =
-                                                        Memory.Instance.LoadDataBlock(address);
+                                                        Memory.Instance.LoadDataBlock(blockNumberInMemory);
                                                     DataCache.Blocks[blockNumberInCache].BlockState = BlockState.Shared;
                                                     wordData = DataCache.Blocks[blockNumberInCache]
                                                         .Words[wordNumberInBlock];
@@ -394,7 +394,7 @@ namespace ProcessorSimulator.core
                                                     //Release the lock in other cache because it is not needed
                                                     Monitor.Exit(DataCache.OtherCache.Blocks[blockNumberInOtherCache]);
                                                     DataCache.Blocks[blockNumberInCache].Words =
-                                                        Memory.Instance.LoadDataBlock(address);
+                                                        Memory.Instance.LoadDataBlock(blockNumberInMemory);
                                                     DataCache.Blocks[blockNumberInCache].BlockState = BlockState.Shared;
                                                     wordData = DataCache.Blocks[blockNumberInCache]
                                                         .Words[wordNumberInBlock];
@@ -565,7 +565,7 @@ namespace ProcessorSimulator.core
                                                             BlockState.Shared;
                                                         Memory.Instance.StoreDataBlock(address, otherCacheBlock.Words);
                                                         DataCache.Blocks[blockNumberInCache].Words =
-                                                            Memory.Instance.LoadDataBlock(address);
+                                                            Memory.Instance.LoadDataBlock(blockNumberInMemory);
                                                         DataCache.Blocks[blockNumberInCache].BlockState =
                                                             BlockState.Shared;
                                                         // Add forty cycles
@@ -598,7 +598,7 @@ namespace ProcessorSimulator.core
                                                         DataCache.OtherCache.Blocks[blockNumberInOtherCache].BlockState
                                                             = BlockState.Invalid;
                                                         DataCache.Blocks[blockNumberInCache].Words =
-                                                            Memory.Instance.LoadDataBlock(address);
+                                                            Memory.Instance.LoadDataBlock(blockNumberInMemory);
                                                         /*for (var i = 0; i < Constants.CyclesMemory; i++)
                                                         {
                                                             //Processor.Instance.ClockBarrier.SignalAndWait();
@@ -621,7 +621,7 @@ namespace ProcessorSimulator.core
                                                         //Release the lock in other cache because it is not needed
                                                         Monitor.Exit(DataCache.OtherCache.Blocks[blockNumberInOtherCache]);
                                                         DataCache.Blocks[blockNumberInCache].Words =
-                                                            Memory.Instance.LoadDataBlock(address);
+                                                            Memory.Instance.LoadDataBlock(blockNumberInMemory);
                                                         /*for (var i = 0; i < Constants.CyclesMemory; i++)
                                                         {
                                                             //Processor.Instance.ClockBarrier.SignalAndWait();
