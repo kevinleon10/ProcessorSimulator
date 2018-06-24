@@ -14,23 +14,16 @@ namespace ProcessorSimulator.core
     {
         public DobleCore(Cache<Instruction> instructionCache, Cache<int> dataCache) : base(instructionCache, dataCache)
         {
-            InstructionRegister = null;
-            InstructionRegisterTwo = null;
-            RemainingThreadCycles = Constants.NotRunningAnyThread;
+            RemainingThreadCycles[0] = Constants.NotRunningAnyThread;
+            RemainingThreadCycles[1] = Constants.NotRunningAnyThread;
             Reservations = new List<Reservation>();
+            Contexts = new Context[2];
         }
-
-        public Instruction InstructionRegisterTwo { get; set; }
-
-        public Context ContextTwo { get; set; }
-
-        public int RemainingThreadCyclesTwo { get; set; }
-
-        public ThreadStatus ThreadStatusTwo { get; set; }
-
+        
         public List<Reservation> Reservations { get; set; }
+        
 
-        private int BlockPositionInReservations(int blockNumberInCache)
+        private int BlockPositionInReservations(int blockNumberInCache, int contextIndex)
         {
             var blockPositionInReservations = 0;
             while (blockPositionInReservations < Reservations.Count)
@@ -43,31 +36,11 @@ namespace ProcessorSimulator.core
                 ++blockPositionInReservations;
             }
 
-            Reservations.Add(new Reservation(true, false, false, blockNumberInCache, Context.ThreadId));
+            Reservations.Add(new Reservation(true, false, false, blockNumberInCache, Contexts[contextIndex].ThreadId));
             return blockPositionInReservations;
         }
 
-        public override void StartExecution(Context context)
-        {
-            Context = context;
-            RemainingThreadCycles = Processor.Instance.Quantum;
-
-            //First instruction fetch
-            InstructionRegister = LoadInstruction();
-
-            //Execute every instruction in the thread until it obtains an end instruction
-            while (InstructionRegister.OperationCode != (int) Operation.END)
-            {
-                Context.ProgramCounter += Constants.BytesInWord;
-                ExecuteInstruction(InstructionRegister);
-                //Instruction fetch
-                InstructionRegister = LoadInstruction();
-            }
-
-            ThreadStatus = ThreadStatus.Ended;
-        }
-
-        protected override int LoadData(int address)
+        protected override int LoadData(int address, int contextIndex)
         {
             var blockNumberInMemory = GetBlockNumberInMemory(address);
             var wordNumberInBlock = GetWordNumberInBlock(address);
@@ -77,7 +50,7 @@ namespace ProcessorSimulator.core
             // Wwhile it has not finished the load it continues trying
             while (!hasFinishedLoad)
             {
-                var blockPositionInReservations = BlockPositionInReservations(blockNumberInCache);
+                var blockPositionInReservations = BlockPositionInReservations(blockNumberInCache, contextIndex);
                 // If it is not reserved it can try to lock
                 if (!Reservations[blockPositionInReservations].IsInDateCache)
                 {
@@ -95,8 +68,8 @@ namespace ProcessorSimulator.core
                                 currentBlock.BlockState != BlockState.Invalid)
                             {
                                 wordData = currentBlock.Words[wordNumberInBlock];
-                                Context.NumberOfCycles++;
-                                RemainingThreadCycles--;
+                                Contexts[contextIndex].NumberOfCycles++;
+                                RemainingThreadCycles[contextIndex]--;
                                 //Processor.Instance.ClockBarrier.SignalAndWait();
                                 //Processor.Instance.ProcessorBarrier.SignalAndWait();
                                 hasFinishedLoad = true;
@@ -112,7 +85,7 @@ namespace ProcessorSimulator.core
                                     {
                                         try
                                         {
-                                            ThreadStatus = ThreadStatus.CacheFail;
+                                            ThreadStatuses[contextIndex] = ThreadStatus.CacheFail;
                                             //Processor.Instance.ClockBarrier.SignalAndWait();
                                             //Processor.Instance.ProcessorBarrier.SignalAndWait();
                                             // If the label does not match with the block number and it is modified it will store the block in memory
@@ -171,9 +144,9 @@ namespace ProcessorSimulator.core
                                                                 //Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                             }*/
 
-                                                            Context.NumberOfCycles++;
-                                                            RemainingThreadCycles--;
-                                                            ThreadStatus = ThreadStatus.SolvedCacheFail;
+                                                            Contexts[contextIndex].NumberOfCycles++;
+                                                            RemainingThreadCycles[contextIndex]--;
+                                                            ThreadStatuses[contextIndex] = ThreadStatus.SolvedCacheFail;
                                                             //Processor.Instance.ClockBarrier.SignalAndWait();
                                                             //Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                             hasFinishedLoad = true;
@@ -195,9 +168,9 @@ namespace ProcessorSimulator.core
                                                                 //Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                             }*/
 
-                                                            Context.NumberOfCycles++;
-                                                            RemainingThreadCycles--;
-                                                            ThreadStatus = ThreadStatus.SolvedCacheFail;
+                                                            Contexts[contextIndex].NumberOfCycles++;
+                                                            RemainingThreadCycles[contextIndex]--;
+                                                            ThreadStatuses[contextIndex] = ThreadStatus.SolvedCacheFail;
                                                             //Processor.Instance.ClockBarrier.SignalAndWait();
                                                             //Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                             hasFinishedLoad = true;
@@ -235,7 +208,7 @@ namespace ProcessorSimulator.core
                                 }
                                 else
                                 {
-                                    ThreadStatus = ThreadStatus.Waiting;
+                                    ThreadStatuses[contextIndex] = ThreadStatus.Waiting;
                                 }
                             }
 
@@ -255,14 +228,14 @@ namespace ProcessorSimulator.core
                 }
                 else
                 {
-                    ThreadStatus = ThreadStatus.Waiting;
+                    ThreadStatuses[contextIndex] = ThreadStatus.Waiting;
                 }
             }
 
             return wordData;
         }
 
-        protected override void StoreData(int address, int newData)
+        protected override void StoreData(int address, int newData, int contextIndex)
         {
             var blockNumberInMemory = GetBlockNumberInMemory(address);
             var wordNumberInBlock = GetWordNumberInBlock(address);
@@ -270,7 +243,7 @@ namespace ProcessorSimulator.core
             var hasFinishedStore = false;
             while (!hasFinishedStore)
             {
-                var blockPositionInReservations = BlockPositionInReservations(blockNumberInCache);
+                var blockPositionInReservations = BlockPositionInReservations(blockNumberInCache, contextIndex);
                 // If it is not reserved it can try to lock
                 if (!Reservations[blockPositionInReservations].IsInDateCache)
                 {
@@ -287,8 +260,8 @@ namespace ProcessorSimulator.core
                                 currentBlock.BlockState == BlockState.Modified)
                             {
                                 DataCache.Blocks[blockNumberInCache].Words[wordNumberInBlock] = newData;
-                                Context.NumberOfCycles++;
-                                RemainingThreadCycles--;
+                                Contexts[contextIndex].NumberOfCycles++;
+                                RemainingThreadCycles[contextIndex]--;
                                 //Processor.Instance.ClockBarrier.SignalAndWait();
                                 //Processor.Instance.ProcessorBarrier.SignalAndWait();
                                 hasFinishedStore = true;
@@ -351,8 +324,8 @@ namespace ProcessorSimulator.core
                                                                 newData;
                                                             DataCache.Blocks[blockNumberInCache].BlockState =
                                                                 BlockState.Modified;
-                                                            Context.NumberOfCycles++;
-                                                            RemainingThreadCycles--;
+                                                            Contexts[contextIndex].NumberOfCycles++;
+                                                            RemainingThreadCycles[contextIndex]--;
                                                             //Processor.Instance.ClockBarrier.SignalAndWait();
                                                             //Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                             hasFinishedStore = true;
@@ -361,7 +334,7 @@ namespace ProcessorSimulator.core
                                                         else if (currentBlock.BlockState == BlockState.Invalid ||
                                                                  currentBlock.Label != blockNumberInMemory)
                                                         {
-                                                            ThreadStatus = ThreadStatus.CacheFail;
+                                                            ThreadStatuses[contextIndex] = ThreadStatus.CacheFail;
                                                             DataCache.Blocks[blockNumberInCache].Label =
                                                                 blockNumberInMemory;
                                                             // If the label matches with the block number and it is modified it will be replaced with the current block
@@ -397,9 +370,9 @@ namespace ProcessorSimulator.core
                                                                     BlockState.Invalid;
                                                                 DataCache.Blocks[blockNumberInCache].BlockState =
                                                                     BlockState.Modified;
-                                                                ThreadStatus = ThreadStatus.SolvedCacheFail;
-                                                                Context.NumberOfCycles++;
-                                                                RemainingThreadCycles--;
+                                                                ThreadStatuses[contextIndex] = ThreadStatus.SolvedCacheFail;
+                                                                Contexts[contextIndex].NumberOfCycles++;
+                                                                RemainingThreadCycles[contextIndex]--;
                                                                 //Processor.Instance.ClockBarrier.SignalAndWait();
                                                                 //Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                                 hasFinishedStore = true;
@@ -424,9 +397,9 @@ namespace ProcessorSimulator.core
                                                                     newData;
                                                                 DataCache.Blocks[blockNumberInCache].BlockState =
                                                                     BlockState.Modified;
-                                                                ThreadStatus = ThreadStatus.SolvedCacheFail;
-                                                                Context.NumberOfCycles++;
-                                                                RemainingThreadCycles--;
+                                                                ThreadStatuses[contextIndex] = ThreadStatus.SolvedCacheFail;
+                                                                Contexts[contextIndex].NumberOfCycles++;
+                                                                RemainingThreadCycles[contextIndex]--;
                                                                 //Processor.Instance.ClockBarrier.SignalAndWait();
                                                                 //Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                                 hasFinishedStore = true;
@@ -449,9 +422,9 @@ namespace ProcessorSimulator.core
                                                                     newData;
                                                                 DataCache.Blocks[blockNumberInCache].BlockState =
                                                                     BlockState.Modified;
-                                                                ThreadStatus = ThreadStatus.SolvedCacheFail;
-                                                                Context.NumberOfCycles++;
-                                                                RemainingThreadCycles--;
+                                                                ThreadStatuses[contextIndex] = ThreadStatus.SolvedCacheFail;
+                                                                Contexts[contextIndex].NumberOfCycles++;
+                                                                RemainingThreadCycles[contextIndex]--;
                                                                 //Processor.Instance.ClockBarrier.SignalAndWait();
                                                                 //Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                                 hasFinishedStore = true;
@@ -490,7 +463,7 @@ namespace ProcessorSimulator.core
                                 }
                                 else
                                 {
-                                    ThreadStatus = ThreadStatus.Waiting;
+                                    ThreadStatuses[contextIndex] = ThreadStatus.Waiting;
                                 }
                             }
 
@@ -510,7 +483,7 @@ namespace ProcessorSimulator.core
                 }
                 else
                 {
-                    ThreadStatus = ThreadStatus.Waiting;
+                    ThreadStatuses[contextIndex] = ThreadStatus.Waiting;
                 }
             }
         }

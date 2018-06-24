@@ -18,9 +18,10 @@
         public const int NotRunningAnyThread = -1;
         public const int CyclesMemory = 40;
         public const int SlowMotionCycles = 20;
+        public const int FirstContextIndex = 0;
+        public const int SecondContextIndex = 1;
         public const string FilePath = "hilillos/";
         public const string FileExtension = ".txt";
-        
         // ERRORS
         public const string AddressError = "ERROR: Bad memory address reference in the following instruction: ";
     }
