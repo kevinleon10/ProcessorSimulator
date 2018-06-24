@@ -16,7 +16,6 @@ namespace ProcessorSimulator.core
             InstructionCache = instructionCache;
             DataCache = dataCache;
             RemainingThreadCycles = Constants.NotRunningAnyThread;
-            ThreadStatus = ThreadStatus.Stopped;
         }
 
         protected Instruction InstructionRegister { get; set; }
@@ -41,7 +40,7 @@ namespace ProcessorSimulator.core
             return (address % Constants.BytesInBlock) / Constants.WordsInBlock;
         }
 
-        public void StartExecution(Context context)
+        public virtual void StartExecution(Context context)
         {
             Context = context;
             RemainingThreadCycles = Processor.Instance.Quantum;
@@ -66,7 +65,7 @@ namespace ProcessorSimulator.core
         /// <returns>
         /// The resulting instruction
         /// </returns>
-        private Instruction LoadInstruction()
+        protected Instruction LoadInstruction()
         {
             var blockNumberInMemory = GetBlockNumberInMemory(Context.ProgramCounter);
             var wordNumberInBlock = GetWordNumberInBlock(Context.ProgramCounter);
@@ -214,7 +213,7 @@ namespace ProcessorSimulator.core
             return instruction;
         }
 
-        private void ExecuteInstruction(Instruction actualInstruction)
+        protected void ExecuteInstruction(Instruction actualInstruction)
         {
             int address;
             switch (actualInstruction.OperationCode)

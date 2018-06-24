@@ -17,7 +17,6 @@ namespace ProcessorSimulator.core
             InstructionRegister = null;
             InstructionRegisterTwo = null;
             RemainingThreadCycles = Constants.NotRunningAnyThread;
-            ThreadStatusTwo = ThreadStatus.Stopped;
             Reservations = new List<Reservation>();
         }
 
@@ -46,6 +45,26 @@ namespace ProcessorSimulator.core
 
             Reservations.Add(new Reservation(true, false, false, blockNumberInCache, Context.ThreadId));
             return blockPositionInReservations;
+        }
+
+        public override void StartExecution(Context context)
+        {
+            Context = context;
+            RemainingThreadCycles = Processor.Instance.Quantum;
+
+            //First instruction fetch
+            InstructionRegister = LoadInstruction();
+
+            //Execute every instruction in the thread until it obtains an end instruction
+            while (InstructionRegister.OperationCode != (int) Operation.END)
+            {
+                Context.ProgramCounter += Constants.BytesInWord;
+                ExecuteInstruction(InstructionRegister);
+                //Instruction fetch
+                InstructionRegister = LoadInstruction();
+            }
+
+            ThreadStatus = ThreadStatus.Ended;
         }
 
         protected override int LoadData(int address)
