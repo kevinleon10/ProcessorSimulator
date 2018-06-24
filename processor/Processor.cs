@@ -22,13 +22,11 @@ namespace ProcessorSimulator.processor
             Quantum = 0;
             ContextList = new List<Context>();
             CoreZeroThreadA = new Thread(StartMainThreadCoreZero);
-            CoreZeroThreadB = new Thread(StartSecThreadCoreZero);
             CoreOneThread = new Thread(StartCoreOne);
 
             InitializeStructures();
-            //CoreOneThread.Start();
+            CoreOneThread.Start();
             CoreZeroThreadA.Start();
-            //CoreZeroThreadB.Start();
         }
 
         public static Processor Instance
