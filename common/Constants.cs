@@ -20,6 +20,8 @@
         public const int SlowMotionCycles = 20;
         public const int FirstContextIndex = 0;
         public const int SecondContextIndex = 1;
+        public const int ThreadsInCoreOne = 1;
+        public const int ThreadsInCoreZero = 2;
         public const string FilePath = "hilillos/";
         public const string FileExtension = ".txt";
         // ERRORS

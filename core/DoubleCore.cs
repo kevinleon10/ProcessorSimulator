@@ -12,9 +12,9 @@ namespace ProcessorSimulator.core
         public DobleCore(Cache<Instruction> instructionCache, Cache<int> dataCache) : base(instructionCache, dataCache)
         {
             Reservations = new List<Reservation>();
-            RemainingThreadCycles = new int[2];
-            ThreadStatuses = new ThreadStatus[2];
-            Contexts = new Context[2];
+            RemainingThreadCycles = new int[Constants.ThreadsInCoreZero];
+            ThreadStatuses = new ThreadStatus[Constants.ThreadsInCoreZero];
+            Contexts = new Context[Constants.ThreadsInCoreZero];
             RemainingThreadCycles[Constants.FirstContextIndex] = Constants.NotRunningAnyThread;
             RemainingThreadCycles[Constants.SecondContextIndex] = Constants.NotRunningAnyThread;
         }
@@ -35,7 +35,7 @@ namespace ProcessorSimulator.core
                 ++blockPositionInReservations;
             }
 
-            Reservations.Add(new Reservation(true, false, false, blockNumberInCache, Contexts[contextIndex].ThreadId));
+            Reservations.Add(new Reservation(false, false, false, blockNumberInCache, Contexts[contextIndex].ThreadId));
             return blockPositionInReservations;
         }
 
@@ -77,12 +77,14 @@ namespace ProcessorSimulator.core
                                         //Processor.Instance.ClockBarrier.SignalAndWait();
                                         //Processor.Instance.ProcessorBarrier.SignalAndWait();
                                         hasFinishedLoad = true;
+                                        Reservations[blockPositionInReservations].IsInDateCache = false;
                                     }
-                                    else // It tryes to get the bus
+                                    else // It tries to get the bus
                                     {
                                         // It checks if it is not reserved
                                         if (!Reservations[blockPositionInReservations].IsUsingBus)
                                         {
+                                            Reservations[blockPositionInReservations].IsWaiting = false;
                                             Reservations[blockPositionInReservations].IsUsingBus = true;
                                             // Try lock
                                             if (Monitor.TryEnter(DataBus.Instance))
@@ -157,6 +159,8 @@ namespace ProcessorSimulator.core
                                                                     //Processor.Instance.ClockBarrier.SignalAndWait();
                                                                     //Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                                     hasFinishedLoad = true;
+                                                                    Reservations[blockPositionInReservations].IsInDateCache = false;
+                                                                    Reservations[blockPositionInReservations].IsUsingBus = false;
                                                                 }
                                                                 else // It will bring it from memory
                                                                 {
@@ -184,6 +188,8 @@ namespace ProcessorSimulator.core
                                                                     //Processor.Instance.ClockBarrier.SignalAndWait();
                                                                     //Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                                     hasFinishedLoad = true;
+                                                                    Reservations[blockPositionInReservations].IsInDateCache = false;
+                                                                    Reservations[blockPositionInReservations].IsUsingBus = false;
                                                                 }
                                                             }
                                                             finally
@@ -220,6 +226,7 @@ namespace ProcessorSimulator.core
                                         }
                                         else
                                         {
+                                            Reservations[blockPositionInReservations].IsWaiting = true;
                                             ThreadStatuses[contextIndex] = ThreadStatus.Waiting;
                                         }
                                     }
@@ -240,6 +247,7 @@ namespace ProcessorSimulator.core
                         }
                         else
                         {
+                            Reservations[blockPositionInReservations].IsWaiting = true;
                             ThreadStatuses[contextIndex] = ThreadStatus.Waiting;
                         }
                     }
@@ -289,12 +297,14 @@ namespace ProcessorSimulator.core
                                         //Processor.Instance.ClockBarrier.SignalAndWait();
                                         //Processor.Instance.ProcessorBarrier.SignalAndWait();
                                         hasFinishedStore = true;
+                                        Reservations[blockPositionInReservations].IsInDateCache = false;
                                     }
                                     else // It tries to get the bus
                                     {
                                         // It checks if it is not reserved
                                         if (!Reservations[blockPositionInReservations].IsUsingBus)
                                         {
+                                            Reservations[blockPositionInReservations].IsWaiting = false;
                                             Reservations[blockPositionInReservations].IsUsingBus = true;
                                             // Try lock
                                             if (Monitor.TryEnter(DataBus.Instance))
@@ -353,6 +363,8 @@ namespace ProcessorSimulator.core
                                                                     //Processor.Instance.ClockBarrier.SignalAndWait();
                                                                     //Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                                     hasFinishedStore = true;
+                                                                    Reservations[blockPositionInReservations].IsInDateCache = false;
+                                                                    Reservations[blockPositionInReservations].IsUsingBus = false;
                                                                 }
                                                                 //If it is invalid or it is another label
                                                                 else if (currentBlock.BlockState ==
@@ -366,7 +378,7 @@ namespace ProcessorSimulator.core
                                                                     // If the label matches with the block number and it is modified it will be replaced with the current block
                                                                     var otherCacheBlock =
                                                                         DataCache.OtherCache.Blocks[
-                                                                            blockNumberInOtherCache]; // CUIDADO
+                                                                            blockNumberInOtherCache];
                                                                     if (otherCacheBlock.Label ==
                                                                         blockNumberInMemory &&
                                                                         otherCacheBlock.BlockState ==
@@ -409,6 +421,8 @@ namespace ProcessorSimulator.core
                                                                         //Processor.Instance.ClockBarrier.SignalAndWait();
                                                                         //Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                                         hasFinishedStore = true;
+                                                                        Reservations[blockPositionInReservations].IsInDateCache = false;
+                                                                        Reservations[blockPositionInReservations].IsUsingBus = false;
                                                                     }
                                                                     else if (otherCacheBlock.Label ==
                                                                              blockNumberInMemory &&
@@ -440,6 +454,8 @@ namespace ProcessorSimulator.core
                                                                         //Processor.Instance.ClockBarrier.SignalAndWait();
                                                                         //Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                                         hasFinishedStore = true;
+                                                                        Reservations[blockPositionInReservations].IsInDateCache = false;
+                                                                        Reservations[blockPositionInReservations].IsUsingBus = false;
                                                                     }
                                                                     else //it has to bring it from memory
                                                                     {
@@ -468,6 +484,8 @@ namespace ProcessorSimulator.core
                                                                         //Processor.Instance.ClockBarrier.SignalAndWait();
                                                                         //Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                                         hasFinishedStore = true;
+                                                                        Reservations[blockPositionInReservations].IsInDateCache = false;
+                                                                        Reservations[blockPositionInReservations].IsUsingBus = false;
                                                                     }
                                                                 }
                                                             }
@@ -505,6 +523,7 @@ namespace ProcessorSimulator.core
                                         }
                                         else
                                         {
+                                            Reservations[blockPositionInReservations].IsWaiting = true;
                                             ThreadStatuses[contextIndex] = ThreadStatus.Waiting;
                                         }
                                     }
@@ -525,6 +544,7 @@ namespace ProcessorSimulator.core
                         }
                         else
                         {
+                            Reservations[blockPositionInReservations].IsWaiting = true;
                             ThreadStatuses[contextIndex] = ThreadStatus.Waiting;
                         }
                     }

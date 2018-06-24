@@ -15,9 +15,9 @@ namespace ProcessorSimulator.core
             InstructionRegister = null;
             InstructionCache = instructionCache;
             DataCache = dataCache;
-            RemainingThreadCycles = new int[1];
-            Contexts = new Context[1];
-            ThreadStatuses = new ThreadStatus[1];
+            RemainingThreadCycles = new int[Constants.ThreadsInCoreOne];
+            Contexts = new Context[Constants.ThreadsInCoreOne];
+            ThreadStatuses = new ThreadStatus[Constants.ThreadsInCoreOne];
             RemainingThreadCycles[Constants.FirstContextIndex] = Constants.NotRunningAnyThread;
         }
 
