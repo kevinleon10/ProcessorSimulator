@@ -2,17 +2,17 @@
 {
     public enum Operation
     {
-        JR = 2, 
-        JAL = 3, 
-        BEQZ = 4, 
-        BNEZ = 5, 
-        DADDI = 8, 
-        DMUL = 12, 
-        DDIV = 14, 
-        DADD = 32, 
-        DSUB = 34, 
-        LW = 35, 
-        SW = 43, 
-        END = 63 
+        Jr = 2, 
+        Jal = 3, 
+        Beqz = 4, 
+        Bnez = 5, 
+        Daddi = 8, 
+        Dmul = 12, 
+        Ddiv = 14, 
+        Dadd = 32, 
+        Dsub = 34, 
+        Lw = 35, 
+        Sw = 43, 
+        End = 63 
     }
 }

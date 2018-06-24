@@ -1,5 +1,4 @@
-﻿using System.Linq.Expressions;
-using System.Text;
+﻿using System.Text;
 using ProcessorSimulator.block;
 using ProcessorSimulator.common;
 
@@ -7,7 +6,7 @@ namespace ProcessorSimulator.memory
 {
     public sealed class Memory
     {
-        private static volatile Memory _instance = null;
+        private static volatile Memory _instance;
         private static readonly object Padlock = new object();
  
         private Memory() {}

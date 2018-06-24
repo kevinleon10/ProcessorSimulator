@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace ProcessorSimulator.block
+﻿namespace ProcessorSimulator.block
 {
     public class Instruction
     {
@@ -14,10 +12,10 @@ namespace ProcessorSimulator.block
 
         public Instruction(int operationCode, int source, int destiny, int inmediate)
         {
-            this.OperationCode = operationCode;
-            this.Source = source;
-            this.Destiny = destiny;
-            this.Inmediate = inmediate;
+            OperationCode = operationCode;
+            Source = source;
+            Destiny = destiny;
+            Inmediate = inmediate;
         }
 
         public int OperationCode { get; set; }

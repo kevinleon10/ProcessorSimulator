@@ -2,7 +2,7 @@
 {
     public sealed class DataBus
     {
-        private static volatile DataBus _instance = null;
+        private static volatile DataBus _instance;
         private static readonly object Padlock = new object();
 
         private DataBus()

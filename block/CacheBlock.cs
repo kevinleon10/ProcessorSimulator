@@ -1,5 +1,4 @@
-﻿using System.Threading;
-using ProcessorSimulator.common;
+﻿using ProcessorSimulator.common;
 
 namespace ProcessorSimulator.block
 {

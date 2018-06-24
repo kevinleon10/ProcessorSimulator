@@ -2,7 +2,7 @@
 {
     public sealed class InstructionBus
     {
-        private static volatile InstructionBus _instance = null;
+        private static volatile InstructionBus _instance;
         private static readonly object Padlock = new object();
 
         private InstructionBus()

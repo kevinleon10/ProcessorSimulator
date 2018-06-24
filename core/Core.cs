@@ -15,9 +15,10 @@ namespace ProcessorSimulator.core
             InstructionRegister = null;
             InstructionCache = instructionCache;
             DataCache = dataCache;
-            RemainingThreadCycles[0] = Constants.NotRunningAnyThread;
+            RemainingThreadCycles = new int[1];
             Contexts = new Context[1];
             ThreadStatuses = new ThreadStatus[1];
+            RemainingThreadCycles[Constants.FirstContextIndex] = Constants.NotRunningAnyThread;
         }
 
         protected Instruction InstructionRegister { get; set; }
@@ -44,14 +45,14 @@ namespace ProcessorSimulator.core
 
         public void StartExecution(Context context, int contextIndex)
         {
-            Contexts[0] = context;
+            Contexts[contextIndex] = context;
             RemainingThreadCycles[contextIndex] = Processor.Instance.Quantum;
 
             //First instruction fetch
             InstructionRegister = LoadInstruction(contextIndex);
 
             //Execute every instruction in the thread until it obtains an end instruction
-            while (InstructionRegister.OperationCode != (int) Operation.END)
+            while (InstructionRegister.OperationCode != (int) Operation.End)
             {
                 Contexts[contextIndex].ProgramCounter += Constants.BytesInWord;
                 ExecuteInstruction(InstructionRegister, contextIndex);
@@ -67,7 +68,7 @@ namespace ProcessorSimulator.core
         /// <returns>
         /// The resulting instruction
         /// </returns>
-        protected Instruction LoadInstruction(int contextIndex)
+        private Instruction LoadInstruction(int contextIndex)
         {
             var blockNumberInMemory = GetBlockNumberInMemory(Contexts[contextIndex].ProgramCounter);
             var wordNumberInBlock = GetWordNumberInBlock(Contexts[contextIndex].ProgramCounter);
@@ -215,21 +216,21 @@ namespace ProcessorSimulator.core
             return instruction;
         }
 
-        protected void ExecuteInstruction(Instruction actualInstruction, int contextIndex)
+        private void ExecuteInstruction(Instruction actualInstruction, int contextIndex)
         {
             int address;
             switch (actualInstruction.OperationCode)
             {
-                case (int) Operation.JR:
+                case (int) Operation.Jr:
                     Contexts[contextIndex].ProgramCounter = Contexts[contextIndex].Registers[actualInstruction.Source];
                     break;
 
-                case (int) Operation.JAL:
+                case (int) Operation.Jal:
                     Contexts[contextIndex].Registers[31] = Contexts[contextIndex].ProgramCounter;
                     Contexts[contextIndex].ProgramCounter += actualInstruction.Inmediate;
                     break;
 
-                case (int) Operation.BEQZ:
+                case (int) Operation.Beqz:
                     if (Contexts[contextIndex].Registers[actualInstruction.Source] == 0)
                     {
                         Contexts[contextIndex].ProgramCounter += (4 * actualInstruction.Inmediate);
@@ -237,7 +238,7 @@ namespace ProcessorSimulator.core
 
                     break;
 
-                case (int) Operation.BNEZ:
+                case (int) Operation.Bnez:
                     if (Contexts[contextIndex].Registers[actualInstruction.Source] != 0)
                     {
                         Contexts[contextIndex].ProgramCounter += (4 * actualInstruction.Inmediate);
@@ -245,31 +246,31 @@ namespace ProcessorSimulator.core
 
                     break;
 
-                case (int) Operation.DADDI:
+                case (int) Operation.Daddi:
                     Contexts[contextIndex].Registers[actualInstruction.Destiny] =
                         Contexts[contextIndex].Registers[actualInstruction.Source] + actualInstruction.Inmediate;
                     break;
-                case (int) Operation.DMUL:
+                case (int) Operation.Dmul:
                     Contexts[contextIndex].Registers[actualInstruction.Destiny] =
                         Contexts[contextIndex].Registers[actualInstruction.Source] +
                         Contexts[contextIndex].Registers[actualInstruction.Inmediate];
                     break;
-                case (int) Operation.DDIV:
+                case (int) Operation.Ddiv:
                     Contexts[contextIndex].Registers[actualInstruction.Destiny] =
                         Contexts[contextIndex].Registers[actualInstruction.Source] /
                         Contexts[contextIndex].Registers[actualInstruction.Inmediate];
                     break;
-                case (int) Operation.DADD:
+                case (int) Operation.Dadd:
                     Contexts[contextIndex].Registers[actualInstruction.Destiny] =
                         Contexts[contextIndex].Registers[actualInstruction.Source] +
                         Contexts[contextIndex].Registers[actualInstruction.Inmediate];
                     break;
-                case (int) Operation.DSUB:
+                case (int) Operation.Dsub:
                     Contexts[contextIndex].Registers[actualInstruction.Destiny] =
                         Contexts[contextIndex].Registers[actualInstruction.Source] -
                         Contexts[contextIndex].Registers[actualInstruction.Inmediate];
                     break;
-                case (int) Operation.LW:
+                case (int) Operation.Lw:
                     address = Contexts[contextIndex].Registers[actualInstruction.Source] + actualInstruction.Inmediate;
                     if (address >= 0 && address < Constants.BytesInMemoryDataBlocks)
                     {
@@ -277,11 +278,11 @@ namespace ProcessorSimulator.core
                     }
                     else
                     {
-                        Console.WriteLine(Constants.AddressError + actualInstruction.ToString());
+                        Console.WriteLine(Constants.AddressError + actualInstruction);
                     }
 
                     break;
-                case (int) Operation.SW:
+                case (int) Operation.Sw:
                     address = Contexts[contextIndex].Registers[actualInstruction.Source] + actualInstruction.Inmediate;
                     if (address >= 0 && address < Constants.BytesInMemoryDataBlocks)
                     {
@@ -289,7 +290,7 @@ namespace ProcessorSimulator.core
                     }
                     else
                     {
-                        Console.WriteLine(Constants.AddressError + actualInstruction.ToString());
+                        Console.WriteLine(Constants.AddressError + actualInstruction);
                     }
 
                     break;

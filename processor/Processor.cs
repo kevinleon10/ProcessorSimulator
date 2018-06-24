@@ -20,7 +20,7 @@ namespace ProcessorSimulator.processor
             ProcessorBarrier = new Barrier(3);
             ContextQueue = new Queue<Context>();
             Quantum = 0;
-            contextList = new List<Context>();
+            ContextList = new List<Context>();
             CoreZeroThreadA = new Thread(StartMainThreadCoreZero);
             //CoreZeroThreadB = new Thread(StartSecThreadCoreZero);
             InitializeStructures();
@@ -62,11 +62,11 @@ namespace ProcessorSimulator.processor
             CoreOne.StartExecution(GetNewContext(), 0); // TODO Cambiar cuando hayan cambiado startExecution
         }
 
-        public Thread CoreZeroThreadA { get; private set; }
+        public Thread CoreZeroThreadA { get; set; }
 
-        public Thread CoreZeroThreadB { get; private set; }
+        public Thread CoreZeroThreadB { get; set; }
 
-        public Thread CoreOneThread { get; private set; }
+        public Thread CoreOneThread { get; set; }
 
         public DobleCore CoreZero { get; set; }
 
@@ -78,7 +78,7 @@ namespace ProcessorSimulator.processor
 
         public Queue<Context> ContextQueue { get; set; }
 
-        public List<Context> contextList { get; set; }
+        public List<Context> ContextList { get; set; }
 
         public int Quantum { get; set; }
 
@@ -292,7 +292,7 @@ namespace ProcessorSimulator.processor
         private void LoadNewContextMainThread(Core core, Thread thread)
         {
             var oldContext = core.Contexts[Constants.FirstContextIndex];
-            contextList.Add(oldContext); // Adds the ending context for statistic purposes
+            ContextList.Add(oldContext); // Adds the ending context for statistic purposes
             var newContext = GetNewContext();
             if (newContext != null)
             {
@@ -310,7 +310,7 @@ namespace ProcessorSimulator.processor
         private void LoadNewContextSecThread(DobleCore core, Thread thread)
         {
             var oldContext = core.Contexts[Constants.SecondContextIndex];
-            contextList.Add(oldContext); // Adds the ending context for statistic purposes
+            ContextList.Add(oldContext); // Adds the ending context for statistic purposes
             var newContext = GetNewContext();
             if (newContext != null)
             {
@@ -525,7 +525,7 @@ namespace ProcessorSimulator.processor
 
             // Finally display the statistics of each thread
             System.Console.WriteLine("Displaying statistics for each thread:");
-            foreach (var context in contextList)
+            foreach (var context in ContextList)
             {
                 System.Console.WriteLine(context.ToString());
                 System.Console.WriteLine("***********************************************************");
