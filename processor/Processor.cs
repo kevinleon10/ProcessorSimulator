@@ -26,8 +26,6 @@ namespace ProcessorSimulator.processor
             CoreOneThread = new Thread(StartCoreOne);
 
             InitializeStructures();
-            CoreOneThread.Start();
-            CoreZeroThreadA.Start();
         }
 
         public static Processor Instance
@@ -436,9 +434,12 @@ namespace ProcessorSimulator.processor
 
         private void ResumeHighLevelThread(Thread thread)
         {
-            thread.Resume();
-            ClockBarrier.AddParticipant();
-            ProcessorBarrier.AddParticipant();
+            if (thread.ThreadState == ThreadState.Suspended)
+            {
+                thread.Resume();
+                ClockBarrier.AddParticipant();
+                ProcessorBarrier.AddParticipant();
+            }
         }
 
         private void FinalizeHighLevelThread(Thread thread)

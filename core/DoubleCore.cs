@@ -4,6 +4,7 @@ using ProcessorSimulator.block;
 using ProcessorSimulator.cache;
 using ProcessorSimulator.common;
 using ProcessorSimulator.memory;
+using ProcessorSimulator.processor;
 
 namespace ProcessorSimulator.core
 {
@@ -14,6 +15,7 @@ namespace ProcessorSimulator.core
             Reservations = new List<Reservation>();
             RemainingThreadCycles = new int[Constants.ThreadsInCoreZero];
             ThreadStatuses = new ThreadStatus[Constants.ThreadsInCoreZero];
+            ThreadStatuses[1] = ThreadStatus.Dead;
             Contexts = new Context[Constants.ThreadsInCoreZero];
             RemainingThreadCycles[Constants.FirstContextIndex] = Constants.NotRunningAnyThread;
             RemainingThreadCycles[Constants.SecondContextIndex] = Constants.NotRunningAnyThread;
@@ -83,8 +85,8 @@ namespace ProcessorSimulator.core
                                                 hasFinishedLoad = true;
                                                 Reservations[blockPositionInReservations].IsInDateCache = false;
                                                 Monitor.Exit(Reservations[blockPositionInReservations]);
-                                                //Processor.Instance.ClockBarrier.SignalAndWait();
-                                                //Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                Processor.Instance.ClockBarrier.SignalAndWait();
+                                                Processor.Instance.ProcessorBarrier.SignalAndWait();
                                             }
                                             else // It tries to get the bus
                                             {
@@ -100,8 +102,8 @@ namespace ProcessorSimulator.core
                                                         try
                                                         {
                                                             ThreadStatuses[contextIndex] = ThreadStatus.CacheFail;
-                                                            //Processor.Instance.ClockBarrier.SignalAndWait();
-                                                            //Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                            Processor.Instance.ClockBarrier.SignalAndWait();
+                                                            Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                             // If the label does not match with the block number and it is modified it will store the block in memory
                                                             if (currentBlock.Label != blockNumberInMemory &&
                                                                 currentBlock.BlockState == BlockState.Modified)
@@ -109,11 +111,11 @@ namespace ProcessorSimulator.core
                                                                 Memory.Instance.StoreDataBlock(currentBlock.Label,
                                                                     currentBlock.Words);
                                                                 // Add forty cycles
-                                                                /*for (var i = 0; i < Constants.CyclesMemory; i++)
+                                                                for (var i = 0; i < Constants.CyclesMemory; i++)
                                                                 {
-                                                                    //Processor.Instance.ClockBarrier.SignalAndWait();
-                                                                    //Processor.Instance.ProcessorBarrier.SignalAndWait();
-                                                                }*/
+                                                                    Processor.Instance.ClockBarrier.SignalAndWait();
+                                                                    Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                                }
                                                             }
 
                                                             var blockNumberInOtherCache =
@@ -129,8 +131,8 @@ namespace ProcessorSimulator.core
                                                                     try
                                                                     {
                                                                         hasTakenOtherBlock = true;
-                                                                        //Processor.Instance.ClockBarrier.SignalAndWait();
-                                                                        //Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                                        Processor.Instance.ClockBarrier.SignalAndWait();
+                                                                        Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                                         DataCache.Blocks[blockNumberInCache].Label =
                                                                             blockNumberInMemory;
                                                                         // If the label matches with the block number it will be replaced the current block
@@ -159,11 +161,11 @@ namespace ProcessorSimulator.core
                                                                                 .Blocks[blockNumberInCache]
                                                                                 .Words[wordNumberInBlock];
                                                                             // Add forty cycles
-                                                                            /*for (var i = 0; i < Constants.CyclesMemory; i++)
+                                                                            for (var i = 0; i < Constants.CyclesMemory; i++)
                                                                             {
-                                                                                //Processor.Instance.ClockBarrier.SignalAndWait();
-                                                                                //Processor.Instance.ProcessorBarrier.SignalAndWait();
-                                                                            }*/
+                                                                                Processor.Instance.ClockBarrier.SignalAndWait();
+                                                                                Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                                            }
 
                                                                             Contexts[contextIndex].NumberOfCycles++;
                                                                             RemainingThreadCycles[contextIndex]--;
@@ -189,8 +191,8 @@ namespace ProcessorSimulator.core
                                                                                     }
                                                                                 }
                                                                             }
-                                                                            //Processor.Instance.ClockBarrier.SignalAndWait();
-                                                                            //Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                                            Processor.Instance.ClockBarrier.SignalAndWait();
+                                                                            Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                                         }
                                                                         else // It will bring it from memory
                                                                         {
@@ -207,11 +209,11 @@ namespace ProcessorSimulator.core
                                                                             wordData = DataCache
                                                                                 .Blocks[blockNumberInCache]
                                                                                 .Words[wordNumberInBlock];
-                                                                            /*for (var i = 0; i < Constants.CyclesMemory; i++)
+                                                                            for (var i = 0; i < Constants.CyclesMemory; i++)
                                                                             {
-                                                                                //Processor.Instance.ClockBarrier.SignalAndWait();
-                                                                                //Processor.Instance.ProcessorBarrier.SignalAndWait();
-                                                                            }*/
+                                                                                Processor.Instance.ClockBarrier.SignalAndWait();
+                                                                                Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                                            }
 
                                                                             Contexts[contextIndex].NumberOfCycles++;
                                                                             RemainingThreadCycles[contextIndex]--;
@@ -237,8 +239,8 @@ namespace ProcessorSimulator.core
                                                                                     }
                                                                                 }
                                                                             }
-                                                                            //Processor.Instance.ClockBarrier.SignalAndWait();
-                                                                            //Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                                            Processor.Instance.ClockBarrier.SignalAndWait();
+                                                                            Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                                         }
                                                                     }
                                                                     finally
@@ -256,8 +258,8 @@ namespace ProcessorSimulator.core
                                                                 }
                                                                 else
                                                                 {
-                                                                    //Processor.Instance.ClockBarrier.SignalAndWait();
-                                                                    //Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                                    Processor.Instance.ClockBarrier.SignalAndWait();
+                                                                    Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                                 }
                                                             }
                                                         }
@@ -269,8 +271,8 @@ namespace ProcessorSimulator.core
                                                     }
                                                     else
                                                     {
-                                                        //Processor.Instance.ClockBarrier.SignalAndWait();
-                                                        //Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                        Processor.Instance.ClockBarrier.SignalAndWait();
+                                                        Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                     }
                                                 }
                                                 else
@@ -290,8 +292,8 @@ namespace ProcessorSimulator.core
                                     }
                                     else
                                     {
-                                        //Processor.Instance.ClockBarrier.SignalAndWait();
-                                        //Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                        Processor.Instance.ClockBarrier.SignalAndWait();
+                                        Processor.Instance.ProcessorBarrier.SignalAndWait();
                                     }
                                 }
                                 else
@@ -365,8 +367,8 @@ namespace ProcessorSimulator.core
                                                 hasFinishedStore = true;
                                                 Reservations[blockPositionInReservations].IsInDateCache = false;
                                                 Monitor.Exit(Reservations[blockPositionInReservations]);
-                                                //Processor.Instance.ClockBarrier.SignalAndWait();
-                                                //Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                Processor.Instance.ClockBarrier.SignalAndWait();
+                                                Processor.Instance.ProcessorBarrier.SignalAndWait();
                                             }
                                             else // It tries to get the bus
                                             {
@@ -381,8 +383,8 @@ namespace ProcessorSimulator.core
                                                     {
                                                         try
                                                         {
-                                                            //Processor.Instance.ClockBarrier.SignalAndWait();
-                                                            //Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                            Processor.Instance.ClockBarrier.SignalAndWait();
+                                                            Processor.Instance.ProcessorBarrier.SignalAndWait();
 
                                                             // If the label does not match with the block number and it is modified it will store the block in memory
                                                             if (currentBlock.Label != blockNumberInMemory &&
@@ -391,11 +393,11 @@ namespace ProcessorSimulator.core
                                                                 Memory.Instance.StoreDataBlock(currentBlock.Label,
                                                                     currentBlock.Words);
                                                                 // Add forty cycles
-                                                                /*for (var i = 0; i < Constants.CyclesMemory; i++)
+                                                                for (var i = 0; i < Constants.CyclesMemory; i++)
                                                                 {
-                                                                    //Processor.Instance.ClockBarrier.SignalAndWait();
-                                                                    //Processor.Instance.ProcessorBarrier.SignalAndWait();
-                                                                }*/
+                                                                    Processor.Instance.ClockBarrier.SignalAndWait();
+                                                                    Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                                }
                                                             }
 
                                                             var blockNumberInOtherCache =
@@ -411,8 +413,8 @@ namespace ProcessorSimulator.core
                                                                     try
                                                                     {
                                                                         hasTakenOtherBlock = true;
-                                                                        //Processor.Instance.ClockBarrier.SignalAndWait();
-                                                                        //Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                                        Processor.Instance.ClockBarrier.SignalAndWait();
+                                                                        Processor.Instance.ProcessorBarrier.SignalAndWait();
 
                                                                         //If it is shared it will invalidate the other cache block
                                                                         if (currentBlock.BlockState ==
@@ -455,8 +457,8 @@ namespace ProcessorSimulator.core
                                                                                     }
                                                                                 }
                                                                             }
-                                                                            //Processor.Instance.ClockBarrier.SignalAndWait();
-                                                                            //Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                                            Processor.Instance.ClockBarrier.SignalAndWait();
+                                                                            Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                                         }
                                                                         //If it is invalid or it is another label
                                                                         else if (currentBlock.BlockState ==
@@ -492,11 +494,11 @@ namespace ProcessorSimulator.core
                                                                                         .BlockState =
                                                                                     BlockState.Shared;
                                                                                 // Add forty cycles
-                                                                                /*for (var i = 0; i < Constants.CyclesMemory; i++)
+                                                                                for (var i = 0; i < Constants.CyclesMemory; i++)
                                                                                 {
-                                                                                    //Processor.Instance.ClockBarrier.SignalAndWait();
-                                                                                    //Processor.Instance.ProcessorBarrier.SignalAndWait();
-                                                                                }*/
+                                                                                    Processor.Instance.ClockBarrier.SignalAndWait();
+                                                                                    Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                                                }
                                                                                 DataCache.Blocks[blockNumberInCache]
                                                                                         .Words[wordNumberInBlock] =
                                                                                     newData;
@@ -532,8 +534,8 @@ namespace ProcessorSimulator.core
                                                                                         }
                                                                                     }
                                                                                 }
-                                                                                //Processor.Instance.ClockBarrier.SignalAndWait();
-                                                                                //Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                                                Processor.Instance.ClockBarrier.SignalAndWait();
+                                                                                Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                                             }
                                                                             else if (otherCacheBlock.Label ==
                                                                                      blockNumberInMemory &&
@@ -548,11 +550,11 @@ namespace ProcessorSimulator.core
                                                                                         .Words =
                                                                                     Memory.Instance.LoadDataBlock(
                                                                                         blockNumberInMemory);
-                                                                                /*for (var i = 0; i < Constants.CyclesMemory; i++)
+                                                                                for (var i = 0; i < Constants.CyclesMemory; i++)
                                                                                 {
-                                                                                    //Processor.Instance.ClockBarrier.SignalAndWait();
-                                                                                    //Processor.Instance.ProcessorBarrier.SignalAndWait();
-                                                                                }*/
+                                                                                    Processor.Instance.ClockBarrier.SignalAndWait();
+                                                                                    Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                                                }
                                                                                 DataCache.Blocks[blockNumberInCache]
                                                                                         .Words[wordNumberInBlock] =
                                                                                     newData;
@@ -583,8 +585,8 @@ namespace ProcessorSimulator.core
                                                                                         }
                                                                                     }
                                                                                 }
-                                                                                //Processor.Instance.ClockBarrier.SignalAndWait();
-                                                                                //Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                                                Processor.Instance.ClockBarrier.SignalAndWait();
+                                                                                Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                                             }
                                                                             else //it has to bring it from memory
                                                                             {
@@ -596,11 +598,11 @@ namespace ProcessorSimulator.core
                                                                                         .Words =
                                                                                     Memory.Instance.LoadDataBlock(
                                                                                         blockNumberInMemory);
-                                                                                /*for (var i = 0; i < Constants.CyclesMemory; i++)
+                                                                                for (var i = 0; i < Constants.CyclesMemory; i++)
                                                                                 {
-                                                                                    //Processor.Instance.ClockBarrier.SignalAndWait();
-                                                                                    //Processor.Instance.ProcessorBarrier.SignalAndWait();
-                                                                                }*/
+                                                                                    Processor.Instance.ClockBarrier.SignalAndWait();
+                                                                                    Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                                                }
                                                                                 DataCache.Blocks[blockNumberInCache]
                                                                                         .Words[wordNumberInBlock] =
                                                                                     newData;
@@ -631,8 +633,8 @@ namespace ProcessorSimulator.core
                                                                                         }
                                                                                     }
                                                                                 }
-                                                                                //Processor.Instance.ClockBarrier.SignalAndWait();
-                                                                                //Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                                                Processor.Instance.ClockBarrier.SignalAndWait();
+                                                                                Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                                             }
                                                                         }
                                                                     }
@@ -651,8 +653,8 @@ namespace ProcessorSimulator.core
                                                                 }
                                                                 else
                                                                 {
-                                                                    //Processor.Instance.ClockBarrier.SignalAndWait();
-                                                                    //Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                                    Processor.Instance.ClockBarrier.SignalAndWait();
+                                                                    Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                                 }
                                                             }
                                                         }
@@ -664,8 +666,8 @@ namespace ProcessorSimulator.core
                                                     }
                                                     else
                                                     {
-                                                        //Processor.Instance.ClockBarrier.SignalAndWait();
-                                                        //Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                        Processor.Instance.ClockBarrier.SignalAndWait();
+                                                        Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                     }
                                                 }
                                                 else
@@ -685,8 +687,8 @@ namespace ProcessorSimulator.core
                                     }
                                     else
                                     {
-                                        //Processor.Instance.ClockBarrier.SignalAndWait();
-                                        //Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                        Processor.Instance.ClockBarrier.SignalAndWait();
+                                        Processor.Instance.ProcessorBarrier.SignalAndWait();
                                     }
                                 }
                                 else
