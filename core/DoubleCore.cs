@@ -22,12 +22,12 @@ namespace ProcessorSimulator.core
         public List<Reservation> Reservations { get; set; }
 
 
-        private int BlockPositionInReservations(int blockNumberInCache, int contextIndex)
+        private int BlockPositionInReservations(int blockNumberInMemory, int contextIndex)
         {
             var blockPositionInReservations = 0;
             while (blockPositionInReservations < Reservations.Count)
             {
-                if (blockNumberInCache == Reservations[blockPositionInReservations].BlockLabel)
+                if (blockNumberInMemory == Reservations[blockPositionInReservations].BlockLabel)
                 {
                     return blockPositionInReservations;
                 }
@@ -35,7 +35,8 @@ namespace ProcessorSimulator.core
                 ++blockPositionInReservations;
             }
 
-            Reservations.Add(new Reservation(false, false, false, blockNumberInCache, Contexts[contextIndex].ThreadId));
+            Reservations.Add(new Reservation(false, false, false, blockNumberInMemory,
+                Contexts[contextIndex].ThreadId));
             return blockPositionInReservations;
         }
 
@@ -54,207 +55,268 @@ namespace ProcessorSimulator.core
                 {
                     try
                     {
-                        var blockPositionInReservations = BlockPositionInReservations(blockNumberInCache, contextIndex);
-                        // If it is not reserved it can try to lock
-                        if (!Reservations[blockPositionInReservations].IsInDateCache)
+                        var blockPositionInReservations =
+                            BlockPositionInReservations(blockNumberInMemory, contextIndex);
+                        Monitor.Exit(Reservations);
+                        if (Monitor.TryEnter(Reservations[blockPositionInReservations]))
                         {
-                            Reservations[blockPositionInReservations].IsInDateCache = true;
-                            Reservations[blockPositionInReservations].IsWaiting = false;
-
-                            // Try lock
-                            if (Monitor.TryEnter(DataCache.Blocks[blockNumberInCache]))
+                            try
                             {
-                                try
+                                // If it is not reserved it can try to lock
+                                if (!Reservations[blockPositionInReservations].IsInDateCache)
                                 {
-                                    // If the label matches with the block number and it is not invalid
-                                    var currentBlock = DataCache.Blocks[blockNumberInCache];
-                                    if (currentBlock.Label == blockNumberInMemory &&
-                                        currentBlock.BlockState != BlockState.Invalid)
+                                    Reservations[blockPositionInReservations].IsInDateCache = true;
+                                    Reservations[blockPositionInReservations].IsWaiting = false;
+                                    // Try lock
+                                    if (Monitor.TryEnter(DataCache.Blocks[blockNumberInCache]))
                                     {
-                                        wordData = currentBlock.Words[wordNumberInBlock];
-                                        Contexts[contextIndex].NumberOfCycles++;
-                                        RemainingThreadCycles[contextIndex]--;
-                                        //Processor.Instance.ClockBarrier.SignalAndWait();
-                                        //Processor.Instance.ProcessorBarrier.SignalAndWait();
-                                        hasFinishedLoad = true;
-                                        Reservations[blockPositionInReservations].IsInDateCache = false;
-                                    }
-                                    else // It tries to get the bus
-                                    {
-                                        // It checks if it is not reserved
-                                        if (!Reservations[blockPositionInReservations].IsUsingBus)
+                                        try
                                         {
-                                            Reservations[blockPositionInReservations].IsWaiting = false;
-                                            Reservations[blockPositionInReservations].IsUsingBus = true;
-                                            // Try lock
-                                            if (Monitor.TryEnter(DataBus.Instance))
+                                            // If the label matches with the block number and it is not invalid
+                                            var currentBlock = DataCache.Blocks[blockNumberInCache];
+                                            if (currentBlock.Label == blockNumberInMemory &&
+                                                currentBlock.BlockState != BlockState.Invalid)
                                             {
-                                                try
-                                                {
-                                                    ThreadStatuses[contextIndex] = ThreadStatus.CacheFail;
-                                                    //Processor.Instance.ClockBarrier.SignalAndWait();
-                                                    //Processor.Instance.ProcessorBarrier.SignalAndWait();
-                                                    // If the label does not match with the block number and it is modified it will store the block in memory
-                                                    if (currentBlock.Label != blockNumberInMemory &&
-                                                        currentBlock.BlockState == BlockState.Modified)
-                                                    {
-                                                        Memory.Instance.StoreDataBlock(currentBlock.Label,
-                                                            currentBlock.Words);
-                                                        // Add forty cycles
-                                                        /*for (var i = 0; i < Constants.CyclesMemory; i++)
-                                                        {
-                                                            //Processor.Instance.ClockBarrier.SignalAndWait();
-                                                            //Processor.Instance.ProcessorBarrier.SignalAndWait();
-                                                        }*/
-                                                    }
-
-                                                    var blockNumberInOtherCache =
-                                                        blockNumberInMemory % DataCache.OtherCache.CacheSize;
-                                                    // Try lock
-                                                    var hasTakenOtherBlock = false;
-                                                    while (!hasTakenOtherBlock)
-                                                    {
-                                                        if (Monitor.TryEnter(
-                                                            DataCache.OtherCache.Blocks[blockNumberInOtherCache]))
-                                                        {
-                                                            try
-                                                            {
-                                                                hasTakenOtherBlock = true;
-                                                                //Processor.Instance.ClockBarrier.SignalAndWait();
-                                                                //Processor.Instance.ProcessorBarrier.SignalAndWait();
-                                                                DataCache.Blocks[blockNumberInCache].Label =
-                                                                    blockNumberInMemory;
-                                                                // If the label matches with the block number it will be replaced the current block
-                                                                var otherCacheBlock =
-                                                                    DataCache.OtherCache.Blocks[
-                                                                        blockNumberInOtherCache];
-                                                                if (otherCacheBlock.Label ==
-                                                                    blockNumberInMemory &&
-                                                                    otherCacheBlock.BlockState ==
-                                                                    BlockState.Modified)
-                                                                {
-                                                                    DataCache.OtherCache.Blocks[blockNumberInOtherCache]
-                                                                            .BlockState =
-                                                                        BlockState.Shared;
-                                                                    Memory.Instance.StoreDataBlock(blockNumberInMemory,
-                                                                        otherCacheBlock.Words);
-                                                                    DataCache.Blocks[blockNumberInCache].Words =
-                                                                        Memory.Instance.LoadDataBlock(
-                                                                            blockNumberInMemory);
-                                                                    DataCache.Blocks[blockNumberInCache].BlockState =
-                                                                        BlockState.Shared;
-                                                                    wordData = DataCache.Blocks[blockNumberInCache]
-                                                                        .Words[wordNumberInBlock];
-                                                                    // Add forty cycles
-                                                                    /*for (var i = 0; i < Constants.CyclesMemory; i++)
-                                                                    {
-                                                                        //Processor.Instance.ClockBarrier.SignalAndWait();
-                                                                        //Processor.Instance.ProcessorBarrier.SignalAndWait();
-                                                                    }*/
-
-                                                                    Contexts[contextIndex].NumberOfCycles++;
-                                                                    RemainingThreadCycles[contextIndex]--;
-                                                                    ThreadStatuses[contextIndex] =
-                                                                        ThreadStatus.SolvedCacheFail;
-                                                                    //Processor.Instance.ClockBarrier.SignalAndWait();
-                                                                    //Processor.Instance.ProcessorBarrier.SignalAndWait();
-                                                                    hasFinishedLoad = true;
-                                                                    Reservations[blockPositionInReservations].IsInDateCache = false;
-                                                                    Reservations[blockPositionInReservations].IsUsingBus = false;
-                                                                }
-                                                                else // It will bring it from memory
-                                                                {
-                                                                    //Release the lock in other cache because it is not needed
-                                                                    Monitor.Exit(
-                                                                        DataCache.OtherCache.Blocks
-                                                                            [blockNumberInOtherCache]);
-                                                                    DataCache.Blocks[blockNumberInCache].Words =
-                                                                        Memory.Instance.LoadDataBlock(
-                                                                            blockNumberInMemory);
-                                                                    DataCache.Blocks[blockNumberInCache].BlockState =
-                                                                        BlockState.Shared;
-                                                                    wordData = DataCache.Blocks[blockNumberInCache]
-                                                                        .Words[wordNumberInBlock];
-                                                                    /*for (var i = 0; i < Constants.CyclesMemory; i++)
-                                                                    {
-                                                                        //Processor.Instance.ClockBarrier.SignalAndWait();
-                                                                        //Processor.Instance.ProcessorBarrier.SignalAndWait();
-                                                                    }*/
-
-                                                                    Contexts[contextIndex].NumberOfCycles++;
-                                                                    RemainingThreadCycles[contextIndex]--;
-                                                                    ThreadStatuses[contextIndex] =
-                                                                        ThreadStatus.SolvedCacheFail;
-                                                                    //Processor.Instance.ClockBarrier.SignalAndWait();
-                                                                    //Processor.Instance.ProcessorBarrier.SignalAndWait();
-                                                                    hasFinishedLoad = true;
-                                                                    Reservations[blockPositionInReservations].IsInDateCache = false;
-                                                                    Reservations[blockPositionInReservations].IsUsingBus = false;
-                                                                }
-                                                            }
-                                                            finally
-                                                            {
-                                                                // Ensure that the lock is released.
-                                                                if (Monitor.IsEntered(
-                                                                    DataCache.OtherCache.Blocks
-                                                                        [blockNumberInOtherCache]))
-                                                                {
-                                                                    Monitor.Exit(
-                                                                        DataCache.OtherCache.Blocks
-                                                                            [blockNumberInOtherCache]);
-                                                                }
-                                                            }
-                                                        }
-                                                        else
-                                                        {
-                                                            //Processor.Instance.ClockBarrier.SignalAndWait();
-                                                            //Processor.Instance.ProcessorBarrier.SignalAndWait();
-                                                        }
-                                                    }
-                                                }
-                                                finally
-                                                {
-                                                    // Ensure that the lock is released.
-                                                    Monitor.Exit(DataBus.Instance);
-                                                }
-                                            }
-                                            else
-                                            {
+                                                wordData = currentBlock.Words[wordNumberInBlock];
+                                                Contexts[contextIndex].NumberOfCycles++;
+                                                RemainingThreadCycles[contextIndex]--;
+                                                hasFinishedLoad = true;
+                                                Reservations[blockPositionInReservations].IsInDateCache = false;
+                                                Monitor.Exit(Reservations[blockPositionInReservations]);
                                                 //Processor.Instance.ClockBarrier.SignalAndWait();
                                                 //Processor.Instance.ProcessorBarrier.SignalAndWait();
                                             }
+                                            else // It tries to get the bus
+                                            {
+                                                // It checks if it is not reserved
+                                                if (!Reservations[blockPositionInReservations].IsUsingBus)
+                                                {
+                                                    Reservations[blockPositionInReservations].IsWaiting = false;
+                                                    Reservations[blockPositionInReservations].IsUsingBus = true;
+                                                    Monitor.Exit(Reservations[blockPositionInReservations]);
+                                                    // Try lock
+                                                    if (Monitor.TryEnter(DataBus.Instance))
+                                                    {
+                                                        try
+                                                        {
+                                                            ThreadStatuses[contextIndex] = ThreadStatus.CacheFail;
+                                                            //Processor.Instance.ClockBarrier.SignalAndWait();
+                                                            //Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                            // If the label does not match with the block number and it is modified it will store the block in memory
+                                                            if (currentBlock.Label != blockNumberInMemory &&
+                                                                currentBlock.BlockState == BlockState.Modified)
+                                                            {
+                                                                Memory.Instance.StoreDataBlock(currentBlock.Label,
+                                                                    currentBlock.Words);
+                                                                // Add forty cycles
+                                                                /*for (var i = 0; i < Constants.CyclesMemory; i++)
+                                                                {
+                                                                    //Processor.Instance.ClockBarrier.SignalAndWait();
+                                                                    //Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                                }*/
+                                                            }
+
+                                                            var blockNumberInOtherCache =
+                                                                blockNumberInMemory % DataCache.OtherCache.CacheSize;
+                                                            // Try lock
+                                                            var hasTakenOtherBlock = false;
+                                                            while (!hasTakenOtherBlock)
+                                                            {
+                                                                if (Monitor.TryEnter(
+                                                                    DataCache.OtherCache.Blocks
+                                                                        [blockNumberInOtherCache]))
+                                                                {
+                                                                    try
+                                                                    {
+                                                                        hasTakenOtherBlock = true;
+                                                                        //Processor.Instance.ClockBarrier.SignalAndWait();
+                                                                        //Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                                        DataCache.Blocks[blockNumberInCache].Label =
+                                                                            blockNumberInMemory;
+                                                                        // If the label matches with the block number it will be replaced the current block
+                                                                        var otherCacheBlock =
+                                                                            DataCache.OtherCache.Blocks[
+                                                                                blockNumberInOtherCache];
+                                                                        if (otherCacheBlock.Label ==
+                                                                            blockNumberInMemory &&
+                                                                            otherCacheBlock.BlockState ==
+                                                                            BlockState.Modified)
+                                                                        {
+                                                                            DataCache.OtherCache
+                                                                                    .Blocks[blockNumberInOtherCache]
+                                                                                    .BlockState =
+                                                                                BlockState.Shared;
+                                                                            Memory.Instance.StoreDataBlock(
+                                                                                blockNumberInMemory,
+                                                                                otherCacheBlock.Words);
+                                                                            DataCache.Blocks[blockNumberInCache].Words =
+                                                                                Memory.Instance.LoadDataBlock(
+                                                                                    blockNumberInMemory);
+                                                                            DataCache.Blocks[blockNumberInCache]
+                                                                                    .BlockState =
+                                                                                BlockState.Shared;
+                                                                            wordData = DataCache
+                                                                                .Blocks[blockNumberInCache]
+                                                                                .Words[wordNumberInBlock];
+                                                                            // Add forty cycles
+                                                                            /*for (var i = 0; i < Constants.CyclesMemory; i++)
+                                                                            {
+                                                                                //Processor.Instance.ClockBarrier.SignalAndWait();
+                                                                                //Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                                            }*/
+
+                                                                            Contexts[contextIndex].NumberOfCycles++;
+                                                                            RemainingThreadCycles[contextIndex]--;
+                                                                            ThreadStatuses[contextIndex] =
+                                                                                ThreadStatus.SolvedCacheFail;
+                                                                            while (!hasFinishedLoad)
+                                                                            {
+                                                                                if (Monitor.TryEnter(Reservations[blockPositionInReservations]))
+                                                                                {
+                                                                                    try
+                                                                                    {
+                                                                                        hasFinishedLoad = true;
+                                                                                        Reservations[
+                                                                                                blockPositionInReservations]
+                                                                                            .IsInDateCache = false;
+                                                                                        Reservations[
+                                                                                                blockPositionInReservations]
+                                                                                            .IsUsingBus = false;
+                                                                                    }
+                                                                                    finally
+                                                                                    {
+                                                                                        Monitor.Exit(Reservations[blockPositionInReservations]);
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                            //Processor.Instance.ClockBarrier.SignalAndWait();
+                                                                            //Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                                        }
+                                                                        else // It will bring it from memory
+                                                                        {
+                                                                            //Release the lock in other cache because it is not needed
+                                                                            Monitor.Exit(
+                                                                                DataCache.OtherCache.Blocks
+                                                                                    [blockNumberInOtherCache]);
+                                                                            DataCache.Blocks[blockNumberInCache].Words =
+                                                                                Memory.Instance.LoadDataBlock(
+                                                                                    blockNumberInMemory);
+                                                                            DataCache.Blocks[blockNumberInCache]
+                                                                                    .BlockState =
+                                                                                BlockState.Shared;
+                                                                            wordData = DataCache
+                                                                                .Blocks[blockNumberInCache]
+                                                                                .Words[wordNumberInBlock];
+                                                                            /*for (var i = 0; i < Constants.CyclesMemory; i++)
+                                                                            {
+                                                                                //Processor.Instance.ClockBarrier.SignalAndWait();
+                                                                                //Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                                            }*/
+
+                                                                            Contexts[contextIndex].NumberOfCycles++;
+                                                                            RemainingThreadCycles[contextIndex]--;
+                                                                            ThreadStatuses[contextIndex] =
+                                                                                ThreadStatus.SolvedCacheFail;
+                                                                            while (!hasFinishedLoad)
+                                                                            {
+                                                                                if (Monitor.TryEnter(Reservations[blockPositionInReservations]))
+                                                                                {
+                                                                                    try
+                                                                                    {
+                                                                                        hasFinishedLoad = true;
+                                                                                        Reservations[
+                                                                                                blockPositionInReservations]
+                                                                                            .IsInDateCache = false;
+                                                                                        Reservations[
+                                                                                                blockPositionInReservations]
+                                                                                            .IsUsingBus = false;
+                                                                                    }
+                                                                                    finally
+                                                                                    {
+                                                                                        Monitor.Exit(Reservations[blockPositionInReservations]);
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                            //Processor.Instance.ClockBarrier.SignalAndWait();
+                                                                            //Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                                        }
+                                                                    }
+                                                                    finally
+                                                                    {
+                                                                        // Ensure that the lock is released.
+                                                                        if (Monitor.IsEntered(
+                                                                            DataCache.OtherCache.Blocks
+                                                                                [blockNumberInOtherCache]))
+                                                                        {
+                                                                            Monitor.Exit(
+                                                                                DataCache.OtherCache.Blocks
+                                                                                    [blockNumberInOtherCache]);
+                                                                        }
+                                                                    }
+                                                                }
+                                                                else
+                                                                {
+                                                                    //Processor.Instance.ClockBarrier.SignalAndWait();
+                                                                    //Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                                }
+                                                            }
+                                                        }
+                                                        finally
+                                                        {
+                                                            // Ensure that the lock is released.
+                                                            Monitor.Exit(DataBus.Instance);
+                                                        }
+                                                    }
+                                                    else
+                                                    {
+                                                        //Processor.Instance.ClockBarrier.SignalAndWait();
+                                                        //Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    Reservations[blockPositionInReservations].IsWaiting = true;
+                                                    ThreadStatuses[contextIndex] = ThreadStatus.Waiting;
+                                                }
+                                            }
+
+                                            // The critical section.
                                         }
-                                        else
+                                        finally
                                         {
-                                            Reservations[blockPositionInReservations].IsWaiting = true;
-                                            ThreadStatuses[contextIndex] = ThreadStatus.Waiting;
+                                            // Ensure that the lock is released.
+                                            Monitor.Exit(DataCache.Blocks[blockNumberInCache]);
                                         }
                                     }
-
-                                    // The critical section.
+                                    else
+                                    {
+                                        //Processor.Instance.ClockBarrier.SignalAndWait();
+                                        //Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                    }
                                 }
-                                finally
+                                else
                                 {
-                                    // Ensure that the lock is released.
-                                    Monitor.Exit(DataCache.Blocks[blockNumberInCache]);
+                                    Reservations[blockPositionInReservations].IsWaiting = true;
+                                    ThreadStatuses[contextIndex] = ThreadStatus.Waiting;
                                 }
                             }
-                            else
+                            finally
                             {
-                                //Processor.Instance.ClockBarrier.SignalAndWait();
-                                //Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                // Ensure that the lock is released.
+                                if (Monitor.IsEntered(Reservations[blockPositionInReservations]))
+                                {
+                                    Monitor.Exit(Reservations[blockPositionInReservations]);
+                                }
                             }
-                        }
-                        else
-                        {
-                            Reservations[blockPositionInReservations].IsWaiting = true;
-                            ThreadStatuses[contextIndex] = ThreadStatus.Waiting;
                         }
                     }
                     finally
                     {
                         // Ensure that the lock is released.
-                        Monitor.Exit(Reservations);
+                        if (Monitor.IsEntered(Reservations))
+                        {
+                            Monitor.Exit(Reservations);
+                        }
                     }
                 }
             }
@@ -275,283 +337,387 @@ namespace ProcessorSimulator.core
                 {
                     try
                     {
-                        var blockPositionInReservations = BlockPositionInReservations(blockNumberInCache, contextIndex);
-                        // If it is not reserved it can try to lock
-                        if (!Reservations[blockPositionInReservations].IsInDateCache)
+                        var blockPositionInReservations =
+                            BlockPositionInReservations(blockNumberInMemory, contextIndex);
+                        Monitor.Exit(Reservations);
+                        if (Monitor.TryEnter(Reservations[blockPositionInReservations]))
                         {
-                            Reservations[blockPositionInReservations].IsInDateCache = true;
-                            Reservations[blockPositionInReservations].IsWaiting = false;
-                            // Try lock
-                            if (Monitor.TryEnter(DataCache.Blocks[blockNumberInCache]))
+                            try
                             {
-                                try
+                                // If it is not reserved it can try to lock
+                                if (!Reservations[blockPositionInReservations].IsInDateCache)
                                 {
-                                    // If the label matches with the block number and it is already modified
-                                    var currentBlock = DataCache.Blocks[blockNumberInCache];
-                                    if (currentBlock.Label == blockNumberInMemory &&
-                                        currentBlock.BlockState == BlockState.Modified)
+                                    Reservations[blockPositionInReservations].IsInDateCache = true;
+                                    Reservations[blockPositionInReservations].IsWaiting = false;
+                                    // Try lock
+                                    if (Monitor.TryEnter(DataCache.Blocks[blockNumberInCache]))
                                     {
-                                        DataCache.Blocks[blockNumberInCache].Words[wordNumberInBlock] = newData;
-                                        Contexts[contextIndex].NumberOfCycles++;
-                                        RemainingThreadCycles[contextIndex]--;
-                                        //Processor.Instance.ClockBarrier.SignalAndWait();
-                                        //Processor.Instance.ProcessorBarrier.SignalAndWait();
-                                        hasFinishedStore = true;
-                                        Reservations[blockPositionInReservations].IsInDateCache = false;
-                                    }
-                                    else // It tries to get the bus
-                                    {
-                                        // It checks if it is not reserved
-                                        if (!Reservations[blockPositionInReservations].IsUsingBus)
+                                        try
                                         {
-                                            Reservations[blockPositionInReservations].IsWaiting = false;
-                                            Reservations[blockPositionInReservations].IsUsingBus = true;
-                                            // Try lock
-                                            if (Monitor.TryEnter(DataBus.Instance))
+                                            // If the label matches with the block number and it is already modified
+                                            var currentBlock = DataCache.Blocks[blockNumberInCache];
+                                            if (currentBlock.Label == blockNumberInMemory &&
+                                                currentBlock.BlockState == BlockState.Modified)
                                             {
-                                                try
-                                                {
-                                                    //Processor.Instance.ClockBarrier.SignalAndWait();
-                                                    //Processor.Instance.ProcessorBarrier.SignalAndWait();
-
-                                                    // If the label does not match with the block number and it is modified it will store the block in memory
-                                                    if (currentBlock.Label != blockNumberInMemory &&
-                                                        currentBlock.BlockState == BlockState.Modified)
-                                                    {
-                                                        Memory.Instance.StoreDataBlock(currentBlock.Label,
-                                                            currentBlock.Words);
-                                                        // Add forty cycles
-                                                        /*for (var i = 0; i < Constants.CyclesMemory; i++)
-                                                        {
-                                                            //Processor.Instance.ClockBarrier.SignalAndWait();
-                                                            //Processor.Instance.ProcessorBarrier.SignalAndWait();
-                                                        }*/
-                                                    }
-
-                                                    var blockNumberInOtherCache =
-                                                        blockNumberInMemory % DataCache.OtherCache.CacheSize;
-                                                    // Try lock
-                                                    var hasTakenOtherBlock = false;
-                                                    while (!hasTakenOtherBlock)
-                                                    {
-                                                        if (Monitor.TryEnter(
-                                                            DataCache.OtherCache.Blocks[blockNumberInOtherCache]))
-                                                        {
-                                                            try
-                                                            {
-                                                                hasTakenOtherBlock = true;
-                                                                //Processor.Instance.ClockBarrier.SignalAndWait();
-                                                                //Processor.Instance.ProcessorBarrier.SignalAndWait();
-
-                                                                //If it is shared it will invalidate the other cache block
-                                                                if (currentBlock.BlockState == BlockState.Shared &&
-                                                                    currentBlock.Label == blockNumberInMemory &&
-                                                                    DataCache.OtherCache.Blocks[blockNumberInOtherCache]
-                                                                        .Label ==
-                                                                    blockNumberInMemory)
-                                                                {
-                                                                    DataCache.OtherCache.Blocks[blockNumberInOtherCache]
-                                                                            .BlockState =
-                                                                        BlockState.Invalid;
-                                                                    DataCache.Blocks[blockNumberInCache]
-                                                                            .Words[wordNumberInBlock] =
-                                                                        newData;
-                                                                    DataCache.Blocks[blockNumberInCache].BlockState =
-                                                                        BlockState.Modified;
-                                                                    Contexts[contextIndex].NumberOfCycles++;
-                                                                    RemainingThreadCycles[contextIndex]--;
-                                                                    //Processor.Instance.ClockBarrier.SignalAndWait();
-                                                                    //Processor.Instance.ProcessorBarrier.SignalAndWait();
-                                                                    hasFinishedStore = true;
-                                                                    Reservations[blockPositionInReservations].IsInDateCache = false;
-                                                                    Reservations[blockPositionInReservations].IsUsingBus = false;
-                                                                }
-                                                                //If it is invalid or it is another label
-                                                                else if (currentBlock.BlockState ==
-                                                                         BlockState.Invalid ||
-                                                                         currentBlock.Label != blockNumberInMemory)
-                                                                {
-                                                                    ThreadStatuses[contextIndex] =
-                                                                        ThreadStatus.CacheFail;
-                                                                    DataCache.Blocks[blockNumberInCache].Label =
-                                                                        blockNumberInMemory;
-                                                                    // If the label matches with the block number and it is modified it will be replaced with the current block
-                                                                    var otherCacheBlock =
-                                                                        DataCache.OtherCache.Blocks[
-                                                                            blockNumberInOtherCache];
-                                                                    if (otherCacheBlock.Label ==
-                                                                        blockNumberInMemory &&
-                                                                        otherCacheBlock.BlockState ==
-                                                                        BlockState.Modified)
-                                                                    {
-                                                                        DataCache.OtherCache
-                                                                                .Blocks[blockNumberInOtherCache]
-                                                                                .BlockState =
-                                                                            BlockState.Shared;
-                                                                        Memory.Instance.StoreDataBlock(
-                                                                            blockNumberInMemory,
-                                                                            otherCacheBlock.Words);
-                                                                        DataCache.Blocks[blockNumberInCache].Words =
-                                                                            Memory.Instance.LoadDataBlock(
-                                                                                blockNumberInMemory);
-                                                                        DataCache.Blocks[blockNumberInCache]
-                                                                                .BlockState =
-                                                                            BlockState.Shared;
-                                                                        // Add forty cycles
-                                                                        /*for (var i = 0; i < Constants.CyclesMemory; i++)
-                                                                        {
-                                                                            //Processor.Instance.ClockBarrier.SignalAndWait();
-                                                                            //Processor.Instance.ProcessorBarrier.SignalAndWait();
-                                                                        }*/
-                                                                        DataCache.Blocks[blockNumberInCache]
-                                                                                .Words[wordNumberInBlock] =
-                                                                            newData;
-                                                                        //Just for follow the process
-                                                                        DataCache.OtherCache
-                                                                                .Blocks[blockNumberInOtherCache]
-                                                                                .BlockState =
-                                                                            BlockState.Invalid;
-                                                                        DataCache.Blocks[blockNumberInCache]
-                                                                                .BlockState =
-                                                                            BlockState.Modified;
-                                                                        ThreadStatuses[contextIndex] =
-                                                                            ThreadStatus.SolvedCacheFail;
-                                                                        Contexts[contextIndex].NumberOfCycles++;
-                                                                        RemainingThreadCycles[contextIndex]--;
-                                                                        //Processor.Instance.ClockBarrier.SignalAndWait();
-                                                                        //Processor.Instance.ProcessorBarrier.SignalAndWait();
-                                                                        hasFinishedStore = true;
-                                                                        Reservations[blockPositionInReservations].IsInDateCache = false;
-                                                                        Reservations[blockPositionInReservations].IsUsingBus = false;
-                                                                    }
-                                                                    else if (otherCacheBlock.Label ==
-                                                                             blockNumberInMemory &&
-                                                                             otherCacheBlock.BlockState ==
-                                                                             BlockState.Shared)
-                                                                    {
-                                                                        DataCache.OtherCache
-                                                                                .Blocks[blockNumberInOtherCache]
-                                                                                .BlockState
-                                                                            = BlockState.Invalid;
-                                                                        DataCache.Blocks[blockNumberInCache].Words =
-                                                                            Memory.Instance.LoadDataBlock(
-                                                                                blockNumberInMemory);
-                                                                        /*for (var i = 0; i < Constants.CyclesMemory; i++)
-                                                                        {
-                                                                            //Processor.Instance.ClockBarrier.SignalAndWait();
-                                                                            //Processor.Instance.ProcessorBarrier.SignalAndWait();
-                                                                        }*/
-                                                                        DataCache.Blocks[blockNumberInCache]
-                                                                                .Words[wordNumberInBlock] =
-                                                                            newData;
-                                                                        DataCache.Blocks[blockNumberInCache]
-                                                                                .BlockState =
-                                                                            BlockState.Modified;
-                                                                        ThreadStatuses[contextIndex] =
-                                                                            ThreadStatus.SolvedCacheFail;
-                                                                        Contexts[contextIndex].NumberOfCycles++;
-                                                                        RemainingThreadCycles[contextIndex]--;
-                                                                        //Processor.Instance.ClockBarrier.SignalAndWait();
-                                                                        //Processor.Instance.ProcessorBarrier.SignalAndWait();
-                                                                        hasFinishedStore = true;
-                                                                        Reservations[blockPositionInReservations].IsInDateCache = false;
-                                                                        Reservations[blockPositionInReservations].IsUsingBus = false;
-                                                                    }
-                                                                    else //it has to bring it from memory
-                                                                    {
-                                                                        //Release the lock in other cache because it is not needed
-                                                                        Monitor.Exit(
-                                                                            DataCache.OtherCache.Blocks
-                                                                                [blockNumberInOtherCache]);
-                                                                        DataCache.Blocks[blockNumberInCache].Words =
-                                                                            Memory.Instance.LoadDataBlock(
-                                                                                blockNumberInMemory);
-                                                                        /*for (var i = 0; i < Constants.CyclesMemory; i++)
-                                                                        {
-                                                                            //Processor.Instance.ClockBarrier.SignalAndWait();
-                                                                            //Processor.Instance.ProcessorBarrier.SignalAndWait();
-                                                                        }*/
-                                                                        DataCache.Blocks[blockNumberInCache]
-                                                                                .Words[wordNumberInBlock] =
-                                                                            newData;
-                                                                        DataCache.Blocks[blockNumberInCache]
-                                                                                .BlockState =
-                                                                            BlockState.Modified;
-                                                                        ThreadStatuses[contextIndex] =
-                                                                            ThreadStatus.SolvedCacheFail;
-                                                                        Contexts[contextIndex].NumberOfCycles++;
-                                                                        RemainingThreadCycles[contextIndex]--;
-                                                                        //Processor.Instance.ClockBarrier.SignalAndWait();
-                                                                        //Processor.Instance.ProcessorBarrier.SignalAndWait();
-                                                                        hasFinishedStore = true;
-                                                                        Reservations[blockPositionInReservations].IsInDateCache = false;
-                                                                        Reservations[blockPositionInReservations].IsUsingBus = false;
-                                                                    }
-                                                                }
-                                                            }
-                                                            finally
-                                                            {
-                                                                // Ensure that the lock is released.
-                                                                if (Monitor.IsEntered(
-                                                                    DataCache.OtherCache.Blocks
-                                                                        [blockNumberInOtherCache]))
-                                                                {
-                                                                    Monitor.Exit(
-                                                                        DataCache.OtherCache.Blocks
-                                                                            [blockNumberInOtherCache]);
-                                                                }
-                                                            }
-                                                        }
-                                                        else
-                                                        {
-                                                            //Processor.Instance.ClockBarrier.SignalAndWait();
-                                                            //Processor.Instance.ProcessorBarrier.SignalAndWait();
-                                                        }
-                                                    }
-                                                }
-                                                finally
-                                                {
-                                                    // Ensure that the lock is released.
-                                                    Monitor.Exit(DataBus.Instance);
-                                                }
-                                            }
-                                            else
-                                            {
+                                                DataCache.Blocks[blockNumberInCache].Words[wordNumberInBlock] = newData;
+                                                Contexts[contextIndex].NumberOfCycles++;
+                                                RemainingThreadCycles[contextIndex]--;
+                                                hasFinishedStore = true;
+                                                Reservations[blockPositionInReservations].IsInDateCache = false;
+                                                Monitor.Exit(Reservations[blockPositionInReservations]);
                                                 //Processor.Instance.ClockBarrier.SignalAndWait();
                                                 //Processor.Instance.ProcessorBarrier.SignalAndWait();
                                             }
+                                            else // It tries to get the bus
+                                            {
+                                                // It checks if it is not reserved
+                                                if (!Reservations[blockPositionInReservations].IsUsingBus)
+                                                {
+                                                    Reservations[blockPositionInReservations].IsWaiting = false;
+                                                    Reservations[blockPositionInReservations].IsUsingBus = true;
+                                                    Monitor.Exit(Reservations[blockPositionInReservations]);
+                                                    // Try lock
+                                                    if (Monitor.TryEnter(DataBus.Instance))
+                                                    {
+                                                        try
+                                                        {
+                                                            //Processor.Instance.ClockBarrier.SignalAndWait();
+                                                            //Processor.Instance.ProcessorBarrier.SignalAndWait();
+
+                                                            // If the label does not match with the block number and it is modified it will store the block in memory
+                                                            if (currentBlock.Label != blockNumberInMemory &&
+                                                                currentBlock.BlockState == BlockState.Modified)
+                                                            {
+                                                                Memory.Instance.StoreDataBlock(currentBlock.Label,
+                                                                    currentBlock.Words);
+                                                                // Add forty cycles
+                                                                /*for (var i = 0; i < Constants.CyclesMemory; i++)
+                                                                {
+                                                                    //Processor.Instance.ClockBarrier.SignalAndWait();
+                                                                    //Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                                }*/
+                                                            }
+
+                                                            var blockNumberInOtherCache =
+                                                                blockNumberInMemory % DataCache.OtherCache.CacheSize;
+                                                            // Try lock
+                                                            var hasTakenOtherBlock = false;
+                                                            while (!hasTakenOtherBlock)
+                                                            {
+                                                                if (Monitor.TryEnter(
+                                                                    DataCache.OtherCache.Blocks
+                                                                        [blockNumberInOtherCache]))
+                                                                {
+                                                                    try
+                                                                    {
+                                                                        hasTakenOtherBlock = true;
+                                                                        //Processor.Instance.ClockBarrier.SignalAndWait();
+                                                                        //Processor.Instance.ProcessorBarrier.SignalAndWait();
+
+                                                                        //If it is shared it will invalidate the other cache block
+                                                                        if (currentBlock.BlockState ==
+                                                                            BlockState.Shared &&
+                                                                            currentBlock.Label == blockNumberInMemory &&
+                                                                            DataCache.OtherCache
+                                                                                .Blocks[blockNumberInOtherCache]
+                                                                                .Label ==
+                                                                            blockNumberInMemory)
+                                                                        {
+                                                                            DataCache.OtherCache
+                                                                                    .Blocks[blockNumberInOtherCache]
+                                                                                    .BlockState =
+                                                                                BlockState.Invalid;
+                                                                            DataCache.Blocks[blockNumberInCache]
+                                                                                    .Words[wordNumberInBlock] =
+                                                                                newData;
+                                                                            DataCache.Blocks[blockNumberInCache]
+                                                                                    .BlockState =
+                                                                                BlockState.Modified;
+                                                                            Contexts[contextIndex].NumberOfCycles++;
+                                                                            RemainingThreadCycles[contextIndex]--;
+                                                                            while (!hasFinishedStore)
+                                                                            {
+                                                                                if (Monitor.TryEnter(Reservations[blockPositionInReservations]))
+                                                                                {
+                                                                                    try
+                                                                                    {
+                                                                                        hasFinishedStore = true;
+                                                                                        Reservations[
+                                                                                                blockPositionInReservations]
+                                                                                            .IsInDateCache = false;
+                                                                                        Reservations[
+                                                                                                blockPositionInReservations]
+                                                                                            .IsUsingBus = false;
+                                                                                    }
+                                                                                    finally
+                                                                                    {
+                                                                                        Monitor.Exit(Reservations[blockPositionInReservations]);
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                            //Processor.Instance.ClockBarrier.SignalAndWait();
+                                                                            //Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                                        }
+                                                                        //If it is invalid or it is another label
+                                                                        else if (currentBlock.BlockState ==
+                                                                                 BlockState.Invalid ||
+                                                                                 currentBlock.Label !=
+                                                                                 blockNumberInMemory)
+                                                                        {
+                                                                            ThreadStatuses[contextIndex] =
+                                                                                ThreadStatus.CacheFail;
+                                                                            DataCache.Blocks[blockNumberInCache].Label =
+                                                                                blockNumberInMemory;
+                                                                            // If the label matches with the block number and it is modified it will be replaced with the current block
+                                                                            var otherCacheBlock =
+                                                                                DataCache.OtherCache.Blocks[
+                                                                                    blockNumberInOtherCache];
+                                                                            if (otherCacheBlock.Label ==
+                                                                                blockNumberInMemory &&
+                                                                                otherCacheBlock.BlockState ==
+                                                                                BlockState.Modified)
+                                                                            {
+                                                                                DataCache.OtherCache
+                                                                                        .Blocks[blockNumberInOtherCache]
+                                                                                        .BlockState =
+                                                                                    BlockState.Shared;
+                                                                                Memory.Instance.StoreDataBlock(
+                                                                                    blockNumberInMemory,
+                                                                                    otherCacheBlock.Words);
+                                                                                DataCache.Blocks[blockNumberInCache]
+                                                                                        .Words =
+                                                                                    Memory.Instance.LoadDataBlock(
+                                                                                        blockNumberInMemory);
+                                                                                DataCache.Blocks[blockNumberInCache]
+                                                                                        .BlockState =
+                                                                                    BlockState.Shared;
+                                                                                // Add forty cycles
+                                                                                /*for (var i = 0; i < Constants.CyclesMemory; i++)
+                                                                                {
+                                                                                    //Processor.Instance.ClockBarrier.SignalAndWait();
+                                                                                    //Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                                                }*/
+                                                                                DataCache.Blocks[blockNumberInCache]
+                                                                                        .Words[wordNumberInBlock] =
+                                                                                    newData;
+                                                                                //Just for follow the process
+                                                                                DataCache.OtherCache
+                                                                                        .Blocks[blockNumberInOtherCache]
+                                                                                        .BlockState =
+                                                                                    BlockState.Invalid;
+                                                                                DataCache.Blocks[blockNumberInCache]
+                                                                                        .BlockState =
+                                                                                    BlockState.Modified;
+                                                                                ThreadStatuses[contextIndex] =
+                                                                                    ThreadStatus.SolvedCacheFail;
+                                                                                Contexts[contextIndex].NumberOfCycles++;
+                                                                                RemainingThreadCycles[contextIndex]--;
+                                                                                while (!hasFinishedStore)
+                                                                                {
+                                                                                    if (Monitor.TryEnter(Reservations[blockPositionInReservations]))
+                                                                                    {
+                                                                                        try
+                                                                                        {
+                                                                                            hasFinishedStore = true;
+                                                                                            Reservations[
+                                                                                                    blockPositionInReservations]
+                                                                                                .IsInDateCache = false;
+                                                                                            Reservations[
+                                                                                                    blockPositionInReservations]
+                                                                                                .IsUsingBus = false;
+                                                                                        }
+                                                                                        finally
+                                                                                        {
+                                                                                            Monitor.Exit(Reservations[blockPositionInReservations]);
+                                                                                        }
+                                                                                    }
+                                                                                }
+                                                                                //Processor.Instance.ClockBarrier.SignalAndWait();
+                                                                                //Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                                            }
+                                                                            else if (otherCacheBlock.Label ==
+                                                                                     blockNumberInMemory &&
+                                                                                     otherCacheBlock.BlockState ==
+                                                                                     BlockState.Shared)
+                                                                            {
+                                                                                DataCache.OtherCache
+                                                                                        .Blocks[blockNumberInOtherCache]
+                                                                                        .BlockState
+                                                                                    = BlockState.Invalid;
+                                                                                DataCache.Blocks[blockNumberInCache]
+                                                                                        .Words =
+                                                                                    Memory.Instance.LoadDataBlock(
+                                                                                        blockNumberInMemory);
+                                                                                /*for (var i = 0; i < Constants.CyclesMemory; i++)
+                                                                                {
+                                                                                    //Processor.Instance.ClockBarrier.SignalAndWait();
+                                                                                    //Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                                                }*/
+                                                                                DataCache.Blocks[blockNumberInCache]
+                                                                                        .Words[wordNumberInBlock] =
+                                                                                    newData;
+                                                                                DataCache.Blocks[blockNumberInCache]
+                                                                                        .BlockState =
+                                                                                    BlockState.Modified;
+                                                                                ThreadStatuses[contextIndex] =
+                                                                                    ThreadStatus.SolvedCacheFail;
+                                                                                Contexts[contextIndex].NumberOfCycles++;
+                                                                                RemainingThreadCycles[contextIndex]--;
+                                                                                while (!hasFinishedStore)
+                                                                                {
+                                                                                    if (Monitor.TryEnter(Reservations[blockPositionInReservations]))
+                                                                                    {
+                                                                                        try
+                                                                                        {
+                                                                                            hasFinishedStore = true;
+                                                                                            Reservations[
+                                                                                                    blockPositionInReservations]
+                                                                                                .IsInDateCache = false;
+                                                                                            Reservations[
+                                                                                                    blockPositionInReservations]
+                                                                                                .IsUsingBus = false;
+                                                                                        }
+                                                                                        finally
+                                                                                        {
+                                                                                            Monitor.Exit(Reservations[blockPositionInReservations]);
+                                                                                        }
+                                                                                    }
+                                                                                }
+                                                                                //Processor.Instance.ClockBarrier.SignalAndWait();
+                                                                                //Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                                            }
+                                                                            else //it has to bring it from memory
+                                                                            {
+                                                                                //Release the lock in other cache because it is not needed
+                                                                                Monitor.Exit(
+                                                                                    DataCache.OtherCache.Blocks
+                                                                                        [blockNumberInOtherCache]);
+                                                                                DataCache.Blocks[blockNumberInCache]
+                                                                                        .Words =
+                                                                                    Memory.Instance.LoadDataBlock(
+                                                                                        blockNumberInMemory);
+                                                                                /*for (var i = 0; i < Constants.CyclesMemory; i++)
+                                                                                {
+                                                                                    //Processor.Instance.ClockBarrier.SignalAndWait();
+                                                                                    //Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                                                }*/
+                                                                                DataCache.Blocks[blockNumberInCache]
+                                                                                        .Words[wordNumberInBlock] =
+                                                                                    newData;
+                                                                                DataCache.Blocks[blockNumberInCache]
+                                                                                        .BlockState =
+                                                                                    BlockState.Modified;
+                                                                                ThreadStatuses[contextIndex] =
+                                                                                    ThreadStatus.SolvedCacheFail;
+                                                                                Contexts[contextIndex].NumberOfCycles++;
+                                                                                RemainingThreadCycles[contextIndex]--;
+                                                                                while (!hasFinishedStore)
+                                                                                {
+                                                                                    if (Monitor.TryEnter(Reservations[blockPositionInReservations]))
+                                                                                    {
+                                                                                        try
+                                                                                        {
+                                                                                            hasFinishedStore = true;
+                                                                                            Reservations[
+                                                                                                    blockPositionInReservations]
+                                                                                                .IsInDateCache = false;
+                                                                                            Reservations[
+                                                                                                    blockPositionInReservations]
+                                                                                                .IsUsingBus = false;
+                                                                                        }
+                                                                                        finally
+                                                                                        {
+                                                                                            Monitor.Exit(Reservations[blockPositionInReservations]);
+                                                                                        }
+                                                                                    }
+                                                                                }
+                                                                                //Processor.Instance.ClockBarrier.SignalAndWait();
+                                                                                //Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                    finally
+                                                                    {
+                                                                        // Ensure that the lock is released.
+                                                                        if (Monitor.IsEntered(
+                                                                            DataCache.OtherCache.Blocks
+                                                                                [blockNumberInOtherCache]))
+                                                                        {
+                                                                            Monitor.Exit(
+                                                                                DataCache.OtherCache.Blocks
+                                                                                    [blockNumberInOtherCache]);
+                                                                        }
+                                                                    }
+                                                                }
+                                                                else
+                                                                {
+                                                                    //Processor.Instance.ClockBarrier.SignalAndWait();
+                                                                    //Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                                }
+                                                            }
+                                                        }
+                                                        finally
+                                                        {
+                                                            // Ensure that the lock is released.
+                                                            Monitor.Exit(DataBus.Instance);
+                                                        }
+                                                    }
+                                                    else
+                                                    {
+                                                        //Processor.Instance.ClockBarrier.SignalAndWait();
+                                                        //Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    Reservations[blockPositionInReservations].IsWaiting = true;
+                                                    ThreadStatuses[contextIndex] = ThreadStatus.Waiting;
+                                                }
+                                            }
+
+                                            // The critical section.
                                         }
-                                        else
+                                        finally
                                         {
-                                            Reservations[blockPositionInReservations].IsWaiting = true;
-                                            ThreadStatuses[contextIndex] = ThreadStatus.Waiting;
+                                            // Ensure that the lock is released.
+                                            Monitor.Exit(DataCache.Blocks[blockNumberInCache]);
                                         }
                                     }
-
-                                    // The critical section.
+                                    else
+                                    {
+                                        //Processor.Instance.ClockBarrier.SignalAndWait();
+                                        //Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                    }
                                 }
-                                finally
+                                else
                                 {
-                                    // Ensure that the lock is released.
-                                    Monitor.Exit(DataCache.Blocks[blockNumberInCache]);
+                                    Reservations[blockPositionInReservations].IsWaiting = true;
+                                    ThreadStatuses[contextIndex] = ThreadStatus.Waiting;
                                 }
                             }
-                            else
+                            finally
                             {
-                                //Processor.Instance.ClockBarrier.SignalAndWait();
-                                //Processor.Instance.ProcessorBarrier.SignalAndWait();
+                                // Ensure that the lock is released.
+                                if (Monitor.IsEntered(
+                                    Reservations
+                                        [blockPositionInReservations]))
+                                {
+                                    Monitor.Exit(
+                                        Reservations
+                                            [blockPositionInReservations]);
+                                }
                             }
-                        }
-                        else
-                        {
-                            Reservations[blockPositionInReservations].IsWaiting = true;
-                            ThreadStatuses[contextIndex] = ThreadStatus.Waiting;
                         }
                     }
                     finally
                     {
                         // Ensure that the lock is released.
-                        Monitor.Exit(Reservations);
+                        if (Monitor.IsEntered(
+                            Reservations))
+                        {
+                            Monitor.Exit(
+                                Reservations);
+                        }
                     }
                 }
             }
