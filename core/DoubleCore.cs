@@ -22,12 +22,12 @@ namespace ProcessorSimulator.core
         public List<Reservation> Reservations { get; set; }
 
 
-        private int BlockPositionInReservations(int blockNumberInMemory, int contextIndex)
+        private int BlockPositionInReservations(int blockNumberInCache, int contextIndex)
         {
             var blockPositionInReservations = 0;
             while (blockPositionInReservations < Reservations.Count)
             {
-                if (blockNumberInMemory == Reservations[blockPositionInReservations].BlockLabel)
+                if (blockNumberInCache == Reservations[blockPositionInReservations].BlockNumberInCache)
                 {
                     return blockPositionInReservations;
                 }
@@ -35,7 +35,7 @@ namespace ProcessorSimulator.core
                 ++blockPositionInReservations;
             }
 
-            Reservations.Add(new Reservation(false, false, false, blockNumberInMemory,
+            Reservations.Add(new Reservation(false, false, false, blockNumberInCache,
                 Contexts[contextIndex].ThreadId));
             return blockPositionInReservations;
         }
@@ -56,7 +56,7 @@ namespace ProcessorSimulator.core
                     try
                     {
                         var blockPositionInReservations =
-                            BlockPositionInReservations(blockNumberInMemory, contextIndex);
+                            BlockPositionInReservations(blockNumberInCache, contextIndex);
                         Monitor.Exit(Reservations);
                         if (Monitor.TryEnter(Reservations[blockPositionInReservations]))
                         {
@@ -338,7 +338,7 @@ namespace ProcessorSimulator.core
                     try
                     {
                         var blockPositionInReservations =
-                            BlockPositionInReservations(blockNumberInMemory, contextIndex);
+                            BlockPositionInReservations(blockNumberInCache, contextIndex);
                         Monitor.Exit(Reservations);
                         if (Monitor.TryEnter(Reservations[blockPositionInReservations]))
                         {

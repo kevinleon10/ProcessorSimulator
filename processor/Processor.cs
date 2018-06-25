@@ -354,7 +354,7 @@ namespace ProcessorSimulator.processor
         {
             var usingBus = waitingReservation.IsUsingBus;
             var inDataCache = waitingReservation.IsInDateCache;
-            var blockNum = waitingReservation.BlockLabel;
+            var blockNum = waitingReservation.BlockNumberInCache;
             var found = false;
             var reservations = CoreZero.Reservations;
             foreach (var reservation in reservations)
@@ -368,7 +368,7 @@ namespace ProcessorSimulator.processor
                 }
 
                 // Check if block labels match
-                if (blockNum != reservation.BlockLabel || inDataCache != reservation.IsInDateCache) continue;
+                if (blockNum != reservation.BlockNumberInCache || inDataCache != reservation.IsInDateCache) continue;
                 found = true;
                 break;
             }
