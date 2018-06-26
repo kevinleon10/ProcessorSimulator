@@ -144,10 +144,10 @@ namespace ProcessorSimulator.core
                                                         RemainingThreadCycles[contextIndex]--;
                                                         if (RemainingThreadCycles[contextIndex] == 0)
                                                         {
-                                                            Monitor.Exit(DataCache.Blocks[blockNumberInCache]);
+                                                            Monitor.Exit(InstructionCache.Blocks[blockNumberInCache]);
                                                             Monitor.Exit(DataBus.Instance);
                                                             Monitor.Exit(
-                                                                DataCache.OtherCache.Blocks[blockNumberInOtherCache]);
+                                                                InstructionCache.OtherCache.Blocks[blockNumberInOtherCache]);
                                                         }
 
                                                         ThreadStatuses[contextIndex] = ThreadStatus.SolvedCacheFail;
