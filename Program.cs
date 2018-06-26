@@ -7,9 +7,8 @@ namespace ProcessorSimulator
     {
         public static void Main(string[] args)
         {
-            Processor.Instance.Quantum = 10;
             Console.WriteLine("Hello world!");
-            Processor.Instance.RunSimulation(false);
+            Processor.Instance.Quantum = 10;
         }
     }
 }
