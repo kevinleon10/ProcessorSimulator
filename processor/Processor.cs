@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+﻿﻿using System.Collections.Generic;
 using System.Threading;
 using ProcessorSimulator.block;
 using ProcessorSimulator.cache;
@@ -374,7 +374,7 @@ namespace ProcessorSimulator.processor
         private bool FindBlockingReservation(Reservation waitingReservation)
         {
             var usingBus = waitingReservation.IsUsingBus;
-            var inDataCache = waitingReservation.IsInDateCache;
+            var inDataCache = waitingReservation.IsInDataCache;
             var blockNum = waitingReservation.BlockNumberInCache;
             var found = false;
             var reservations = CoreZero.Reservations;
@@ -383,13 +383,13 @@ namespace ProcessorSimulator.processor
                 if (usingBus && reservation.IsUsingBus)
                 {
                     // We then check if they are using the same cache
-                    if (inDataCache != reservation.IsInDateCache) continue;
+                    if (inDataCache != reservation.IsInDataCache) continue;
                     found = true;
                     break;
                 }
 
                 // Check if block labels match
-                if (blockNum != reservation.BlockNumberInCache || inDataCache != reservation.IsInDateCache) continue;
+                if (blockNum != reservation.BlockNumberInCache || inDataCache != reservation.IsInDataCache) continue;
                 found = true;
                 break;
             }

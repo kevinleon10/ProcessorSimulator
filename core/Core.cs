@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Threading;
 using ProcessorSimulator.block;
 using ProcessorSimulator.cache;
@@ -69,7 +69,7 @@ namespace ProcessorSimulator.core
         /// <returns>
         /// The resulting instruction
         /// </returns>
-        private Instruction LoadInstruction(int contextIndex)
+        protected virtual Instruction LoadInstruction(int contextIndex)
         {
             var blockNumberInMemory = GetBlockNumberInMemory(Contexts[contextIndex].ProgramCounter);
             var wordNumberInBlock = GetWordNumberInBlock(Contexts[contextIndex].ProgramCounter);

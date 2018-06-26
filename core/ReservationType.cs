@@ -2,6 +2,6 @@
 {
     public enum ReservationType
     {
-        
+        DataCache, InstructionCache
     }
 }

@@ -8,16 +8,16 @@ namespace ProcessorSimulator.core
         {
             IsWaiting = false;
             IsUsingBus = false;
-            IsInDateCache = false;
+            IsInDataCache = false;
             BlockNumberInCache = Constants.InvalidLabel;
             ThreadId = Constants.InvalidLabel;
         }
 
-        public Reservation(bool isWaiting, bool isUsingBus, bool isInDateCache, int blockNumberInCache, int threadId)
+        public Reservation(bool isWaiting, bool isUsingBus, bool isInDataCache, int blockNumberInCache, int threadId)
         {
             IsWaiting = isWaiting;
             IsUsingBus = isUsingBus;
-            IsInDateCache = isInDateCache;
+            IsInDataCache = isInDataCache;
             BlockNumberInCache = blockNumberInCache;
             ThreadId = threadId;
         }
@@ -28,7 +28,7 @@ namespace ProcessorSimulator.core
 
         public bool IsUsingBus { get; set; }
 
-        public bool IsInDateCache { get; set; }
+        public bool IsInDataCache { get; set; }
 
         public int BlockNumberInCache { get; set; }
     }
