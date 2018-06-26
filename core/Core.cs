@@ -278,7 +278,7 @@ namespace ProcessorSimulator.core
                     break;
                 case (int) Operation.Dmul:
                     Contexts[contextIndex].Registers[actualInstruction.Inmediate] =
-                        Contexts[contextIndex].Registers[actualInstruction.Source] +
+                        Contexts[contextIndex].Registers[actualInstruction.Source] *
                         Contexts[contextIndex].Registers[actualInstruction.Destiny];
                     break;
                 case (int) Operation.Ddiv:
@@ -592,7 +592,7 @@ namespace ProcessorSimulator.core
                                                 //Processor.Instance.ClockBarrier.SignalAndWait();
                                                 //Processor.Instance.ProcessorBarrier.SignalAndWait();
 
-                                                //If it is shared it will invalidate other cache block
+                                                //If it is shared and the other cache block coincides it will invalidate other cache block
                                                 if (currentBlock.BlockState == BlockState.Shared &&
                                                     currentBlock.Label == blockNumberInMemory)
                                                 {
@@ -602,8 +602,8 @@ namespace ProcessorSimulator.core
                                                         DataCache.OtherCache.Blocks[blockNumberInOtherCache]
                                                                 .BlockState =
                                                             BlockState.Invalid;
-                                                        Monitor.Exit(DataCache.OtherCache.Blocks[blockNumberInOtherCache]);
                                                     }
+                                                    Monitor.Exit(DataCache.OtherCache.Blocks[blockNumberInOtherCache]);
 
                                                     DataCache.Blocks[blockNumberInCache].Words[wordNumberInBlock] =
                                                         newData;
@@ -615,8 +615,6 @@ namespace ProcessorSimulator.core
                                                     {
                                                         Monitor.Exit(DataCache.Blocks[blockNumberInCache]);
                                                         Monitor.Exit(DataBus.Instance);
-                                                        Monitor.Exit(
-                                                            DataCache.OtherCache.Blocks[blockNumberInOtherCache]);
                                                     }
 
                                                     hasFinishedStore = true;
@@ -631,7 +629,7 @@ namespace ProcessorSimulator.core
                                                     DataCache.Blocks[blockNumberInCache].Label = blockNumberInMemory;
                                                     // If the label matches with the block number and it is modified it will be replaced with the current block
                                                     var otherCacheBlock =
-                                                        DataCache.OtherCache.Blocks[blockNumberInOtherCache]; // CUIDADO
+                                                        DataCache.OtherCache.Blocks[blockNumberInOtherCache]; 
                                                     if (otherCacheBlock.Label ==
                                                         blockNumberInMemory &&
                                                         otherCacheBlock.BlockState ==

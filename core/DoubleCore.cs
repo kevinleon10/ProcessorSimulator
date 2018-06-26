@@ -476,7 +476,7 @@ namespace ProcessorSimulator.core
                                                                         Processor.Instance.ProcessorBarrier
                                                                             .SignalAndWait();
 
-                                                                        //If it is shared it will invalidate other cache block
+                                                                        //If it is shared and the other cache block coincides it will invalidate other cache block
                                                                         if (currentBlock.BlockState ==
                                                                             BlockState.Shared &&
                                                                             currentBlock.Label == blockNumberInMemory)
@@ -490,10 +490,10 @@ namespace ProcessorSimulator.core
                                                                                         .Blocks[blockNumberInOtherCache]
                                                                                         .BlockState =
                                                                                     BlockState.Invalid;
-                                                                                Monitor.Exit(
-                                                                                    DataCache.OtherCache.Blocks[
-                                                                                        blockNumberInOtherCache]);
                                                                             }
+                                                                            Monitor.Exit(
+                                                                                DataCache.OtherCache.Blocks[
+                                                                                    blockNumberInOtherCache]);
 
                                                                             DataCache.Blocks[blockNumberInCache]
                                                                                     .Words[wordNumberInBlock] =
@@ -510,9 +510,6 @@ namespace ProcessorSimulator.core
                                                                                     DataCache.Blocks
                                                                                         [blockNumberInCache]);
                                                                                 Monitor.Exit(DataBus.Instance);
-                                                                                Monitor.Exit(
-                                                                                    DataCache.OtherCache.Blocks[
-                                                                                        blockNumberInOtherCache]);
                                                                             }
 
                                                                             while (!hasFinishedStore)
