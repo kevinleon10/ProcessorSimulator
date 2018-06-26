@@ -22,6 +22,7 @@
         public const int SecondContextIndex = 1;
         public const int ThreadsInCoreOne = 1;
         public const int ThreadsInCoreZero = 2;
+        public const int DelayTime = 2000; // Miliseconds
         public const string FilePath = "hilillos/";
         public const string FileExtension = ".txt";
         // ERRORS

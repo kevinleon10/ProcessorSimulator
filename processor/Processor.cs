@@ -24,7 +24,6 @@ namespace ProcessorSimulator.processor
             CoreZeroThreadA = new Thread(StartMainThreadCoreZero);
             CoreZeroThreadB = new Thread(StartSecThreadCoreZero);
             CoreOneThread = new Thread(StartCoreOne);
-
             InitializeStructures();
         }
 
@@ -47,17 +46,32 @@ namespace ProcessorSimulator.processor
 
         private void StartMainThreadCoreZero()
         {
-            CoreZero.StartExecution(GetNewContext(), Constants.FirstContextIndex);  
+            var context = GetNewContext();
+            if (context == null)
+            {
+                FinalizeHighLevelThread(CoreZeroThreadA);
+            }
+            CoreZero.StartExecution(context, Constants.FirstContextIndex);  
         }
 
         private void StartSecThreadCoreZero()
         {
-            CoreZero.StartExecution(GetNewContext(), Constants.SecondContextIndex);
+            var context = GetNewContext();
+            if (context == null)
+            {
+                FinalizeHighLevelThread(CoreZeroThreadB);
+            }
+            CoreZero.StartExecution(context, Constants.SecondContextIndex);
         }
 
         private void StartCoreOne()
         {
-            CoreOne.StartExecution(GetNewContext(),  Constants.FirstContextIndex); // TODO Cambiar cuando hayan cambiado startExecution
+            var context = GetNewContext();
+            if (context == null)
+            {
+                FinalizeHighLevelThread(CoreOneThread);
+            }
+            CoreOne.StartExecution(context,  Constants.FirstContextIndex); 
         }
 
         public Thread CoreZeroThreadA { get; set; }
@@ -183,11 +197,21 @@ namespace ProcessorSimulator.processor
             instructionCacheOne.OtherCache = instructionCacheZero;
 
             // Creates the two cores of the processor
-            CoreOne = new Core(instructionCacheOne, dataCacheOne);
-            CoreZero = new DobleCore(instructionCacheZero, dataCacheZero);
+            CoreOne = new Core(instructionCacheOne, dataCacheOne)
+            {
+                ThreadStatuses = {[Constants.FirstContextIndex] = ThreadStatus.Running}
+            };
+            CoreZero = new DobleCore(instructionCacheZero, dataCacheZero)
+            {
+                ThreadStatuses =
+                {
+                    [Constants.FirstContextIndex] = ThreadStatus.Running,
+                    [Constants.SecondContextIndex] = ThreadStatus.Dead
+                }
+            };
         }
 
-        private void Check()
+        private bool Check()
         {
             // Check if there are threads that have ended execution
             if (CoreZero.ThreadStatuses[Constants.FirstContextIndex] == ThreadStatus.Ended)
@@ -276,14 +300,11 @@ namespace ProcessorSimulator.processor
                 // Check if there is no other thread running, and there are available threads in the context queue
                 if (CoreZero.ThreadStatuses[Constants.SecondContextIndex] == ThreadStatus.Dead && ContextQueue.Count > 0)
                 {
-                    CoreZero.Contexts[Constants.SecondContextIndex] = ContextQueue.Dequeue();
-                    CoreZero.Contexts[Constants.SecondContextIndex].NumberOfCycles = Quantum;
                     CoreZero.ThreadStatuses[Constants.SecondContextIndex] = ThreadStatus.Running;
-                    CoreZeroThreadB.Start();
-                    ClockBarrier.AddParticipant();
-                    ProcessorBarrier.AddParticipant();
+                    return true;
                 }
             }
+            return false;
         }
 
         private void LoadNewContext(Core core, Thread thread, int contextIndex)
@@ -306,9 +327,11 @@ namespace ProcessorSimulator.processor
 
         private Context GetNewContext()
         {
-            if (ContextQueue.Count == 0) return null;
-            var newContext = ContextQueue.Dequeue();
-            return newContext;
+            if (ContextQueue.Count == 0)
+            {
+                return null;
+            }
+            return ContextQueue.Dequeue();
         }
 
         private ThreadStatus[] CheckForWaitingThreads(Context context, ThreadStatus oStatus, Thread threadA,
@@ -434,12 +457,9 @@ namespace ProcessorSimulator.processor
 
         private void ResumeHighLevelThread(Thread thread)
         {
-            if (thread.ThreadState == ThreadState.Suspended)
-            {
-                thread.Resume();
-                ClockBarrier.AddParticipant();
-                ProcessorBarrier.AddParticipant();
-            }
+            thread.Resume();
+            ClockBarrier.AddParticipant();
+            ProcessorBarrier.AddParticipant();  
         }
 
         private void FinalizeHighLevelThread(Thread thread)
@@ -462,17 +482,33 @@ namespace ProcessorSimulator.processor
                     System.Console.WriteLine("Clock : " + Clock);
                     System.Console.WriteLine("Core Zero Main thread number: " +
                                              CoreZero.Contexts[Constants.FirstContextIndex].ThreadId);
-                    System.Console.WriteLine("Core Zero Sec thread number: " +
-                                             CoreZero.Contexts[Constants.SecondContextIndex].ThreadId);
+                    if (CoreZero.Contexts[Constants.SecondContextIndex] != null)
+                    {
+                        System.Console.WriteLine("Core Zero Sec thread number: " +
+                                                 CoreZero.Contexts[Constants.SecondContextIndex].ThreadId);
+                    }
+                    else
+                    {
+                        System.Console.WriteLine("Core Zero Secundary thread not running yet");
+                    }
                     System.Console.WriteLine("Core One thread number: " +
                                              CoreOne.Contexts[Constants.FirstContextIndex].ThreadId);
                     System.Console.WriteLine("***********************************************************");
                 }
 
                 Clock++;
-                Check();
-                // TODO agregar el delay de 2 segundos
+                var startSecThread = Check();
+                if (startSecThread)
+                {
+                    ClockBarrier.AddParticipant();
+                }
+                Thread.Sleep(Constants.DelayTime);
                 ProcessorBarrier.SignalAndWait();
+                if (startSecThread)
+                {
+                    ProcessorBarrier.AddParticipant();
+                    CoreZeroThreadB.Start();
+                }
             }
 
             // At this point the simulation has ended
