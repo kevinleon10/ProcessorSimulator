@@ -15,7 +15,6 @@ namespace ProcessorSimulator.core
             Reservations = new List<Reservation>();
             RemainingThreadCycles = new int[Constants.ThreadsInCoreZero];
             ThreadStatuses = new ThreadStatus[Constants.ThreadsInCoreZero];
-            ThreadStatuses[1] = ThreadStatus.Dead;
             Contexts = new Context[Constants.ThreadsInCoreZero];
             RemainingThreadCycles[Constants.FirstContextIndex] = Constants.NotRunningAnyThread;
             RemainingThreadCycles[Constants.SecondContextIndex] = Constants.NotRunningAnyThread;
@@ -82,6 +81,10 @@ namespace ProcessorSimulator.core
                                                 wordData = currentBlock.Words[wordNumberInBlock];
                                                 Contexts[contextIndex].NumberOfCycles++;
                                                 RemainingThreadCycles[contextIndex]--;
+                                                if (RemainingThreadCycles[contextIndex] == 0)
+                                                {
+                                                   Monitor.Exit(DataCache.Blocks[blockNumberInCache]);
+                                                }
                                                 hasFinishedLoad = true;
                                                 Reservations[blockPositionInReservations].IsInDateCache = false;
                                                 Monitor.Exit(Reservations[blockPositionInReservations]);
@@ -169,6 +172,12 @@ namespace ProcessorSimulator.core
 
                                                                             Contexts[contextIndex].NumberOfCycles++;
                                                                             RemainingThreadCycles[contextIndex]--;
+                                                                            if (RemainingThreadCycles[contextIndex] == 0)
+                                                                            {
+                                                                                Monitor.Exit(DataCache.Blocks[blockNumberInCache]);
+                                                                                Monitor.Exit(DataBus.Instance);
+                                                                                Monitor.Exit(DataCache.OtherCache.Blocks[blockNumberInOtherCache]);
+                                                                            }
                                                                             ThreadStatuses[contextIndex] =
                                                                                 ThreadStatus.SolvedCacheFail;
                                                                             while (!hasFinishedLoad)
@@ -217,6 +226,11 @@ namespace ProcessorSimulator.core
 
                                                                             Contexts[contextIndex].NumberOfCycles++;
                                                                             RemainingThreadCycles[contextIndex]--;
+                                                                            if (RemainingThreadCycles[contextIndex] == 0)
+                                                                            {
+                                                                                Monitor.Exit(DataCache.Blocks[blockNumberInCache]);
+                                                                                Monitor.Exit(DataBus.Instance);
+                                                                            }
                                                                             ThreadStatuses[contextIndex] =
                                                                                 ThreadStatus.SolvedCacheFail;
                                                                             while (!hasFinishedLoad)
@@ -266,7 +280,10 @@ namespace ProcessorSimulator.core
                                                         finally
                                                         {
                                                             // Ensure that the lock is released.
-                                                            Monitor.Exit(DataBus.Instance);
+                                                            if (Monitor.IsEntered(DataBus.Instance))
+                                                            {
+                                                                Monitor.Exit(DataBus.Instance);
+                                                            }
                                                         }
                                                     }
                                                     else
@@ -287,7 +304,10 @@ namespace ProcessorSimulator.core
                                         finally
                                         {
                                             // Ensure that the lock is released.
-                                            Monitor.Exit(DataCache.Blocks[blockNumberInCache]);
+                                            if (Monitor.IsEntered(DataCache.Blocks[blockNumberInCache]))
+                                            {
+                                                Monitor.Exit(DataCache.Blocks[blockNumberInCache]);
+                                            }
                                         }
                                     }
                                     else
@@ -364,6 +384,10 @@ namespace ProcessorSimulator.core
                                                 DataCache.Blocks[blockNumberInCache].Words[wordNumberInBlock] = newData;
                                                 Contexts[contextIndex].NumberOfCycles++;
                                                 RemainingThreadCycles[contextIndex]--;
+                                                if (RemainingThreadCycles[contextIndex] == 0)
+                                                {
+                                                    Monitor.Exit(DataCache.Blocks[blockNumberInCache]);
+                                                }
                                                 hasFinishedStore = true;
                                                 Reservations[blockPositionInReservations].IsInDateCache = false;
                                                 Monitor.Exit(Reservations[blockPositionInReservations]);
@@ -437,6 +461,12 @@ namespace ProcessorSimulator.core
                                                                                 BlockState.Modified;
                                                                             Contexts[contextIndex].NumberOfCycles++;
                                                                             RemainingThreadCycles[contextIndex]--;
+                                                                            if (RemainingThreadCycles[contextIndex] == 0)
+                                                                            {
+                                                                                Monitor.Exit(DataCache.Blocks[blockNumberInCache]);
+                                                                                Monitor.Exit(DataBus.Instance);
+                                                                                Monitor.Exit(DataCache.OtherCache.Blocks[blockNumberInOtherCache]);
+                                                                            }
                                                                             while (!hasFinishedStore)
                                                                             {
                                                                                 if (Monitor.TryEnter(Reservations[blockPositionInReservations]))
@@ -514,6 +544,12 @@ namespace ProcessorSimulator.core
                                                                                     ThreadStatus.SolvedCacheFail;
                                                                                 Contexts[contextIndex].NumberOfCycles++;
                                                                                 RemainingThreadCycles[contextIndex]--;
+                                                                                if (RemainingThreadCycles[contextIndex] == 0)
+                                                                                {
+                                                                                    Monitor.Exit(DataCache.Blocks[blockNumberInCache]);
+                                                                                    Monitor.Exit(DataBus.Instance);
+                                                                                    Monitor.Exit(DataCache.OtherCache.Blocks[blockNumberInOtherCache]);
+                                                                                }
                                                                                 while (!hasFinishedStore)
                                                                                 {
                                                                                     if (Monitor.TryEnter(Reservations[blockPositionInReservations]))
@@ -565,6 +601,12 @@ namespace ProcessorSimulator.core
                                                                                     ThreadStatus.SolvedCacheFail;
                                                                                 Contexts[contextIndex].NumberOfCycles++;
                                                                                 RemainingThreadCycles[contextIndex]--;
+                                                                                if (RemainingThreadCycles[contextIndex] == 0)
+                                                                                {
+                                                                                    Monitor.Exit(DataCache.Blocks[blockNumberInCache]);
+                                                                                    Monitor.Exit(DataBus.Instance);
+                                                                                    Monitor.Exit(DataCache.OtherCache.Blocks[blockNumberInOtherCache]);
+                                                                                }
                                                                                 while (!hasFinishedStore)
                                                                                 {
                                                                                     if (Monitor.TryEnter(Reservations[blockPositionInReservations]))
@@ -613,6 +655,11 @@ namespace ProcessorSimulator.core
                                                                                     ThreadStatus.SolvedCacheFail;
                                                                                 Contexts[contextIndex].NumberOfCycles++;
                                                                                 RemainingThreadCycles[contextIndex]--;
+                                                                                if (RemainingThreadCycles[contextIndex] == 0)
+                                                                                {
+                                                                                    Monitor.Exit(DataCache.Blocks[blockNumberInCache]);
+                                                                                    Monitor.Exit(DataBus.Instance);
+                                                                                }
                                                                                 while (!hasFinishedStore)
                                                                                 {
                                                                                     if (Monitor.TryEnter(Reservations[blockPositionInReservations]))
@@ -661,7 +708,10 @@ namespace ProcessorSimulator.core
                                                         finally
                                                         {
                                                             // Ensure that the lock is released.
-                                                            Monitor.Exit(DataBus.Instance);
+                                                            if (Monitor.IsEntered(DataBus.Instance))
+                                                            {
+                                                                Monitor.Exit(DataBus.Instance);
+                                                            }
                                                         }
                                                     }
                                                     else
@@ -682,7 +732,10 @@ namespace ProcessorSimulator.core
                                         finally
                                         {
                                             // Ensure that the lock is released.
-                                            Monitor.Exit(DataCache.Blocks[blockNumberInCache]);
+                                            if (Monitor.IsEntered(DataCache.Blocks[blockNumberInCache]))
+                                            {
+                                                Monitor.Exit(DataCache.Blocks[blockNumberInCache]);
+                                            }
                                         }
                                     }
                                     else
