@@ -52,7 +52,6 @@ namespace ProcessorSimulator.core
 
                 ++i;
             }
-
             return false;
         }
 
@@ -64,6 +63,10 @@ namespace ProcessorSimulator.core
             var blockNumberInCache = blockNumberInMemory % InstructionCache.CacheSize;
             var hasTakenBlock = false;
             // While it has not gotten the block it continues asking for
+            if (contextIndex == 1)
+            {
+                int a = 3;
+            }
             while (!hasTakenBlock)
             {
                 if (!IsBlockReserved(blockNumberInCache, false))
@@ -302,8 +305,9 @@ namespace ProcessorSimulator.core
                                             }
                                         }
                                     }
-
                                     ThreadStatuses[contextIndex] = ThreadStatus.Waiting;
+                                    Processor.Instance.ClockBarrier.SignalAndWait();
+                                    Processor.Instance.ProcessorBarrier.SignalAndWait();
                                 }
                             }
                         }
@@ -345,6 +349,8 @@ namespace ProcessorSimulator.core
                     }
 
                     ThreadStatuses[contextIndex] = ThreadStatus.Waiting;
+                    Processor.Instance.ClockBarrier.SignalAndWait();
+                    Processor.Instance.ProcessorBarrier.SignalAndWait();
                 }
             }
 
@@ -634,6 +640,8 @@ namespace ProcessorSimulator.core
                                     }
 
                                     ThreadStatuses[contextIndex] = ThreadStatus.Waiting;
+                                    Processor.Instance.ClockBarrier.SignalAndWait();
+                                    Processor.Instance.ProcessorBarrier.SignalAndWait();
                                 }
                             }
                         }
@@ -677,6 +685,8 @@ namespace ProcessorSimulator.core
                     }
 
                     ThreadStatuses[contextIndex] = ThreadStatus.Waiting;
+                    Processor.Instance.ClockBarrier.SignalAndWait();
+                    Processor.Instance.ProcessorBarrier.SignalAndWait();
                 }
             }
 
@@ -1080,6 +1090,8 @@ namespace ProcessorSimulator.core
                                     }
 
                                     ThreadStatuses[contextIndex] = ThreadStatus.Waiting;
+                                    Processor.Instance.ClockBarrier.SignalAndWait();
+                                    Processor.Instance.ProcessorBarrier.SignalAndWait();
                                 }
                             }
 
@@ -1123,8 +1135,9 @@ namespace ProcessorSimulator.core
                             }
                         }
                     }
-
                     ThreadStatuses[contextIndex] = ThreadStatus.Waiting;
+                    Processor.Instance.ClockBarrier.SignalAndWait();
+                    Processor.Instance.ProcessorBarrier.SignalAndWait();
                 }
             }
         }

@@ -475,6 +475,7 @@ namespace ProcessorSimulator.processor
             CoreOneThread.Start();
             while (ClockBarrier.ParticipantCount > 1)
             {
+                System.Console.WriteLine("Current Clock: " + Clock);
                 ClockBarrier.SignalAndWait();
                 if (slowMotion && Clock % Constants.SlowMotionCycles == 0)
                 {
