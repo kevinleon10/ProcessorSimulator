@@ -49,9 +49,6 @@
     <Compile Include="common\Operation.cs" />
     <Compile Include="core\Context.cs" />
     <Compile Include="core\Core.cs" />
-    <Compile Include="core\DoubleCore.cs" />
-    <Compile Include="core\Reservation.cs" />
-    <Compile Include="core\ThreadStatus.cs" />
     <Compile Include="memory\Memory.cs" />
     <Compile Include="processor\Processor.cs" />
     <Compile Include="Program.cs" />

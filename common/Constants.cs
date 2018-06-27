@@ -17,11 +17,8 @@
         public const int NumberOfRegisters = 32;
         public const int NotRunningAnyThread = -1;
         public const int CyclesMemory = 40;
+        public const int Quantum = 100;
         public const int SlowMotionCycles = 20;
-        public const int FirstContextIndex = 0;
-        public const int SecondContextIndex = 1;
-        public const int ThreadsInCoreOne = 1;
-        public const int ThreadsInCoreZero = 2;
         public const int DelayTime = 2000; // Miliseconds
         public const string FilePath = "hilillos/";
         public const string FileExtension = ".txt";

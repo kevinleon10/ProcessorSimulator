@@ -10,7 +10,6 @@ namespace ProcessorSimulator.core
             ProgramCounter = programCounter;
             ThreadId = threadId;
             NumberOfCycles = 0;
-            HasPriority = false;
             Registers = new int[Constants.NumberOfRegisters];
             for (var i = 0; i < Registers.Length; i++)
             {
@@ -25,8 +24,6 @@ namespace ProcessorSimulator.core
         public int ThreadId { get; set; }
 
         public int NumberOfCycles { get; set; }
-
-        public bool HasPriority { get; set; }
 
         public override string ToString()
         {
