@@ -197,18 +197,12 @@ namespace ProcessorSimulator.processor
             instructionCacheOne.OtherCache = instructionCacheZero;
 
             // Creates the two cores of the processor
-            CoreOne = new Core(instructionCacheOne, dataCacheOne)
-            {
-                ThreadStatuses = {[Constants.FirstContextIndex] = ThreadStatus.Running}
-            };
-            CoreZero = new DobleCore(instructionCacheZero, dataCacheZero)
-            {
-                ThreadStatuses =
-                {
-                    [Constants.FirstContextIndex] = ThreadStatus.Running,
-                    [Constants.SecondContextIndex] = ThreadStatus.Dead
-                }
-            };
+            CoreOne = new Core(instructionCacheOne, dataCacheOne);
+            CoreOne.ThreadStatuses[Constants.FirstContextIndex] = ThreadStatus.Running;
+            CoreZero = new DobleCore(instructionCacheZero, dataCacheZero);
+            CoreZero.ThreadStatuses[Constants.FirstContextIndex] = ThreadStatus.Running;
+            CoreZero.ThreadStatuses[Constants.SecondContextIndex] = ThreadStatus.Dead;
+
         }
 
         private bool Check()
