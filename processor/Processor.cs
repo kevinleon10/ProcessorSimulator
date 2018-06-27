@@ -51,7 +51,11 @@ namespace ProcessorSimulator.processor
             {
                 FinalizeHighLevelThread(CoreZeroThreadA);
             }
-            CoreZero.StartExecution(context, Constants.FirstContextIndex);  
+            else
+            {
+                context.HasPriority = true;
+                CoreZero.StartExecution(context, Constants.FirstContextIndex);
+            }              
         }
 
         private void StartSecThreadCoreZero()
@@ -61,7 +65,11 @@ namespace ProcessorSimulator.processor
             {
                 FinalizeHighLevelThread(CoreZeroThreadB);
             }
-            CoreZero.StartExecution(context, Constants.SecondContextIndex);
+            else
+            {
+                CoreZero.StartExecution(context, Constants.SecondContextIndex);
+
+            }
         }
 
         private void StartCoreOne()
@@ -71,7 +79,12 @@ namespace ProcessorSimulator.processor
             {
                 FinalizeHighLevelThread(CoreOneThread);
             }
-            CoreOne.StartExecution(context,  Constants.FirstContextIndex); 
+            else
+            {
+                context.HasPriority = true;
+                CoreOne.StartExecution(context,  Constants.FirstContextIndex); 
+
+            }
         }
 
         public Thread CoreZeroThreadA { get; set; }
@@ -197,12 +210,19 @@ namespace ProcessorSimulator.processor
             instructionCacheOne.OtherCache = instructionCacheZero;
 
             // Creates the two cores of the processor
-            CoreOne = new Core(instructionCacheOne, dataCacheOne);
-            CoreOne.ThreadStatuses[Constants.FirstContextIndex] = ThreadStatus.Running;
-            CoreZero = new DobleCore(instructionCacheZero, dataCacheZero);
-            CoreZero.ThreadStatuses[Constants.FirstContextIndex] = ThreadStatus.Running;
-            CoreZero.ThreadStatuses[Constants.SecondContextIndex] = ThreadStatus.Dead;
+            CoreOne = new Core(instructionCacheOne, dataCacheOne)
+            {
+                ThreadStatuses = {[Constants.FirstContextIndex] = ThreadStatus.Running}                
+            };
 
+            CoreZero = new DobleCore(instructionCacheZero, dataCacheZero)
+            {
+                ThreadStatuses =
+                {
+                    [Constants.FirstContextIndex] = ThreadStatus.Running,
+                    [Constants.SecondContextIndex] = ThreadStatus.Dead
+                }
+            };
         }
 
         private bool Check()
@@ -338,7 +358,7 @@ namespace ProcessorSimulator.processor
             foreach (var reservation in reservations)
             {
                 // Here we find out the resource the thread was waiting for
-                if (reservation.ThreadId != context.ThreadId) continue;
+                if (reservation.ThreadId != context.ThreadId || reservation.IsWaiting == false) continue;
                 waitingCause = reservation;
                 break;
             }
@@ -469,7 +489,6 @@ namespace ProcessorSimulator.processor
             CoreOneThread.Start();
             while (ClockBarrier.ParticipantCount > 1)
             {
-                System.Console.WriteLine("Current Clock: " + Clock);
                 ClockBarrier.SignalAndWait();
                 if (slowMotion && Clock % Constants.SlowMotionCycles == 0)
                 {
@@ -497,7 +516,7 @@ namespace ProcessorSimulator.processor
                 {
                     ClockBarrier.AddParticipant();
                 }
-                Thread.Sleep(Constants.DelayTime);
+                //Thread.Sleep(Constants.DelayTime);
                 ProcessorBarrier.SignalAndWait();
                 if (startSecThread)
                 {
