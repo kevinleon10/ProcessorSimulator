@@ -81,7 +81,7 @@ namespace ProcessorSimulator.processor
 
         public Thread CoreOneThread { get; set; }
 
-        public DobleCore CoreZero { get; set; }
+        public DoubleCore CoreZero { get; set; }
 
         public Core CoreOne { get; set; }
 
@@ -200,7 +200,7 @@ namespace ProcessorSimulator.processor
             // Creates the two cores of the processor
             CoreOne = new Core(instructionCacheOne, dataCacheOne);
             CoreOne.ThreadStatuses[Constants.FirstContextIndex] = ThreadStatus.Running;
-            CoreZero = new DobleCore(instructionCacheZero, dataCacheZero);
+            CoreZero = new DoubleCore(instructionCacheZero, dataCacheZero);
             CoreZero.ThreadStatuses[Constants.FirstContextIndex] = ThreadStatus.Running;
             CoreZero.ThreadStatuses[Constants.SecondContextIndex] = ThreadStatus.Dead;
 

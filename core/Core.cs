@@ -104,11 +104,10 @@ namespace ProcessorSimulator.core
                         {
                             ThreadStatuses[contextIndex] = ThreadStatus.CacheFail;
                             // Try lock
-                            if (Monitor.TryEnter(DataBus.Instance))
+                            if (Monitor.TryEnter(InstructionBus.Instance))
                             {
                                 try
                                 {
-                                    //ThreadStatuses[contextIndex] = ThreadStatus.CacheFail;
                                     Processor.Instance.ClockBarrier.SignalAndWait();
                                     Processor.Instance.ProcessorBarrier.SignalAndWait();
 
@@ -144,13 +143,13 @@ namespace ProcessorSimulator.core
                                                     {
                                                         Monitor.Exit(
                                                             InstructionCache.Blocks[blockNumberInCache]);
-                                                        Monitor.Exit(DataBus.Instance);
                                                         Monitor.Exit(
                                                             InstructionCache.OtherCache.Blocks[
                                                                 blockNumberInOtherCache]);
                                                     }
-
+                                                    Monitor.Exit(InstructionBus.Instance);
                                                     ThreadStatuses[contextIndex] = ThreadStatus.SolvedCacheFail;
+                                                    hasFinishedLoad = true;
                                                     Processor.Instance.ClockBarrier.SignalAndWait();
                                                     Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                 }
@@ -178,10 +177,10 @@ namespace ProcessorSimulator.core
                                                     {
                                                         Monitor.Exit(
                                                             InstructionCache.Blocks[blockNumberInCache]);
-                                                        Monitor.Exit(DataBus.Instance);
                                                     }
-
+                                                    Monitor.Exit(InstructionBus.Instance);
                                                     ThreadStatuses[contextIndex] = ThreadStatus.SolvedCacheFail;
+                                                    hasFinishedLoad = true;
                                                     Processor.Instance.ClockBarrier.SignalAndWait();
                                                     Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                 }
@@ -207,9 +206,9 @@ namespace ProcessorSimulator.core
                                 finally
                                 {
                                     // Ensure that the lock is released.
-                                    if (Monitor.IsEntered(DataBus.Instance))
+                                    if (Monitor.IsEntered(InstructionBus.Instance))
                                     {
-                                        Monitor.Exit(DataBus.Instance);
+                                        Monitor.Exit(InstructionBus.Instance);
                                     }
                                 }
                             }
@@ -224,7 +223,6 @@ namespace ProcessorSimulator.core
                     }
                     finally
                     {
-                        // Ensure that the lock is released.
                         // Ensure that the lock is released.
                         if (Monitor.IsEntered(InstructionCache.Blocks[blockNumberInCache]))
                         {
