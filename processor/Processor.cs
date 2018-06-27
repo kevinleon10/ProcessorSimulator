@@ -471,7 +471,7 @@ namespace ProcessorSimulator.processor
             while (ClockBarrier.ParticipantCount > 1)
             {
                 System.Console.WriteLine("Current Clock: " + Clock);
-                if (Clock==1183)
+                if (Clock==42)
                 {
                     Console.WriteLine("POR AQUI");
                 }
