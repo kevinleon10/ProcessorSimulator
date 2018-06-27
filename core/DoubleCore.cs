@@ -106,6 +106,10 @@ namespace ProcessorSimulator.core
                             {
                                 ThreadStatuses[contextIndex] = ThreadStatus.CacheFail;
 
+                                if (contextIndex == 1)
+                                {
+                                    Console.WriteLine("me cago en la puta");
+                                }
                                 if (!hasReserved && !IsBusReserved(false))
                                 {
                                     var hasAccesedReservations = false;
@@ -504,7 +508,7 @@ namespace ProcessorSimulator.core
                             {
                                 ThreadStatuses[contextIndex] = ThreadStatus.CacheFail;
 
-                                if (!hasReserved && !IsBusReserved(false))
+                                if (!hasReserved && !IsBusReserved(true))
                                 {
                                     var hasAccesedReservations = false;
                                     while (!hasAccesedReservations)
@@ -986,7 +990,7 @@ namespace ProcessorSimulator.core
                             }
                             else // It tries to get the bus
                             {
-                                if (!hasReserved && !IsBusReserved(false))
+                                if (!hasReserved && !IsBusReserved(true))
                                 {
                                     var hasAccesedReservations = false;
                                     while (!hasAccesedReservations)
