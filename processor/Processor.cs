@@ -189,13 +189,27 @@ namespace ProcessorSimulator.processor
         private void Check()
         {
             // Check if there are threads that have ended execution
-            if (CoreZero.ThreadHasEnded)    LoadNewContext(CoreZero, CoreZeroThread);
-            if (CoreOne.ThreadHasEnded)     LoadNewContext(CoreOne, CoreOneThread);
-             
+            if (CoreZero.ThreadHasEnded)
+            {
+                LoadNewContext(CoreZero, CoreZeroThread);
+            }
+
+            if (CoreOne.ThreadHasEnded)
+            {
+                LoadNewContext(CoreOne, CoreOneThread);
+            }
+
             // Check if there are threads that have ran out of the cycles
-            if (CoreZero.RemainingThreadCycles == 0)    SwapContext(CoreZero);
-            if (CoreOne.RemainingThreadCycles == 0)     SwapContext(CoreOne);
-                                                       
+            if (CoreZero.RemainingThreadCycles == 0)
+            {
+                SwapContext(CoreZero);
+            }
+
+            if (CoreOne.RemainingThreadCycles == 0)
+            {
+                SwapContext(CoreOne);
+                
+            }
         }
 
         private void LoadNewContext(Core core, Thread thread)
@@ -212,7 +226,6 @@ namespace ProcessorSimulator.processor
             else
             {
                 // No more threads to run, so high level threads finishes execution 
-                core.ThreadHasEnded = true;
                 FinalizeHighLevelThread(thread);
             }
         }
@@ -238,9 +251,11 @@ namespace ProcessorSimulator.processor
 
         private void FinalizeHighLevelThread(Thread thread)
         {
-            thread.Abort();
+            // thread.Abort();
             ClockBarrier.RemoveParticipant();
+            ProcessorBarrier.SignalAndWait();
             ProcessorBarrier.RemoveParticipant();
+            ClockBarrier.SignalAndWait();
         }
 
         public void RunSimulation(bool slowMotion)
