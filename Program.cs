@@ -1,5 +1,4 @@
-﻿using System;
-using ProcessorSimulator.processor;
+﻿using ProcessorSimulator.processor;
 
 namespace ProcessorSimulator
 {
@@ -7,7 +6,7 @@ namespace ProcessorSimulator
     {
         public static void Main(string[] args)
         {
-            Processor.Instance.RunSimulation(true);
+            Processor.Instance.RunSimulation(false);
         }
     }
 }

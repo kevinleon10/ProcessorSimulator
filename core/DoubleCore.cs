@@ -63,33 +63,10 @@ namespace ProcessorSimulator.core
             var blockNumberInCache = blockNumberInMemory % InstructionCache.CacheSize;
             var hasTakenBlock = false;
             // While it has not gotten the block it continues asking for
-            if (contextIndex == 1)
-            {
-                int a = 3;
-            }
             while (!hasTakenBlock)
             {
                 if (!IsBlockReserved(blockNumberInCache, false))
                 {
-                    var hasReserved = false;
-                    while (!hasReserved)
-                    {
-                        if (Monitor.TryEnter(
-                            Reservations))
-                        {
-                            try
-                            {
-                                hasReserved = true;
-                                Reservations.Add(new Reservation(false, false, false, blockNumberInCache,
-                                    Contexts[contextIndex].ThreadId));
-                            }
-                            finally
-                            {
-                                Monitor.Exit(
-                                    Reservations);
-                            }
-                        }
-                    }
 
                     // Try lock
                     if (Monitor.TryEnter(InstructionCache.Blocks[blockNumberInCache]))
@@ -115,6 +92,25 @@ namespace ProcessorSimulator.core
                             }
                             else
                             {
+                                var hasReserved = false;
+                                while (!hasReserved)
+                                {
+                                    if (Monitor.TryEnter(
+                                        Reservations))
+                                    {
+                                        try
+                                        {
+                                            hasReserved = true;
+                                            Reservations.Add(new Reservation(false, false, false, blockNumberInCache,
+                                                Contexts[contextIndex].ThreadId));
+                                        }
+                                        finally
+                                        {
+                                            Monitor.Exit(
+                                                Reservations);
+                                        }
+                                    }
+                                }
                                 if (!IsBusReserved(false))
                                 {
                                     hasReserved = false;
@@ -137,7 +133,6 @@ namespace ProcessorSimulator.core
                                         }
                                     }
 
-                                    ThreadStatuses[contextIndex] = ThreadStatus.Waiting;
                                     ThreadStatuses[contextIndex] = ThreadStatus.CacheFail;
                                     var blockNumberInOtherCache =
                                         blockNumberInMemory % InstructionCache.OtherCache.CacheSize;
@@ -166,8 +161,7 @@ namespace ProcessorSimulator.core
                                                         {
                                                             hasTakenOtherCacheBlock = true;
                                                             Processor.Instance.ClockBarrier.SignalAndWait();
-                                                            Processor.Instance.ProcessorBarrier
-                                                                .SignalAndWait();
+                                                            Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                             InstructionCache.Blocks[blockNumberInCache]
                                                                     .Label =
                                                                 blockNumberInMemory;
@@ -200,10 +194,8 @@ namespace ProcessorSimulator.core
 
                                                                 ThreadStatuses[contextIndex] =
                                                                     ThreadStatus.SolvedCacheFail;
-                                                                Processor.Instance.ClockBarrier
-                                                                    .SignalAndWait();
-                                                                Processor.Instance.ProcessorBarrier
-                                                                    .SignalAndWait();
+                                                                Processor.Instance.ClockBarrier.SignalAndWait();
+                                                                Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                             }
                                                             else // It has to bring it from memory
                                                             {
@@ -223,10 +215,8 @@ namespace ProcessorSimulator.core
                                                                     i < Constants.CyclesMemory;
                                                                     i++)
                                                                 {
-                                                                    Processor.Instance.ClockBarrier
-                                                                        .SignalAndWait();
-                                                                    Processor.Instance.ProcessorBarrier
-                                                                        .SignalAndWait();
+                                                                    Processor.Instance.ClockBarrier.SignalAndWait();
+                                                                    Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                                 }
 
                                                                 Contexts[contextIndex].NumberOfCycles++;
@@ -242,10 +232,8 @@ namespace ProcessorSimulator.core
 
                                                                 ThreadStatuses[contextIndex] =
                                                                     ThreadStatus.SolvedCacheFail;
-                                                                Processor.Instance.ClockBarrier
-                                                                    .SignalAndWait();
-                                                                Processor.Instance.ProcessorBarrier
-                                                                    .SignalAndWait();
+                                                                Processor.Instance.ClockBarrier.SignalAndWait();
+                                                                Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                             }
                                                         }
                                                         finally
@@ -295,6 +283,8 @@ namespace ProcessorSimulator.core
                                             try
                                             {
                                                 hasReserved = true;
+                                                var lastPosition = Reservations.Count - 1;
+                                                Reservations.RemoveAt(lastPosition);
                                                 Reservations.Add(new Reservation(true, true, false, blockNumberInCache,
                                                     Contexts[contextIndex].ThreadId));
                                             }
@@ -369,25 +359,6 @@ namespace ProcessorSimulator.core
             {
                 if (!IsBlockReserved(blockNumberInCache, true))
                 {
-                    var hasReserved = false;
-                    while (!hasReserved)
-                    {
-                        if (Monitor.TryEnter(
-                            Reservations))
-                        {
-                            try
-                            {
-                                hasReserved = true;
-                                Reservations.Add(new Reservation(false, false, true, blockNumberInCache,
-                                    Contexts[contextIndex].ThreadId));
-                            }
-                            finally
-                            {
-                                Monitor.Exit(
-                                    Reservations);
-                            }
-                        }
-                    }
 
                     // Try lock
                     if (Monitor.TryEnter(DataCache.Blocks[blockNumberInCache]))
@@ -413,6 +384,25 @@ namespace ProcessorSimulator.core
                             }
                             else // It tries to get the bus
                             {
+                                var hasReserved = false;
+                                while (!hasReserved)
+                                {
+                                    if (Monitor.TryEnter(
+                                        Reservations))
+                                    {
+                                        try
+                                        {
+                                            hasReserved = true;
+                                            Reservations.Add(new Reservation(false, false, true, blockNumberInCache,
+                                                Contexts[contextIndex].ThreadId));
+                                        }
+                                        finally
+                                        {
+                                            Monitor.Exit(
+                                                Reservations);
+                                        }
+                                    }
+                                }
                                 if (!IsBusReserved(true))
                                 {
                                     hasReserved = false;
@@ -472,8 +462,7 @@ namespace ProcessorSimulator.core
                                                     {
                                                         hasTakenOtherBlock = true;
                                                         Processor.Instance.ClockBarrier.SignalAndWait();
-                                                        Processor.Instance.ProcessorBarrier
-                                                            .SignalAndWait();
+                                                        Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                         DataCache.Blocks[blockNumberInCache].Label =
                                                             blockNumberInMemory;
                                                         // If the label matches with the block number it will be replaced the current block
@@ -506,10 +495,8 @@ namespace ProcessorSimulator.core
                                                                 i < Constants.CyclesMemory;
                                                                 i++)
                                                             {
-                                                                Processor.Instance.ClockBarrier
-                                                                    .SignalAndWait();
-                                                                Processor.Instance.ProcessorBarrier
-                                                                    .SignalAndWait();
+                                                                Processor.Instance.ClockBarrier.SignalAndWait();
+                                                                Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                             }
 
                                                             Contexts[contextIndex].NumberOfCycles++;
@@ -530,10 +517,8 @@ namespace ProcessorSimulator.core
                                                                 ThreadStatus.SolvedCacheFail;
                                                             hasFinishedLoad = true;
 
-                                                            Processor.Instance.ClockBarrier
-                                                                .SignalAndWait();
-                                                            Processor.Instance.ProcessorBarrier
-                                                                .SignalAndWait();
+                                                            Processor.Instance.ClockBarrier.SignalAndWait();
+                                                            Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                         }
                                                         else // It will bring it from memory
                                                         {
@@ -554,10 +539,8 @@ namespace ProcessorSimulator.core
                                                                 i < Constants.CyclesMemory;
                                                                 i++)
                                                             {
-                                                                Processor.Instance.ClockBarrier
-                                                                    .SignalAndWait();
-                                                                Processor.Instance.ProcessorBarrier
-                                                                    .SignalAndWait();
+                                                                Processor.Instance.ClockBarrier.SignalAndWait();
+                                                                Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                             }
 
                                                             Contexts[contextIndex].NumberOfCycles++;
@@ -576,10 +559,8 @@ namespace ProcessorSimulator.core
                                                             hasFinishedLoad = true;
 
 
-                                                            Processor.Instance.ClockBarrier
-                                                                .SignalAndWait();
-                                                            Processor.Instance.ProcessorBarrier
-                                                                .SignalAndWait();
+                                                            Processor.Instance.ClockBarrier.SignalAndWait();
+                                                            Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                         }
                                                     }
                                                     finally
@@ -628,6 +609,8 @@ namespace ProcessorSimulator.core
                                             try
                                             {
                                                 hasReserved = true;
+                                                var lastPosition = Reservations.Count - 1;
+                                                Reservations.RemoveAt(lastPosition);
                                                 Reservations.Add(new Reservation(true, true, true, blockNumberInCache,
                                                     Contexts[contextIndex].ThreadId));
                                             }
@@ -704,25 +687,6 @@ namespace ProcessorSimulator.core
             {
                 if (!IsBlockReserved(blockNumberInCache, true))
                 {
-                    var hasReserved = false;
-                    while (!hasReserved)
-                    {
-                        if (Monitor.TryEnter(
-                            Reservations))
-                        {
-                            try
-                            {
-                                hasReserved = true;
-                                Reservations.Add(new Reservation(false, false, true, blockNumberInCache,
-                                    Contexts[contextIndex].ThreadId));
-                            }
-                            finally
-                            {
-                                Monitor.Exit(
-                                    Reservations);
-                            }
-                        }
-                    }
 
                     // Try lock
                     if (Monitor.TryEnter(DataCache.Blocks[blockNumberInCache]))
@@ -748,6 +712,26 @@ namespace ProcessorSimulator.core
                             }
                             else // It tries to get the bus
                             {
+                                var hasReserved = false;
+                                while (!hasReserved)
+                                {
+                                    if (Monitor.TryEnter(
+                                        Reservations))
+                                    {
+                                        try
+                                        {
+                                            hasReserved = true;
+                                            Reservations.Add(new Reservation(false, false, true, blockNumberInCache,
+                                                Contexts[contextIndex].ThreadId));
+                                        }
+                                        finally
+                                        {
+                                            Monitor.Exit(
+                                                Reservations);
+                                        }
+                                    }
+                                }
+                                
                                 if (!IsBusReserved(true))
                                 {
                                     hasReserved = false;
@@ -807,8 +791,7 @@ namespace ProcessorSimulator.core
                                                     {
                                                         hasTakenOtherBlock = true;
                                                         Processor.Instance.ClockBarrier.SignalAndWait();
-                                                        Processor.Instance.ProcessorBarrier
-                                                            .SignalAndWait();
+                                                        Processor.Instance.ProcessorBarrier.SignalAndWait();
 
                                                         //If it is shared and the other cache block coincides it will invalidate other cache block
                                                         if (currentBlock.BlockState ==
@@ -849,10 +832,8 @@ namespace ProcessorSimulator.core
 
                                                             hasFinishedStore = true;
 
-                                                            Processor.Instance.ClockBarrier
-                                                                .SignalAndWait();
-                                                            Processor.Instance.ProcessorBarrier
-                                                                .SignalAndWait();
+                                                            Processor.Instance.ClockBarrier.SignalAndWait();
+                                                            Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                         }
                                                         //If it is invalid or it is another label
                                                         else if (currentBlock.BlockState ==
@@ -892,10 +873,8 @@ namespace ProcessorSimulator.core
                                                                     i < Constants.CyclesMemory;
                                                                     i++)
                                                                 {
-                                                                    Processor.Instance.ClockBarrier
-                                                                        .SignalAndWait();
-                                                                    Processor.Instance.ProcessorBarrier
-                                                                        .SignalAndWait();
+                                                                    Processor.Instance.ClockBarrier.SignalAndWait();
+                                                                    Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                                 }
 
                                                                 DataCache.Blocks[blockNumberInCache]
@@ -927,10 +906,8 @@ namespace ProcessorSimulator.core
 
                                                                 hasFinishedStore = true;
 
-                                                                Processor.Instance.ClockBarrier
-                                                                    .SignalAndWait();
-                                                                Processor.Instance.ProcessorBarrier
-                                                                    .SignalAndWait();
+                                                                Processor.Instance.ClockBarrier.SignalAndWait();
+                                                                Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                             }
                                                             else if (otherCacheBlock.Label ==
                                                                      blockNumberInMemory &&
@@ -949,10 +926,8 @@ namespace ProcessorSimulator.core
                                                                     i < Constants.CyclesMemory;
                                                                     i++)
                                                                 {
-                                                                    Processor.Instance.ClockBarrier
-                                                                        .SignalAndWait();
-                                                                    Processor.Instance.ProcessorBarrier
-                                                                        .SignalAndWait();
+                                                                    Processor.Instance.ClockBarrier.SignalAndWait();
+                                                                    Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                                 }
 
                                                                 DataCache.Blocks[blockNumberInCache]
@@ -979,10 +954,8 @@ namespace ProcessorSimulator.core
 
                                                                 hasFinishedStore = true;
 
-                                                                Processor.Instance.ClockBarrier
-                                                                    .SignalAndWait();
-                                                                Processor.Instance.ProcessorBarrier
-                                                                    .SignalAndWait();
+                                                                Processor.Instance.ClockBarrier.SignalAndWait();
+                                                                Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                             }
                                                             else //it has to bring it from memory
                                                             {
@@ -998,10 +971,8 @@ namespace ProcessorSimulator.core
                                                                     i < Constants.CyclesMemory;
                                                                     i++)
                                                                 {
-                                                                    Processor.Instance.ClockBarrier
-                                                                        .SignalAndWait();
-                                                                    Processor.Instance.ProcessorBarrier
-                                                                        .SignalAndWait();
+                                                                    Processor.Instance.ClockBarrier.SignalAndWait();
+                                                                    Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                                 }
 
                                                                 DataCache.Blocks[blockNumberInCache]
@@ -1025,10 +996,8 @@ namespace ProcessorSimulator.core
 
                                                                 hasFinishedStore = true;
 
-                                                                Processor.Instance.ClockBarrier
-                                                                    .SignalAndWait();
-                                                                Processor.Instance.ProcessorBarrier
-                                                                    .SignalAndWait();
+                                                                Processor.Instance.ClockBarrier.SignalAndWait();
+                                                                Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                             }
                                                         }
                                                     }
@@ -1078,6 +1047,8 @@ namespace ProcessorSimulator.core
                                             try
                                             {
                                                 hasReserved = true;
+                                                var lastPosition = Reservations.Count - 1;
+                                                Reservations.RemoveAt(lastPosition);
                                                 Reservations.Add(new Reservation(true, true, true, blockNumberInCache,
                                                     Contexts[contextIndex].ThreadId));
                                             }
