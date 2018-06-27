@@ -497,7 +497,7 @@ namespace ProcessorSimulator.processor
                 {
                     ClockBarrier.AddParticipant();
                 }
-                Thread.Sleep(Constants.DelayTime);
+                //Thread.Sleep(Constants.DelayTime);
                 ProcessorBarrier.SignalAndWait();
                 if (startSecThread)
                 {
