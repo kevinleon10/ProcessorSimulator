@@ -59,7 +59,7 @@ namespace ProcessorSimulator.core
 
         protected override Instruction LoadInstruction(int contextIndex)
         {
-            if (contextIndex == 1)
+            if (Processor.Instance.Clock == 1223)
             {
                 Console.WriteLine("me cago en la puta");
             }
@@ -71,6 +71,8 @@ namespace ProcessorSimulator.core
             var hasFinishedLoad = false;
             var hasReserved = false;
             var hasAccesedBlockReservations = false;
+            Reservation busReservation = null;
+            Reservation blockReservation = null;
             // While it has not finished the load it continues trying
             while (!hasFinishedLoad)
             {
@@ -97,10 +99,9 @@ namespace ProcessorSimulator.core
                                 {
                                     Monitor.Exit(InstructionCache.Blocks[blockNumberInCache]);
                                 }
-
+                                hasFinishedLoad = true;
                                 Processor.Instance.ClockBarrier.SignalAndWait();
                                 Processor.Instance.ProcessorBarrier.SignalAndWait();
-                                hasFinishedLoad = true;
                             }
                             else // It tries to get the bus
                             {
@@ -110,6 +111,7 @@ namespace ProcessorSimulator.core
                                 {
                                     Console.WriteLine("me cago en la puta");
                                 }
+                                
                                 if (!hasReserved && !IsBusReserved(false))
                                 {
                                     var hasAccesedReservations = false;
@@ -122,12 +124,14 @@ namespace ProcessorSimulator.core
                                             {
                                                 hasAccesedReservations = true;
                                                 hasReserved = true;
-                                                Reservations.Add(new Reservation(false, true, false,
+                                                busReservation = new Reservation(false, true, false,
                                                     blockNumberInCache,
-                                                    Contexts[contextIndex].ThreadId));
-                                                Reservations.Add(new Reservation(false, false, false,
+                                                    Contexts[contextIndex].ThreadId);
+                                                Reservations.Add(busReservation);
+                                                blockReservation = new Reservation(false, false, false,
                                                     blockNumberInCache,
-                                                    Contexts[contextIndex].ThreadId));
+                                                    Contexts[contextIndex].ThreadId);
+                                                Reservations.Add(blockReservation);
                                             }
                                             finally
                                             {
@@ -135,6 +139,11 @@ namespace ProcessorSimulator.core
                                                     Reservations);
                                             }
                                         }
+                                    }
+                                    
+                                    if (contextIndex == 1)
+                                    {
+                                        Console.WriteLine("me cago en la puta");
                                     }
 
                                     // Try lock
@@ -189,6 +198,27 @@ namespace ProcessorSimulator.core
                                                             ThreadStatuses[contextIndex] =
                                                                 ThreadStatus.SolvedCacheFail;
                                                             hasFinishedLoad = true;
+                                                            
+                                                            hasAccesedReservations = false;
+                                                            while (!hasAccesedReservations)
+                                                            {
+                                                                if (Monitor.TryEnter(
+                                                                    Reservations))
+                                                                {
+                                                                    try
+                                                                    {
+                                                                        hasAccesedReservations = true;
+                                                                        Reservations.Remove(busReservation);
+                                                                        Reservations.Remove(blockReservation);
+                                                                    }
+                                                                    finally
+                                                                    {
+                                                                        Monitor.Exit(
+                                                                            Reservations);
+                                                                    }
+                                                                }
+                                                            }
+                                                            
                                                             Processor.Instance.ClockBarrier.SignalAndWait();
                                                             Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                         }
@@ -223,6 +253,25 @@ namespace ProcessorSimulator.core
                                                             ThreadStatuses[contextIndex] =
                                                                 ThreadStatus.SolvedCacheFail;
                                                             hasFinishedLoad = true;
+                                                            hasAccesedReservations = false;
+                                                            while (!hasAccesedReservations)
+                                                            {
+                                                                if (Monitor.TryEnter(
+                                                                    Reservations))
+                                                                {
+                                                                    try
+                                                                    {
+                                                                        hasAccesedReservations = true;
+                                                                        Reservations.Remove(busReservation);
+                                                                        Reservations.Remove(blockReservation);
+                                                                    }
+                                                                    finally
+                                                                    {
+                                                                        Monitor.Exit(
+                                                                            Reservations);
+                                                                    }
+                                                                }
+                                                            }
                                                             Processor.Instance.ClockBarrier.SignalAndWait();
                                                             Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                         }
@@ -316,6 +365,25 @@ namespace ProcessorSimulator.core
                                                             ThreadStatuses[contextIndex] =
                                                                 ThreadStatus.SolvedCacheFail;
                                                             hasFinishedLoad = true;
+                                                            var hasAccesedReservations = false;
+                                                            while (!hasAccesedReservations)
+                                                            {
+                                                                if (Monitor.TryEnter(
+                                                                    Reservations))
+                                                                {
+                                                                    try
+                                                                    {
+                                                                        hasAccesedReservations = true;
+                                                                        Reservations.Remove(busReservation);
+                                                                        Reservations.Remove(blockReservation);
+                                                                    }
+                                                                    finally
+                                                                    {
+                                                                        Monitor.Exit(
+                                                                            Reservations);
+                                                                    }
+                                                                }
+                                                            }
                                                             Processor.Instance.ClockBarrier.SignalAndWait();
                                                             Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                         }
@@ -350,6 +418,25 @@ namespace ProcessorSimulator.core
                                                             ThreadStatuses[contextIndex] =
                                                                 ThreadStatus.SolvedCacheFail;
                                                             hasFinishedLoad = true;
+                                                            var hasAccesedReservations = false;
+                                                            while (!hasAccesedReservations)
+                                                            {
+                                                                if (Monitor.TryEnter(
+                                                                    Reservations))
+                                                                {
+                                                                    try
+                                                                    {
+                                                                        hasAccesedReservations = true;
+                                                                        Reservations.Remove(busReservation);
+                                                                        Reservations.Remove(blockReservation);
+                                                                    }
+                                                                    finally
+                                                                    {
+                                                                        Monitor.Exit(
+                                                                            Reservations);
+                                                                    }
+                                                                }
+                                                            }
                                                             Processor.Instance.ClockBarrier.SignalAndWait();
                                                             Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                         }
@@ -477,6 +564,8 @@ namespace ProcessorSimulator.core
             var hasFinishedLoad = false;
             var hasReserved = false;
             var hasAccesedBlockReservations = false;
+            Reservation busReservation = null;
+            Reservation blockReservation = null;
             // Wwhile it has not finished the load it continues trying
             while (!hasFinishedLoad)
             {
@@ -520,12 +609,14 @@ namespace ProcessorSimulator.core
                                             {
                                                 hasAccesedReservations = true;
                                                 hasReserved = true;
-                                                Reservations.Add(new Reservation(false, true, true,
+                                                busReservation = new Reservation(false, true, false,
                                                     blockNumberInCache,
-                                                    Contexts[contextIndex].ThreadId));
-                                                Reservations.Add(new Reservation(false, false, true,
+                                                    Contexts[contextIndex].ThreadId);
+                                                Reservations.Add(busReservation);
+                                                blockReservation = new Reservation(false, false, false,
                                                     blockNumberInCache,
-                                                    Contexts[contextIndex].ThreadId));
+                                                    Contexts[contextIndex].ThreadId);
+                                                Reservations.Add(blockReservation);
                                             }
                                             finally
                                             {
@@ -540,7 +631,6 @@ namespace ProcessorSimulator.core
                                     {
                                         try
                                         {
-                                            //ThreadStatuses[contextIndex] = ThreadStatus.CacheFail;
                                             Processor.Instance.ClockBarrier.SignalAndWait();
                                             Processor.Instance.ProcessorBarrier.SignalAndWait();
                                             // If the label does not match with the block number and it is modified it will store the block in memory
@@ -624,7 +714,25 @@ namespace ProcessorSimulator.core
 
                                                             ThreadStatuses[contextIndex] = ThreadStatus.SolvedCacheFail;
                                                             hasFinishedLoad = true;
-
+                                                            hasAccesedReservations = false;
+                                                            while (!hasAccesedReservations)
+                                                            {
+                                                                if (Monitor.TryEnter(
+                                                                    Reservations))
+                                                                {
+                                                                    try
+                                                                    {
+                                                                        hasAccesedReservations = true;
+                                                                        Reservations.Remove(busReservation);
+                                                                        Reservations.Remove(blockReservation);
+                                                                    }
+                                                                    finally
+                                                                    {
+                                                                        Monitor.Exit(
+                                                                            Reservations);
+                                                                    }
+                                                                }
+                                                            }
                                                             Processor.Instance.ClockBarrier.SignalAndWait();
                                                             Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                         }
@@ -665,7 +773,25 @@ namespace ProcessorSimulator.core
                                                             ThreadStatuses[contextIndex] =
                                                                 ThreadStatus.SolvedCacheFail;
                                                             hasFinishedLoad = true;
-
+                                                            hasAccesedReservations = false;
+                                                            while (!hasAccesedReservations)
+                                                            {
+                                                                if (Monitor.TryEnter(
+                                                                    Reservations))
+                                                                {
+                                                                    try
+                                                                    {
+                                                                        hasAccesedReservations = true;
+                                                                        Reservations.Remove(busReservation);
+                                                                        Reservations.Remove(blockReservation);
+                                                                    }
+                                                                    finally
+                                                                    {
+                                                                        Monitor.Exit(
+                                                                            Reservations);
+                                                                    }
+                                                                }
+                                                            }
 
                                                             Processor.Instance.ClockBarrier.SignalAndWait();
                                                             Processor.Instance.ProcessorBarrier.SignalAndWait();
@@ -796,7 +922,25 @@ namespace ProcessorSimulator.core
 
                                                             ThreadStatuses[contextIndex] = ThreadStatus.SolvedCacheFail;
                                                             hasFinishedLoad = true;
-
+                                                            var hasAccesedReservations = false;
+                                                            while (!hasAccesedReservations)
+                                                            {
+                                                                if (Monitor.TryEnter(
+                                                                    Reservations))
+                                                                {
+                                                                    try
+                                                                    {
+                                                                        hasAccesedReservations = true;
+                                                                        Reservations.Remove(busReservation);
+                                                                        Reservations.Remove(blockReservation);
+                                                                    }
+                                                                    finally
+                                                                    {
+                                                                        Monitor.Exit(
+                                                                            Reservations);
+                                                                    }
+                                                                }
+                                                            }
                                                             Processor.Instance.ClockBarrier.SignalAndWait();
                                                             Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                         }
@@ -837,7 +981,25 @@ namespace ProcessorSimulator.core
                                                             ThreadStatuses[contextIndex] =
                                                                 ThreadStatus.SolvedCacheFail;
                                                             hasFinishedLoad = true;
-
+                                                            var hasAccesedReservations = false;
+                                                            while (!hasAccesedReservations)
+                                                            {
+                                                                if (Monitor.TryEnter(
+                                                                    Reservations))
+                                                                {
+                                                                    try
+                                                                    {
+                                                                        hasAccesedReservations = true;
+                                                                        Reservations.Remove(busReservation);
+                                                                        Reservations.Remove(blockReservation);
+                                                                    }
+                                                                    finally
+                                                                    {
+                                                                        Monitor.Exit(
+                                                                            Reservations);
+                                                                    }
+                                                                }
+                                                            }
 
                                                             Processor.Instance.ClockBarrier.SignalAndWait();
                                                             Processor.Instance.ProcessorBarrier.SignalAndWait();
@@ -925,7 +1087,6 @@ namespace ProcessorSimulator.core
 
                 else
                 {
-                    hasAccesedBlockReservations = false;
                     while (!hasAccesedBlockReservations)
                     {
                         if (Monitor.TryEnter(
@@ -962,6 +1123,8 @@ namespace ProcessorSimulator.core
             var hasReserved = false;    
             var hasFinishedStore = false;
             var hasAccesedBlockReservations = false;
+            Reservation busReservation = null;
+            Reservation blockReservation = null;
             while (!hasFinishedStore)
             {
                 if (hasReserved || !IsBlockReserved(blockNumberInCache, true))
@@ -990,6 +1153,7 @@ namespace ProcessorSimulator.core
                             }
                             else // It tries to get the bus
                             {
+                                
                                 if (!hasReserved && !IsBusReserved(true))
                                 {
                                     var hasAccesedReservations = false;
@@ -1002,12 +1166,14 @@ namespace ProcessorSimulator.core
                                             {
                                                 hasAccesedReservations = true;
                                                 hasReserved = true;
-                                                Reservations.Add(new Reservation(false, true, true,
+                                                busReservation = new Reservation(false, true, false,
                                                     blockNumberInCache,
-                                                    Contexts[contextIndex].ThreadId));
-                                                Reservations.Add(new Reservation(false, false, true,
+                                                    Contexts[contextIndex].ThreadId);
+                                                Reservations.Add(busReservation);
+                                                blockReservation = new Reservation(false, false, false,
                                                     blockNumberInCache,
-                                                    Contexts[contextIndex].ThreadId));
+                                                    Contexts[contextIndex].ThreadId);
+                                                Reservations.Add(blockReservation);
                                             }
                                             finally
                                             {
@@ -1093,6 +1259,25 @@ namespace ProcessorSimulator.core
                                                             }
 
                                                             hasFinishedStore = true;
+                                                            hasAccesedReservations = false;
+                                                            while (!hasAccesedReservations)
+                                                            {
+                                                                if (Monitor.TryEnter(
+                                                                    Reservations))
+                                                                {
+                                                                    try
+                                                                    {
+                                                                        hasAccesedReservations = true;
+                                                                        Reservations.Remove(busReservation);
+                                                                        Reservations.Remove(blockReservation);
+                                                                    }
+                                                                    finally
+                                                                    {
+                                                                        Monitor.Exit(
+                                                                            Reservations);
+                                                                    }
+                                                                }
+                                                            }
 
                                                             Processor.Instance.ClockBarrier.SignalAndWait();
                                                             Processor.Instance.ProcessorBarrier.SignalAndWait();
@@ -1103,7 +1288,7 @@ namespace ProcessorSimulator.core
                                                                  currentBlock.Label !=
                                                                  blockNumberInMemory)
                                                         {
-                                                            //ThreadStatuses[contextIndex] = ThreadStatus.CacheFail;
+                                                            ThreadStatuses[contextIndex] = ThreadStatus.CacheFail;
                                                             DataCache.Blocks[blockNumberInCache].Label =
                                                                 blockNumberInMemory;
                                                             // If the label matches with the block number and it is modified it will be replaced with the current block
@@ -1166,6 +1351,25 @@ namespace ProcessorSimulator.core
                                                                 }
 
                                                                 hasFinishedStore = true;
+                                                                hasAccesedReservations = false;
+                                                                while (!hasAccesedReservations)
+                                                                {
+                                                                    if (Monitor.TryEnter(
+                                                                        Reservations))
+                                                                    {
+                                                                        try
+                                                                        {
+                                                                            hasAccesedReservations = true;
+                                                                            Reservations.Remove(busReservation);
+                                                                            Reservations.Remove(blockReservation);
+                                                                        }
+                                                                        finally
+                                                                        {
+                                                                            Monitor.Exit(
+                                                                                Reservations);
+                                                                        }
+                                                                    }
+                                                                }
 
                                                                 Processor.Instance.ClockBarrier.SignalAndWait();
                                                                 Processor.Instance.ProcessorBarrier.SignalAndWait();
@@ -1214,7 +1418,26 @@ namespace ProcessorSimulator.core
                                                                 }
 
                                                                 hasFinishedStore = true;
-
+                                                                hasAccesedReservations = false;
+                                                                while (!hasAccesedReservations)
+                                                                {
+                                                                    if (Monitor.TryEnter(
+                                                                        Reservations))
+                                                                    {
+                                                                        try
+                                                                        {
+                                                                            hasAccesedReservations = true;
+                                                                            Reservations.Remove(busReservation);
+                                                                            Reservations.Remove(blockReservation);
+                                                                        }
+                                                                        finally
+                                                                        {
+                                                                            Monitor.Exit(
+                                                                                Reservations);
+                                                                        }
+                                                                    }
+                                                                }
+                                                                
                                                                 Processor.Instance.ClockBarrier.SignalAndWait();
                                                                 Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                             }
@@ -1256,6 +1479,25 @@ namespace ProcessorSimulator.core
                                                                 }
 
                                                                 hasFinishedStore = true;
+                                                                hasAccesedReservations = false;
+                                                                while (!hasAccesedReservations)
+                                                                {
+                                                                    if (Monitor.TryEnter(
+                                                                        Reservations))
+                                                                    {
+                                                                        try
+                                                                        {
+                                                                            hasAccesedReservations = true;
+                                                                            Reservations.Remove(busReservation);
+                                                                            Reservations.Remove(blockReservation);
+                                                                        }
+                                                                        finally
+                                                                        {
+                                                                            Monitor.Exit(
+                                                                                Reservations);
+                                                                        }
+                                                                    }
+                                                                }
 
                                                                 Processor.Instance.ClockBarrier.SignalAndWait();
                                                                 Processor.Instance.ProcessorBarrier.SignalAndWait();
@@ -1375,6 +1617,25 @@ namespace ProcessorSimulator.core
                                                             }
 
                                                             hasFinishedStore = true;
+                                                            var hasAccesedReservations = false;
+                                                            while (!hasAccesedReservations)
+                                                            {
+                                                                if (Monitor.TryEnter(
+                                                                    Reservations))
+                                                                {
+                                                                    try
+                                                                    {
+                                                                        hasAccesedReservations = true;
+                                                                        Reservations.Remove(busReservation);
+                                                                        Reservations.Remove(blockReservation);
+                                                                    }
+                                                                    finally
+                                                                    {
+                                                                        Monitor.Exit(
+                                                                            Reservations);
+                                                                    }
+                                                                }
+                                                            }
 
                                                             Processor.Instance.ClockBarrier.SignalAndWait();
                                                             Processor.Instance.ProcessorBarrier.SignalAndWait();
@@ -1385,7 +1646,7 @@ namespace ProcessorSimulator.core
                                                                  currentBlock.Label !=
                                                                  blockNumberInMemory)
                                                         {
-                                                            //ThreadStatuses[contextIndex] = ThreadStatus.CacheFail;
+                                                            ThreadStatuses[contextIndex] = ThreadStatus.CacheFail;
                                                             DataCache.Blocks[blockNumberInCache].Label =
                                                                 blockNumberInMemory;
                                                             // If the label matches with the block number and it is modified it will be replaced with the current block
@@ -1448,6 +1709,25 @@ namespace ProcessorSimulator.core
                                                                 }
 
                                                                 hasFinishedStore = true;
+                                                                var hasAccesedReservations = false;
+                                                                while (!hasAccesedReservations)
+                                                                {
+                                                                    if (Monitor.TryEnter(
+                                                                        Reservations))
+                                                                    {
+                                                                        try
+                                                                        {
+                                                                            hasAccesedReservations = true;
+                                                                            Reservations.Remove(busReservation);
+                                                                            Reservations.Remove(blockReservation);
+                                                                        }
+                                                                        finally
+                                                                        {
+                                                                            Monitor.Exit(
+                                                                                Reservations);
+                                                                        }
+                                                                    }
+                                                                }
 
                                                                 Processor.Instance.ClockBarrier.SignalAndWait();
                                                                 Processor.Instance.ProcessorBarrier.SignalAndWait();
@@ -1496,6 +1776,25 @@ namespace ProcessorSimulator.core
                                                                 }
 
                                                                 hasFinishedStore = true;
+                                                                var hasAccesedReservations = false;
+                                                                while (!hasAccesedReservations)
+                                                                {
+                                                                    if (Monitor.TryEnter(
+                                                                        Reservations))
+                                                                    {
+                                                                        try
+                                                                        {
+                                                                            hasAccesedReservations = true;
+                                                                            Reservations.Remove(busReservation);
+                                                                            Reservations.Remove(blockReservation);
+                                                                        }
+                                                                        finally
+                                                                        {
+                                                                            Monitor.Exit(
+                                                                                Reservations);
+                                                                        }
+                                                                    }
+                                                                }
 
                                                                 Processor.Instance.ClockBarrier.SignalAndWait();
                                                                 Processor.Instance.ProcessorBarrier.SignalAndWait();
@@ -1538,6 +1837,25 @@ namespace ProcessorSimulator.core
                                                                 }
 
                                                                 hasFinishedStore = true;
+                                                                var hasAccesedReservations = false;
+                                                                while (!hasAccesedReservations)
+                                                                {
+                                                                    if (Monitor.TryEnter(
+                                                                        Reservations))
+                                                                    {
+                                                                        try
+                                                                        {
+                                                                            hasAccesedReservations = true;
+                                                                            Reservations.Remove(busReservation);
+                                                                            Reservations.Remove(blockReservation);
+                                                                        }
+                                                                        finally
+                                                                        {
+                                                                            Monitor.Exit(
+                                                                                Reservations);
+                                                                        }
+                                                                    }
+                                                                }
 
                                                                 Processor.Instance.ClockBarrier.SignalAndWait();
                                                                 Processor.Instance.ProcessorBarrier.SignalAndWait();
@@ -1628,7 +1946,6 @@ namespace ProcessorSimulator.core
 
                 else
                 {
-                    hasAccesedBlockReservations = false;
                     while (!hasAccesedBlockReservations)
                     {
                         if (Monitor.TryEnter(

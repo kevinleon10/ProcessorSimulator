@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Threading;
 using ProcessorSimulator.block;
 using ProcessorSimulator.cache;
@@ -17,7 +17,7 @@ namespace ProcessorSimulator.core
             DataCache = dataCache;
             RemainingThreadCycles = Constants.NotRunningAnyThread;
             Context = null;
-            threadHasEnded = false;
+            MoreAvailableInstructions = true;
         }
 
         private Instruction InstructionRegister { get; set; }
@@ -30,7 +30,9 @@ namespace ProcessorSimulator.core
 
         public int RemainingThreadCycles { get; set; }
 
-        public bool threadHasEnded { get; set; }
+        public bool ThreadHasEnded { get; set; }
+
+        public bool MoreAvailableInstructions { get; set; }
 
         protected int GetBlockNumberInMemory(int address)
         {
@@ -47,19 +49,32 @@ namespace ProcessorSimulator.core
             Context = context;
             RemainingThreadCycles = Constants.Quantum;
 
-            //First instruction fetch
-            InstructionRegister = LoadInstruction();
-
-            //Execute every instruction in the thread until it obtains an end instruction
-            while (InstructionRegister.OperationCode != (int) Operation.End)
+            while (MoreAvailableInstructions)
             {
-                Context.ProgramCounter += Constants.BytesInWord;
-                ExecuteInstruction(InstructionRegister);
-                //Instruction fetch
-                InstructionRegister = LoadInstruction();
-            }
 
-            threadHasEnded = true;
+                ThreadHasEnded = false;
+                //First instruction fetch
+                InstructionRegister = LoadInstruction();
+
+                //Execute every instruction in the thread until it obtains an end instruction
+                while (InstructionRegister.OperationCode != (int) Operation.End)
+                {
+                    Context.ProgramCounter += Constants.BytesInWord;
+                    if (Context.ProgramCounter == 172)
+                    {
+                        Console.WriteLine("fuck");
+                    }
+                    ExecuteInstruction(InstructionRegister);
+                    //Instruction fetch
+                    InstructionRegister = LoadInstruction();
+                }
+
+                ThreadHasEnded = true;
+                MoreAvailableInstructions = false;
+                Processor.Instance.ClockBarrier.SignalAndWait();
+                Processor.Instance.ProcessorBarrier.SignalAndWait();
+                Console.Write("jiij");
+            }
         }
 
         /// <summary>
@@ -141,11 +156,11 @@ namespace ProcessorSimulator.core
                                                     {
                                                         Monitor.Exit(
                                                             InstructionCache.Blocks[blockNumberInCache]);
+                                                        Monitor.Exit(InstructionBus.Instance);
                                                         Monitor.Exit(
                                                             InstructionCache.OtherCache.Blocks[
                                                                 blockNumberInOtherCache]);
                                                     }
-                                                    Monitor.Exit(InstructionBus.Instance);
                                                     hasFinishedLoad = true;
                                                     Processor.Instance.ClockBarrier.SignalAndWait();
                                                     Processor.Instance.ProcessorBarrier.SignalAndWait();
@@ -174,8 +189,8 @@ namespace ProcessorSimulator.core
                                                     {
                                                         Monitor.Exit(
                                                             InstructionCache.Blocks[blockNumberInCache]);
+                                                        Monitor.Exit(InstructionBus.Instance);
                                                     }
-                                                    Monitor.Exit(InstructionBus.Instance);
                                                     hasFinishedLoad = true;
                                                     Processor.Instance.ClockBarrier.SignalAndWait();
                                                     Processor.Instance.ProcessorBarrier.SignalAndWait();
@@ -615,7 +630,6 @@ namespace ProcessorSimulator.core
                                                 else if (currentBlock.BlockState == BlockState.Invalid ||
                                                          currentBlock.Label != blockNumberInMemory)
                                                 {
-                                                    //ThreadStatuse = ThreadStatus.CacheFail;
                                                     DataCache.Blocks[blockNumberInCache].Label = blockNumberInMemory;
                                                     // If the label matches with the block number and it is modified it will be replaced with the current block
                                                     var otherCacheBlock =

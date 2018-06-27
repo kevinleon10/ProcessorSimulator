@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿﻿﻿using System;
  using System.Collections.Generic;
 using System.Threading;
 using ProcessorSimulator.block;
@@ -71,7 +71,7 @@ namespace ProcessorSimulator.processor
 
         private Core CoreOne { get; set; }
 
-        private int Clock { get; set; }
+        public int Clock { get; set; }
 
         public Barrier ClockBarrier { get; set; }
 
@@ -189,8 +189,8 @@ namespace ProcessorSimulator.processor
         private void Check()
         {
             // Check if there are threads that have ended execution
-            if (CoreZero.threadHasEnded)    LoadNewContext(CoreZero, CoreZeroThread);
-            if (CoreOne.threadHasEnded)     LoadNewContext(CoreOne, CoreOneThread);
+            if (CoreZero.ThreadHasEnded)    LoadNewContext(CoreZero, CoreZeroThread);
+            if (CoreOne.ThreadHasEnded)     LoadNewContext(CoreOne, CoreOneThread);
              
             // Check if there are threads that have ran out of the cycles
             if (CoreZero.RemainingThreadCycles == 0)    SwapContext(CoreZero);
@@ -207,11 +207,12 @@ namespace ProcessorSimulator.processor
             {
                 core.Context = newContext;
                 core.RemainingThreadCycles = Constants.Quantum; // Sets the quantum as the remaining cycles for the new thread
+                core.MoreAvailableInstructions = true;
             }
             else
             {
                 // No more threads to run, so high level threads finishes execution 
-                core.threadHasEnded = true;
+                core.ThreadHasEnded = true;
                 FinalizeHighLevelThread(thread);
             }
         }
@@ -224,12 +225,13 @@ namespace ProcessorSimulator.processor
         private void SwapContext(Core core)
         {
             // If context queue is empty then keep running the same thread
-            if (ContextQueue.Count <= 0)
+            if (ContextQueue.Count > 0)
             {
                 var newContext = ContextQueue.Dequeue();
                 var oldContext = core.Context;
                 ContextQueue.Enqueue(oldContext);
                 core.Context = newContext;
+                core.MoreAvailableInstructions = true;
             }
             core.RemainingThreadCycles = Constants.Quantum; // Restores remaining cycles to the quantum value.
         }
@@ -247,6 +249,7 @@ namespace ProcessorSimulator.processor
             CoreOneThread.Start();
             while (ClockBarrier.ParticipantCount > 1)
             {
+
                 ClockBarrier.SignalAndWait();
                 if (slowMotion && Clock % Constants.SlowMotionCycles == 0)
                 {
@@ -261,10 +264,12 @@ namespace ProcessorSimulator.processor
                 }
 
                 Clock++;
+                System.Console.Write(Clock+"\n");
                 Check();                
                 //Thread.Sleep(Constants.DelayTime);
                 ProcessorBarrier.SignalAndWait();                
             }
+            
 
             // At this point the simulation has ended
             // First display the data contents of main memory
