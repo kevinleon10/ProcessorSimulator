@@ -102,12 +102,13 @@ namespace ProcessorSimulator.core
                         }
                         else // It tryes to get the bus
                         {
+                            ThreadStatuses[contextIndex] = ThreadStatus.CacheFail;
                             // Try lock
                             if (Monitor.TryEnter(DataBus.Instance))
                             {
                                 try
                                 {
-                                    ThreadStatuses[contextIndex] = ThreadStatus.CacheFail;
+                                    //ThreadStatuses[contextIndex] = ThreadStatus.CacheFail;
                                     Processor.Instance.ClockBarrier.SignalAndWait();
                                     Processor.Instance.ProcessorBarrier.SignalAndWait();
 
@@ -365,12 +366,13 @@ namespace ProcessorSimulator.core
                         }
                         else // It tryes to get the bus
                         {
+                            ThreadStatuses[contextIndex] = ThreadStatus.CacheFail;
                             // Try lock
                             if (Monitor.TryEnter(DataBus.Instance))
                             {
                                 try
                                 {
-                                    ThreadStatuses[contextIndex] = ThreadStatus.CacheFail;
+                                    //ThreadStatuses[contextIndex] = ThreadStatus.CacheFail;
                                     Processor.Instance.ClockBarrier.SignalAndWait();
                                     Processor.Instance.ProcessorBarrier.SignalAndWait();
                                     // If the label does not match with the block number and it is modified it will store the block in memory
@@ -625,7 +627,7 @@ namespace ProcessorSimulator.core
                                                 else if (currentBlock.BlockState == BlockState.Invalid ||
                                                          currentBlock.Label != blockNumberInMemory)
                                                 {
-                                                    ThreadStatuses[contextIndex] = ThreadStatus.CacheFail;
+                                                    //ThreadStatuses[contextIndex] = ThreadStatus.CacheFail;
                                                     DataCache.Blocks[blockNumberInCache].Label = blockNumberInMemory;
                                                     // If the label matches with the block number and it is modified it will be replaced with the current block
                                                     var otherCacheBlock =

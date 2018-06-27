@@ -1,4 +1,5 @@
-﻿﻿using System.Collections.Generic;
+﻿﻿using System;
+ using System.Collections.Generic;
 using System.Threading;
 using ProcessorSimulator.block;
 using ProcessorSimulator.cache;
@@ -470,6 +471,10 @@ namespace ProcessorSimulator.processor
             while (ClockBarrier.ParticipantCount > 1)
             {
                 System.Console.WriteLine("Current Clock: " + Clock);
+                if (Clock==1183)
+                {
+                    Console.WriteLine("POR AQUI");
+                }
                 ClockBarrier.SignalAndWait();
                 if (slowMotion && Clock % Constants.SlowMotionCycles == 0)
                 {
