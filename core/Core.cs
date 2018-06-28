@@ -17,7 +17,7 @@ namespace ProcessorSimulator.core
             DataCache = dataCache;
             RemainingThreadCycles = Constants.NotRunningAnyThread;
             Context = null;
-            MoreAvailableInstructions = true;
+            thereAreContexts = true;
         }
 
         private Instruction InstructionRegister { get; set; }
@@ -32,7 +32,7 @@ namespace ProcessorSimulator.core
 
         public bool ThreadHasEnded { get; set; }
 
-        public bool MoreAvailableInstructions { get; set; }
+        public bool thereAreContexts { get; set; }
 
         protected int GetBlockNumberInMemory(int address)
         {
@@ -49,7 +49,7 @@ namespace ProcessorSimulator.core
             Context = context;
             RemainingThreadCycles = Constants.Quantum;
 
-            while (MoreAvailableInstructions)
+            while (thereAreContexts)
             {
 
                 ThreadHasEnded = false;
@@ -70,7 +70,7 @@ namespace ProcessorSimulator.core
                 }
 
                 ThreadHasEnded = true;
-                MoreAvailableInstructions = false;
+                thereAreContexts = false;
                 Processor.Instance.ClockBarrier.SignalAndWait();
                 Processor.Instance.ProcessorBarrier.SignalAndWait();
                 Console.Write("jiij");

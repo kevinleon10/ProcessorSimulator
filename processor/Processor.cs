@@ -221,7 +221,7 @@ namespace ProcessorSimulator.processor
             {
                 core.Context = newContext;
                 core.RemainingThreadCycles = Constants.Quantum; // Sets the quantum as the remaining cycles for the new thread
-                core.MoreAvailableInstructions = true;
+                core.thereAreContexts = true;
             }
             else
             {
@@ -244,7 +244,7 @@ namespace ProcessorSimulator.processor
                 var oldContext = core.Context;
                 ContextQueue.Enqueue(oldContext);
                 core.Context = newContext;
-                core.MoreAvailableInstructions = true;
+                core.thereAreContexts = true;
             }
             core.RemainingThreadCycles = Constants.Quantum; // Restores remaining cycles to the quantum value.
         }
