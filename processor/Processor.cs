@@ -170,8 +170,8 @@ namespace ProcessorSimulator.processor
             Memory.Instance.DataBlocks = dataBlocks;
 
             // Creates the four caches. Two per core
-            var dataCacheZero = new Cache<int>(Constants.CoreZeroCacheSize);
-            var instructionCacheZero = new Cache<Instruction>(Constants.CoreZeroCacheSize);
+            var dataCacheZero = new Cache<int>(Constants.CoreOneCacheSize);
+            var instructionCacheZero = new Cache<Instruction>(Constants.CoreOneCacheSize);
             var dataCacheOne = new Cache<int>(Constants.CoreOneCacheSize);
             var instructionCacheOne = new Cache<Instruction>(Constants.CoreOneCacheSize);
 

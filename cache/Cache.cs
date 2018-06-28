@@ -35,7 +35,7 @@ namespace ProcessorSimulator.cache
             var builder = new StringBuilder();
             for (var i = 0; i < Blocks.Length; i++)
             {
-                builder.AppendLine("Block number: " + i + " : " + Blocks[i]);
+                builder.AppendLine("Block number: " + i + " : " + Blocks[i]+ "  Label: "+Blocks[i].Label + "  State: "+Blocks[i].BlockState);
             }
             return builder.ToString();
         }

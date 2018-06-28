@@ -73,7 +73,6 @@ namespace ProcessorSimulator.core
                 thereAreContexts = false;
                 Processor.Instance.ClockBarrier.SignalAndWait();
                 Processor.Instance.ProcessorBarrier.SignalAndWait();
-                Console.Write("jiij");
             }
         }
 
