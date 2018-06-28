@@ -70,7 +70,7 @@ namespace ProcessorSimulator.processor
 
         private Core CoreOne { get; set; }
 
-        public int Clock { get; set; }
+        private int Clock { get; set; }
 
         public Barrier ClockBarrier { get; set; }
 
@@ -79,6 +79,8 @@ namespace ProcessorSimulator.processor
         private List<Context> ContextList { get; set; }
 
         public Barrier ProcessorBarrier { get; set; }
+        
+        public int Quantum { get; set; }
 
         private void InitializeStructures()
         {
@@ -188,27 +190,25 @@ namespace ProcessorSimulator.processor
         private void Check()
         {
             // Check if there are threads that have ended execution
-            if (CoreZero.ThreadHasEnded)
-            {
+            if (CoreZero.ThreadHasEnded && CoreZero.RemainingThreadCycles != Constants.NotRunningAnyThread)
                 LoadNewContext(CoreZero);
-            }
-
-            if (CoreOne.ThreadHasEnded)
-            {
+            else
+                CoreZero.Context.NumberOfCycles++;
+                        
+            if (CoreOne.ThreadHasEnded && CoreOne.RemainingThreadCycles != Constants.NotRunningAnyThread)
                 LoadNewContext(CoreOne);
-            }
-
+            else
+                CoreOne.Context.NumberOfCycles++;
+            
             // Check if there are threads that have ran out of the cycles
             if (CoreZero.RemainingThreadCycles == 0)
-            {
                 SwapContext(CoreZero);
-            }
+            
 
             if (CoreOne.RemainingThreadCycles == 0)
-            {
                 SwapContext(CoreOne);
                 
-            }
+            
         }
 
         private void LoadNewContext(Core core)
@@ -219,12 +219,13 @@ namespace ProcessorSimulator.processor
             if (newContext != null)
             {
                 core.Context = newContext;
-                core.RemainingThreadCycles = Constants.Quantum; // Sets the quantum as the remaining cycles for the new thread
+                core.RemainingThreadCycles = Quantum; // Sets the quantum as the remaining cycles for the new thread
                 core.ThereAreContexts = true;
             }
             else
             {
-                // No more threads to run, so high level threads finishes execution 
+                // No more threads to run, so high level threads finishes execution
+                core.RemainingThreadCycles = Constants.NotRunningAnyThread;
                 FinalizeHighLevelThread();
             }
         }
@@ -245,13 +246,14 @@ namespace ProcessorSimulator.processor
                 core.Context = newContext;
                 core.ThereAreContexts = true;
             }
-            core.RemainingThreadCycles = Constants.Quantum; // Restores remaining cycles to the quantum value.
+            core.RemainingThreadCycles = Quantum; // Restores remaining cycles to the quantum value.
         }
 
         private void FinalizeHighLevelThread()
         {
             ClockBarrier.RemoveParticipant();
             ProcessorBarrier.SignalAndWait();
+            Check();
             ProcessorBarrier.RemoveParticipant();
             ClockBarrier.SignalAndWait();
         }
@@ -274,12 +276,10 @@ namespace ProcessorSimulator.processor
                     System.Console.WriteLine("Core One thread number: " +
                                              CoreOne.Context.ThreadId);
                     System.Console.WriteLine("***********************************************************");
+                    Thread.Sleep(Constants.DelayTime);
                 }
-
                 Clock++;
-                System.Console.Write(Clock+"\n");
                 Check();                
-                //Thread.Sleep(Constants.DelayTime);
                 ProcessorBarrier.SignalAndWait();                
             }
             
