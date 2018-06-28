@@ -17,7 +17,7 @@ namespace ProcessorSimulator.core
             DataCache = dataCache;
             RemainingThreadCycles = Constants.NotRunningAnyThread;
             Context = null;
-            thereAreContexts = true;
+            ThereAreContexts = true;
         }
 
         private Instruction InstructionRegister { get; set; }
@@ -32,7 +32,7 @@ namespace ProcessorSimulator.core
 
         public bool ThreadHasEnded { get; set; }
 
-        public bool thereAreContexts { get; set; }
+        public bool ThereAreContexts { get; set; }
 
         protected int GetBlockNumberInMemory(int address)
         {
@@ -49,7 +49,7 @@ namespace ProcessorSimulator.core
             Context = context;
             RemainingThreadCycles = Constants.Quantum;
 
-            while (thereAreContexts)
+            while (ThereAreContexts)
             {
 
                 ThreadHasEnded = false;
@@ -70,7 +70,7 @@ namespace ProcessorSimulator.core
                 }
 
                 ThreadHasEnded = true;
-                thereAreContexts = false;
+                ThereAreContexts = false;
                 Processor.Instance.ClockBarrier.SignalAndWait();
                 Processor.Instance.ProcessorBarrier.SignalAndWait();
             }
@@ -103,11 +103,11 @@ namespace ProcessorSimulator.core
                         {
                             instruction = currentBlock.Words[wordNumberInBlock];
                             Context.NumberOfCycles++;
-                            RemainingThreadCycles--;
+                            /*RemainingThreadCycles--;
                             if (RemainingThreadCycles == 0)
                             {
                                 Monitor.Exit(InstructionCache.Blocks[blockNumberInCache]);
-                            }
+                            }*/
 
                             hasFinishedLoad = true;
                             Processor.Instance.ClockBarrier.SignalAndWait();
@@ -150,7 +150,7 @@ namespace ProcessorSimulator.core
                                                     instruction = InstructionCache.Blocks[blockNumberInCache]
                                                         .Words[wordNumberInBlock];
                                                     Context.NumberOfCycles++;
-                                                    RemainingThreadCycles--;
+                                                    /*RemainingThreadCycles--;
                                                     if (RemainingThreadCycles == 0)
                                                     {
                                                         Monitor.Exit(
@@ -159,7 +159,7 @@ namespace ProcessorSimulator.core
                                                         Monitor.Exit(
                                                             InstructionCache.OtherCache.Blocks[
                                                                 blockNumberInOtherCache]);
-                                                    }
+                                                    }*/
                                                     hasFinishedLoad = true;
                                                     Processor.Instance.ClockBarrier.SignalAndWait();
                                                     Processor.Instance.ProcessorBarrier.SignalAndWait();
@@ -178,18 +178,19 @@ namespace ProcessorSimulator.core
                                                     // Add forty cycles
                                                     for (var i = 0; i < Constants.CyclesMemory; i++)
                                                     {
+                                                        Context.NumberOfCycles++;
                                                         Processor.Instance.ClockBarrier.SignalAndWait();
                                                         Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                     }
 
                                                     Context.NumberOfCycles++;
-                                                    RemainingThreadCycles--;
+                                                    /*RemainingThreadCycles--;
                                                     if (RemainingThreadCycles == 0)
                                                     {
                                                         Monitor.Exit(
                                                             InstructionCache.Blocks[blockNumberInCache]);
                                                         Monitor.Exit(InstructionBus.Instance);
-                                                    }
+                                                    }*/
                                                     hasFinishedLoad = true;
                                                     Processor.Instance.ClockBarrier.SignalAndWait();
                                                     Processor.Instance.ProcessorBarrier.SignalAndWait();
@@ -362,11 +363,11 @@ namespace ProcessorSimulator.core
                         {
                             wordData = currentBlock.Words[wordNumberInBlock];
                             Context.NumberOfCycles++;
-                            RemainingThreadCycles--;
+                            /*RemainingThreadCycles--;
                             if (RemainingThreadCycles == 0)
                             {
                                 Monitor.Exit(DataCache.Blocks[blockNumberInCache]);
-                            }
+                            }*/
 
                             hasFinishedLoad = true;
                             Processor.Instance.ClockBarrier.SignalAndWait();
@@ -391,6 +392,7 @@ namespace ProcessorSimulator.core
                                         // Add forty cycles
                                         for (var i = 0; i < Constants.CyclesMemory; i++)
                                         {
+                                            Context.NumberOfCycles++;
                                             Processor.Instance.ClockBarrier.SignalAndWait();
                                             Processor.Instance.ProcessorBarrier.SignalAndWait();
                                         }
@@ -429,19 +431,20 @@ namespace ProcessorSimulator.core
                                                     // Add forty cycles
                                                     for (var i = 0; i < Constants.CyclesMemory; i++)
                                                     {
+                                                        Context.NumberOfCycles++;
                                                         Processor.Instance.ClockBarrier.SignalAndWait();
                                                         Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                     }
 
                                                     Context.NumberOfCycles++;
-                                                    RemainingThreadCycles--;
+                                                    /*RemainingThreadCycles--;
                                                     if (RemainingThreadCycles == 0)
                                                     {
                                                         Monitor.Exit(DataCache.Blocks[blockNumberInCache]);
                                                         Monitor.Exit(DataBus.Instance);
                                                         Monitor.Exit(
                                                             DataCache.OtherCache.Blocks[blockNumberInOtherCache]);
-                                                    }
+                                                    }*/
                                                     hasFinishedLoad = true;
                                                     Processor.Instance.ClockBarrier.SignalAndWait();
                                                     Processor.Instance.ProcessorBarrier.SignalAndWait();
@@ -457,17 +460,18 @@ namespace ProcessorSimulator.core
                                                         .Words[wordNumberInBlock];
                                                     for (var i = 0; i < Constants.CyclesMemory; i++)
                                                     {
+                                                        Context.NumberOfCycles++;
                                                         Processor.Instance.ClockBarrier.SignalAndWait();
                                                         Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                     }
 
                                                     Context.NumberOfCycles++;
-                                                    RemainingThreadCycles--;
+                                                    /*RemainingThreadCycles--;
                                                     if (RemainingThreadCycles == 0)
                                                     {
                                                         Monitor.Exit(DataCache.Blocks[blockNumberInCache]);
                                                         Monitor.Exit(DataBus.Instance);
-                                                    }
+                                                    }*/
                                                     hasFinishedLoad = true;
                                                     Processor.Instance.ClockBarrier.SignalAndWait();
                                                     Processor.Instance.ProcessorBarrier.SignalAndWait();
@@ -525,6 +529,7 @@ namespace ProcessorSimulator.core
                 }
             }
 
+            RemainingThreadCycles--;
             return wordData;
         }
 
@@ -548,11 +553,11 @@ namespace ProcessorSimulator.core
                         {
                             DataCache.Blocks[blockNumberInCache].Words[wordNumberInBlock] = newData;
                             Context.NumberOfCycles++;
-                            RemainingThreadCycles--;
+                            /*RemainingThreadCycles--;
                             if (RemainingThreadCycles == 0)
                             {
                                 Monitor.Exit(DataCache.Blocks[blockNumberInCache]);
-                            }
+                            }*/
 
                             hasFinishedStore = true;
                             Processor.Instance.ClockBarrier.SignalAndWait();
@@ -577,6 +582,7 @@ namespace ProcessorSimulator.core
                                         // Add forty cycles
                                         for (var i = 0; i < Constants.CyclesMemory; i++)
                                         {
+                                            Context.NumberOfCycles++;
                                             Processor.Instance.ClockBarrier.SignalAndWait();
                                             Processor.Instance.ProcessorBarrier.SignalAndWait();
                                         }
@@ -614,12 +620,12 @@ namespace ProcessorSimulator.core
                                                     DataCache.Blocks[blockNumberInCache].BlockState =
                                                         BlockState.Modified;
                                                     Context.NumberOfCycles++;
-                                                    RemainingThreadCycles--;
+                                                    /*RemainingThreadCycles--;
                                                     if (RemainingThreadCycles == 0)
                                                     {
                                                         Monitor.Exit(DataCache.Blocks[blockNumberInCache]);
                                                         Monitor.Exit(DataBus.Instance);
-                                                    }
+                                                    }*/
 
                                                     hasFinishedStore = true;
                                                     Processor.Instance.ClockBarrier.SignalAndWait();
@@ -650,6 +656,7 @@ namespace ProcessorSimulator.core
                                                         // Add forty cycles
                                                         for (var i = 0; i < Constants.CyclesMemory; i++)
                                                         {
+                                                            Context.NumberOfCycles++;
                                                             Processor.Instance.ClockBarrier.SignalAndWait();
                                                             Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                         }
@@ -663,14 +670,14 @@ namespace ProcessorSimulator.core
                                                         DataCache.Blocks[blockNumberInCache].BlockState =
                                                             BlockState.Modified;
                                                         Context.NumberOfCycles++;
-                                                        RemainingThreadCycles--;
+                                                        /*RemainingThreadCycles--;
                                                         if (RemainingThreadCycles == 0)
                                                         {
                                                             Monitor.Exit(DataCache.Blocks[blockNumberInCache]);
                                                             Monitor.Exit(DataBus.Instance);
                                                             Monitor.Exit(
                                                                 DataCache.OtherCache.Blocks[blockNumberInOtherCache]);
-                                                        }
+                                                        }*/
 
                                                         hasFinishedStore = true;
                                                         Processor.Instance.ClockBarrier.SignalAndWait();
@@ -687,6 +694,7 @@ namespace ProcessorSimulator.core
                                                             Memory.Instance.LoadDataBlock(blockNumberInMemory);
                                                         for (var i = 0; i < Constants.CyclesMemory; i++)
                                                         {
+                                                            Context.NumberOfCycles++;
                                                             Processor.Instance.ClockBarrier.SignalAndWait();
                                                             Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                         }
@@ -696,14 +704,14 @@ namespace ProcessorSimulator.core
                                                         DataCache.Blocks[blockNumberInCache].BlockState =
                                                             BlockState.Modified;
                                                         Context.NumberOfCycles++;
-                                                        RemainingThreadCycles--;
+                                                        /*RemainingThreadCycles--;
                                                         if (RemainingThreadCycles == 0)
                                                         {
                                                             Monitor.Exit(DataCache.Blocks[blockNumberInCache]);
                                                             Monitor.Exit(DataBus.Instance);
                                                             Monitor.Exit(
                                                                 DataCache.OtherCache.Blocks[blockNumberInOtherCache]);
-                                                        }
+                                                        }*/
 
                                                         hasFinishedStore = true;
                                                         Processor.Instance.ClockBarrier.SignalAndWait();
@@ -718,6 +726,7 @@ namespace ProcessorSimulator.core
                                                             Memory.Instance.LoadDataBlock(blockNumberInMemory);
                                                         for (var i = 0; i < Constants.CyclesMemory; i++)
                                                         {
+                                                            Context.NumberOfCycles++;
                                                             Processor.Instance.ClockBarrier.SignalAndWait();
                                                             Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                         }
@@ -727,12 +736,12 @@ namespace ProcessorSimulator.core
                                                         DataCache.Blocks[blockNumberInCache].BlockState =
                                                             BlockState.Modified;
                                                         Context.NumberOfCycles++;
-                                                        RemainingThreadCycles--;
+                                                        /*RemainingThreadCycles--;
                                                         if (RemainingThreadCycles == 0)
                                                         {
                                                             Monitor.Exit(DataCache.Blocks[blockNumberInCache]);
                                                             Monitor.Exit(DataBus.Instance);
-                                                        }
+                                                        }*/
 
                                                         hasFinishedStore = true;
                                                         Processor.Instance.ClockBarrier.SignalAndWait();
@@ -791,6 +800,8 @@ namespace ProcessorSimulator.core
                     Processor.Instance.ProcessorBarrier.SignalAndWait();
                 }
             }
+
+            RemainingThreadCycles--;
         }
     }
 }

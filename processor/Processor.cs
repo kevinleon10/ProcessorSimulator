@@ -1,5 +1,4 @@
-﻿﻿﻿using System;
- using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading;
 using ProcessorSimulator.block;
 using ProcessorSimulator.cache;
@@ -48,7 +47,7 @@ namespace ProcessorSimulator.processor
             var context = GetNewContext();
             if (context == null)
             {
-                FinalizeHighLevelThread(CoreZeroThread);
+                FinalizeHighLevelThread();
             }
             CoreZero.StartExecution(context);  
         }
@@ -58,7 +57,7 @@ namespace ProcessorSimulator.processor
             var context = GetNewContext();
             if (context == null)
             {
-                FinalizeHighLevelThread(CoreOneThread);
+                FinalizeHighLevelThread();
             }
             CoreOne.StartExecution(context); 
         }
@@ -191,12 +190,12 @@ namespace ProcessorSimulator.processor
             // Check if there are threads that have ended execution
             if (CoreZero.ThreadHasEnded)
             {
-                LoadNewContext(CoreZero, CoreZeroThread);
+                LoadNewContext(CoreZero);
             }
 
             if (CoreOne.ThreadHasEnded)
             {
-                LoadNewContext(CoreOne, CoreOneThread);
+                LoadNewContext(CoreOne);
             }
 
             // Check if there are threads that have ran out of the cycles
@@ -212,7 +211,7 @@ namespace ProcessorSimulator.processor
             }
         }
 
-        private void LoadNewContext(Core core, Thread thread)
+        private void LoadNewContext(Core core)
         {
             var oldContext = core.Context;
             ContextList.Add(oldContext); // Adds the ending context for statistic purposes
@@ -221,12 +220,12 @@ namespace ProcessorSimulator.processor
             {
                 core.Context = newContext;
                 core.RemainingThreadCycles = Constants.Quantum; // Sets the quantum as the remaining cycles for the new thread
-                core.thereAreContexts = true;
+                core.ThereAreContexts = true;
             }
             else
             {
                 // No more threads to run, so high level threads finishes execution 
-                FinalizeHighLevelThread(thread);
+                FinalizeHighLevelThread();
             }
         }
 
@@ -244,14 +243,13 @@ namespace ProcessorSimulator.processor
                 var oldContext = core.Context;
                 ContextQueue.Enqueue(oldContext);
                 core.Context = newContext;
-                core.thereAreContexts = true;
+                core.ThereAreContexts = true;
             }
             core.RemainingThreadCycles = Constants.Quantum; // Restores remaining cycles to the quantum value.
         }
 
-        private void FinalizeHighLevelThread(Thread thread)
+        private void FinalizeHighLevelThread()
         {
-            // thread.Abort();
             ClockBarrier.RemoveParticipant();
             ProcessorBarrier.SignalAndWait();
             ProcessorBarrier.RemoveParticipant();
