@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿using System;
 using System.Threading;
 using ProcessorSimulator.block;
 using ProcessorSimulator.cache;
@@ -34,16 +34,30 @@ namespace ProcessorSimulator.core
 
         public bool ThereAreContexts { get; set; }
 
+        /// <summary>
+        /// Method which generates the block number in memory from the address
+        /// </summary>
+        /// <param name="address">The address where the block is</param>
+        /// <returns>The block number in memory</returns>
         private static int GetBlockNumberInMemory(int address)
         {
             return (address / Constants.BytesInBlock);
         }
 
+        /// <summary>
+        /// Method which generates the word number in the block from the address
+        /// </summary>
+        /// <param name="address">The address where the word number is</param>
+        /// <returns>The word number in the block</returns>
         private static int GetWordNumberInBlock(int address)
         {
             return (address % Constants.BytesInBlock) / Constants.WordsInBlock;
         }
 
+        /// <summary>
+        /// Method which is called once per thread, it starts the execution of the first entered context and it continues if there are remaining threads
+        /// </summary>
+        /// <param name="context">The first context to execute</param>
         public void StartExecution(Context context)
         {
             Context = context;
@@ -51,7 +65,6 @@ namespace ProcessorSimulator.core
 
             while (ThereAreContexts)
             {
-
                 ThreadHasEnded = false;
                 // First Instruction fetch
                 InstructionRegister = LoadInstruction();
@@ -73,11 +86,9 @@ namespace ProcessorSimulator.core
         }
 
         /// <summary>
-        /// Load a instruction
+        /// Load an instruction from the pc address, it could be loaded from cache or memory
         /// </summary>
-        /// <returns>
-        /// The resulting instruction
-        /// </returns>
+        /// <returns>The fetched instruction</returns>
         private Instruction LoadInstruction()
         {
             var blockNumberInMemory = GetBlockNumberInMemory(Context.ProgramCounter);
@@ -118,6 +129,7 @@ namespace ProcessorSimulator.core
                                     var hasTakenOtherBlock = false;
                                     while (!hasTakenOtherBlock)
                                     {
+                                        // Try lock
                                         if (Monitor.TryEnter(
                                             InstructionCache.OtherCache.Blocks[blockNumberInOtherCache]))
                                         {
@@ -160,7 +172,7 @@ namespace ProcessorSimulator.core
                                                         Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                     }
 
-                                                    hasFinishedLoad = true;                            
+                                                    hasFinishedLoad = true;
                                                     Processor.Instance.ClockBarrier.SignalAndWait();
                                                     Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                 }
@@ -220,6 +232,10 @@ namespace ProcessorSimulator.core
             return instruction;
         }
 
+        /// <summary>
+        /// It executes the actual instruction 
+        /// </summary>
+        /// <param name="actualInstruction">It is the current instruction</param>
         private void ExecuteInstruction(Instruction actualInstruction)
         {
             int address;
@@ -239,6 +255,7 @@ namespace ProcessorSimulator.core
                     {
                         Context.ProgramCounter += (4 * actualInstruction.Inmediate);
                     }
+
                     break;
 
                 case (int) Operation.Bnez:
@@ -246,6 +263,7 @@ namespace ProcessorSimulator.core
                     {
                         Context.ProgramCounter += (4 * actualInstruction.Inmediate);
                     }
+
                     break;
 
                 case (int) Operation.Daddi:
@@ -300,17 +318,17 @@ namespace ProcessorSimulator.core
                     Console.WriteLine("Instruction " + actualInstruction.OperationCode + " has not been recognized.");
                     break;
             }
+
             RemainingThreadCycles--;
             Processor.Instance.ClockBarrier.SignalAndWait();
             Processor.Instance.ProcessorBarrier.SignalAndWait();
         }
 
         /// <summary>
-        /// Load data
+        /// Load data from the calculated address, it could be loaded from cache or memory
         /// </summary>
-        /// <returns>
-        /// The resulting data
-        /// </returns>
+        /// <param name="address">The calculated address where the block is</param>
+        /// <returns>The corresponding data</returns>
         private int LoadData(int address)
         {
             var blockNumberInMemory = GetBlockNumberInMemory(address);
@@ -331,7 +349,7 @@ namespace ProcessorSimulator.core
                         if (currentBlock.Label == blockNumberInMemory &&
                             currentBlock.BlockState != BlockState.Invalid)
                         {
-                            wordData = currentBlock.Words[wordNumberInBlock];                            
+                            wordData = currentBlock.Words[wordNumberInBlock];
                             hasFinishedLoad = true;
                         }
                         else // It tryes to get the bus
@@ -358,10 +376,10 @@ namespace ProcessorSimulator.core
                                     }
 
                                     var blockNumberInOtherCache = blockNumberInMemory % DataCache.OtherCache.CacheSize;
-                                    // Try lock
                                     var hasTakenOtherBlock = false;
                                     while (!hasTakenOtherBlock)
                                     {
+                                        // Try lock
                                         if (Monitor.TryEnter(DataCache.OtherCache.Blocks[blockNumberInOtherCache]))
                                         {
                                             try
@@ -393,7 +411,7 @@ namespace ProcessorSimulator.core
                                                         Processor.Instance.ClockBarrier.SignalAndWait();
                                                         Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                     }
-                                                    
+
                                                     hasFinishedLoad = true;
                                                 }
                                                 else // It will bring it from memory
@@ -410,7 +428,7 @@ namespace ProcessorSimulator.core
                                                         Processor.Instance.ClockBarrier.SignalAndWait();
                                                         Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                     }
-                                                   
+
                                                     hasFinishedLoad = true;
                                                 }
                                             }
@@ -469,6 +487,11 @@ namespace ProcessorSimulator.core
             return wordData;
         }
 
+        /// <summary>
+        /// Store data in the calculated address, it could be stored in cache or memory
+        /// </summary>
+        /// <param name="address">The calculated address where the block is</param>
+        /// <param name="newData">The data to be stored</param>
         private void StoreData(int address, int newData)
         {
             var blockNumberInMemory = GetBlockNumberInMemory(address);
@@ -487,7 +510,7 @@ namespace ProcessorSimulator.core
                         if (currentBlock.Label == blockNumberInMemory &&
                             currentBlock.BlockState == BlockState.Modified)
                         {
-                            DataCache.Blocks[blockNumberInCache].Words[wordNumberInBlock] = newData;                            
+                            DataCache.Blocks[blockNumberInCache].Words[wordNumberInBlock] = newData;
                             hasFinishedStore = true;
                         }
                         else // It tries to get the bus
@@ -544,7 +567,7 @@ namespace ProcessorSimulator.core
                                                     DataCache.Blocks[blockNumberInCache].Words[wordNumberInBlock] =
                                                         newData;
                                                     DataCache.Blocks[blockNumberInCache].BlockState =
-                                                        BlockState.Modified;                                                   
+                                                        BlockState.Modified;
                                                     hasFinishedStore = true;
                                                 }
                                                 //If it is invalid or it is another label
@@ -583,7 +606,7 @@ namespace ProcessorSimulator.core
                                                                 .BlockState =
                                                             BlockState.Invalid;
                                                         DataCache.Blocks[blockNumberInCache].BlockState =
-                                                            BlockState.Modified;                                                        
+                                                            BlockState.Modified;
                                                         hasFinishedStore = true;
                                                     }
                                                     else if (otherCacheBlock.Label ==
@@ -604,7 +627,7 @@ namespace ProcessorSimulator.core
                                                         DataCache.Blocks[blockNumberInCache].Words[wordNumberInBlock] =
                                                             newData;
                                                         DataCache.Blocks[blockNumberInCache].BlockState =
-                                                            BlockState.Modified;                                                        
+                                                            BlockState.Modified;
                                                         hasFinishedStore = true;
                                                     }
                                                     else //it has to bring it from memory
@@ -623,7 +646,7 @@ namespace ProcessorSimulator.core
                                                         DataCache.Blocks[blockNumberInCache].Words[wordNumberInBlock] =
                                                             newData;
                                                         DataCache.Blocks[blockNumberInCache].BlockState =
-                                                            BlockState.Modified;                                                        
+                                                            BlockState.Modified;
                                                         hasFinishedStore = true;
                                                     }
                                                 }
@@ -679,7 +702,6 @@ namespace ProcessorSimulator.core
                     Processor.Instance.ProcessorBarrier.SignalAndWait();
                 }
             }
-
         }
     }
 }
