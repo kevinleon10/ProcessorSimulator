@@ -333,8 +333,6 @@ namespace ProcessorSimulator.core
                         {
                             wordData = currentBlock.Words[wordNumberInBlock];                            
                             hasFinishedLoad = true;
-                            Processor.Instance.ClockBarrier.SignalAndWait();
-                            Processor.Instance.ProcessorBarrier.SignalAndWait();
                         }
                         else // It tryes to get the bus
                         {
@@ -397,8 +395,6 @@ namespace ProcessorSimulator.core
                                                     }
                                                     
                                                     hasFinishedLoad = true;
-                                                    Processor.Instance.ClockBarrier.SignalAndWait();
-                                                    Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                 }
                                                 else // It will bring it from memory
                                                 {
@@ -416,8 +412,6 @@ namespace ProcessorSimulator.core
                                                     }
                                                    
                                                     hasFinishedLoad = true;
-                                                    Processor.Instance.ClockBarrier.SignalAndWait();
-                                                    Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                 }
                                             }
                                             finally
@@ -495,8 +489,6 @@ namespace ProcessorSimulator.core
                         {
                             DataCache.Blocks[blockNumberInCache].Words[wordNumberInBlock] = newData;                            
                             hasFinishedStore = true;
-                            Processor.Instance.ClockBarrier.SignalAndWait();
-                            Processor.Instance.ProcessorBarrier.SignalAndWait();
                         }
                         else // It tries to get the bus
                         {
@@ -554,8 +546,6 @@ namespace ProcessorSimulator.core
                                                     DataCache.Blocks[blockNumberInCache].BlockState =
                                                         BlockState.Modified;                                                   
                                                     hasFinishedStore = true;
-                                                    Processor.Instance.ClockBarrier.SignalAndWait();
-                                                    Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                 }
                                                 //If it is invalid or it is another label
                                                 else if (currentBlock.BlockState == BlockState.Invalid ||
@@ -595,8 +585,6 @@ namespace ProcessorSimulator.core
                                                         DataCache.Blocks[blockNumberInCache].BlockState =
                                                             BlockState.Modified;                                                        
                                                         hasFinishedStore = true;
-                                                        Processor.Instance.ClockBarrier.SignalAndWait();
-                                                        Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                     }
                                                     else if (otherCacheBlock.Label ==
                                                              blockNumberInMemory &&
@@ -618,8 +606,6 @@ namespace ProcessorSimulator.core
                                                         DataCache.Blocks[blockNumberInCache].BlockState =
                                                             BlockState.Modified;                                                        
                                                         hasFinishedStore = true;
-                                                        Processor.Instance.ClockBarrier.SignalAndWait();
-                                                        Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                     }
                                                     else //it has to bring it from memory
                                                     {
@@ -639,8 +625,6 @@ namespace ProcessorSimulator.core
                                                         DataCache.Blocks[blockNumberInCache].BlockState =
                                                             BlockState.Modified;                                                        
                                                         hasFinishedStore = true;
-                                                        Processor.Instance.ClockBarrier.SignalAndWait();
-                                                        Processor.Instance.ProcessorBarrier.SignalAndWait();
                                                     }
                                                 }
                                             }
