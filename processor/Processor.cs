@@ -20,7 +20,7 @@ namespace ProcessorSimulator.processor
         /// <summary>
         /// Class constructor.
         /// </summary>        
-        private Processor()
+        public Processor()
         {
             Clock = 0;
             ClockBarrier = new Barrier(3);
@@ -32,6 +32,12 @@ namespace ProcessorSimulator.processor
             InitializeStructures();
         }
 
+        public void RestartProcessor()
+        {
+            _instance = null;
+            _instance = new Processor();
+        }
+        
         /// <summary>
         /// Intializes if necessary the singleton instance of the processor.
         /// </summary>
@@ -50,6 +56,7 @@ namespace ProcessorSimulator.processor
 
                 return _instance;
             }
+            set { throw new System.NotImplementedException(); }
         }
 
         /// <summary>
@@ -78,9 +85,9 @@ namespace ProcessorSimulator.processor
             CoreOne.StartExecution(context); 
         }
 
-        private Thread CoreZeroThread { get; }
+        private Thread CoreZeroThread { get; set; }
 
-        private Thread CoreOneThread { get; }
+        private Thread CoreOneThread { get; set; }
 
         private Core CoreZero { get; set; }
 
@@ -88,14 +95,14 @@ namespace ProcessorSimulator.processor
 
         private int Clock { get; set; }
 
-        public Barrier ClockBarrier { get; }
+        public Barrier ClockBarrier { get; set; }
 
-        private Queue<Context> ContextQueue { get; }
+        private Queue<Context> ContextQueue { get; set; }
 
-        private List<Context> ContextList { get; }
+        private List<Context> ContextList { get; set; }
 
-        public Barrier ProcessorBarrier { get; }
-        
+        public Barrier ProcessorBarrier { get; set; }
+
         public int Quantum { get; set; }
 
         /// <summary>

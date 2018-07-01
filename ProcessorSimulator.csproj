@@ -47,6 +47,7 @@
     <Compile Include="cache\InstructionBus.cs" />
     <Compile Include="common\Constants.cs" />
     <Compile Include="common\Operation.cs" />
+    <Compile Include="Controller.cs" />
     <Compile Include="core\Context.cs" />
     <Compile Include="core\Core.cs" />
     <Compile Include="memory\Memory.cs" />
