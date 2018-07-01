@@ -4,13 +4,22 @@ using ProcessorSimulator.common;
 
 namespace ProcessorSimulator.memory
 {
+    /// <summary>
+    /// A class that represents the structure of main memory.
+    /// </summary>
     public sealed class Memory
     {
-        private static volatile Memory _instance;
-        private static readonly object Padlock = new object();
+        private static volatile Memory _instance; // Singleton
+        private static readonly object Padlock = new object(); // Lock
  
+        /// <summary>
+        /// Empty constructor.
+        /// </summary>
         private Memory() {}
  
+        /// <summary>
+        /// Constructs the singleton instance if none exists, otherwise just return the existing one.
+        /// </summary>
         public static Memory Instance
         {
             get
@@ -28,10 +37,21 @@ namespace ProcessorSimulator.memory
             }
         }
 
+        /// <summary>
+        /// Accessor for the instruction block array.
+        /// </summary>
         public Block<Instruction>[] InstructionBlocks { get; set; }
 
+        /// <summary>
+        /// Accessor for the data block array.
+        /// </summary>
         public Block<int>[] DataBlocks { get; set; }
         
+        /// <summary>
+        /// Loads the instruction array found at a given position.
+        /// </summary>
+        /// <param name="position">The position where the instruction array should be fetched from.</param>
+        /// <returns></returns>
         public Instruction[] LoadInstructionBlock(int position)
         {
             var instructions = new Instruction[Constants.WordsInBlock];
@@ -42,6 +62,11 @@ namespace ProcessorSimulator.memory
             return instructions;
         }
         
+        /// <summary>
+        /// Loads the data array found at a given position.
+        /// </summary>
+        /// <param name="position">The position where the data array should be fetched from.</param>
+        /// <returns></returns>
         public int[] LoadDataBlock(int position)
         {
             var words = new int[Constants.WordsInBlock];
@@ -52,6 +77,11 @@ namespace ProcessorSimulator.memory
             return words;
         }
         
+        /// <summary>
+        /// Saves a block of data at a given position.
+        /// </summary>
+        /// <param name="position">Index where the data is to be saved.</param>
+        /// <param name="words">The data array that is to be stored.</param>
         public void StoreDataBlock(int position, int[] words)
         {
             var newWords = new int[Constants.WordsInBlock];
@@ -62,6 +92,10 @@ namespace ProcessorSimulator.memory
             DataBlocks[position].Words = newWords;
         }
 
+        /// <summary>
+        /// Builds a textual representation of the object.
+        /// </summary>
+        /// <returns>a string of characters that represent the object.</returns>
         public override string ToString()
         {
             // Gathers the data blocks of the memory instance.

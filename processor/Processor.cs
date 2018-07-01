@@ -8,11 +8,18 @@ using ProcessorSimulator.memory;
 
 namespace ProcessorSimulator.processor
 {
+    /// <summary>
+    /// This class directs the main thread of the application and also initializes every structure required. Additionally
+    /// it creates and synchronizes other participating threads.
+    /// </summary>
     public sealed class Processor
     {
-        private static volatile Processor _instance;
-        private static readonly object Padlock = new object();
+        private static volatile Processor _instance; // Singleton
+        private static readonly object Padlock = new object(); // Class´s lock
 
+        /// <summary>
+        /// Class constructor.
+        /// </summary>        
         private Processor()
         {
             Clock = 0;
@@ -25,6 +32,9 @@ namespace ProcessorSimulator.processor
             InitializeStructures();
         }
 
+        /// <summary>
+        /// Intializes if necessary the singleton instance of the processor.
+        /// </summary>
         public static Processor Instance
         {
             get
@@ -42,6 +52,9 @@ namespace ProcessorSimulator.processor
             }
         }
 
+        /// <summary>
+        /// Initializes the thread that is to be conducted by the Core Zero.
+        /// </summary>
         private void StartCoreZero()
         {
             var context = GetNewContext();
@@ -52,6 +65,9 @@ namespace ProcessorSimulator.processor
             CoreZero.StartExecution(context);  
         }
 
+        /// <summary>
+        /// Initializes the thread that is to be conducted by the Core One.
+        /// </summary>
         private void StartCoreOne()
         {
             var context = GetNewContext();
@@ -62,9 +78,9 @@ namespace ProcessorSimulator.processor
             CoreOne.StartExecution(context); 
         }
 
-        private Thread CoreZeroThread { get; set; }
+        private Thread CoreZeroThread { get; }
 
-        private Thread CoreOneThread { get; set; }
+        private Thread CoreOneThread { get; }
 
         private Core CoreZero { get; set; }
 
@@ -72,16 +88,19 @@ namespace ProcessorSimulator.processor
 
         private int Clock { get; set; }
 
-        public Barrier ClockBarrier { get; set; }
+        public Barrier ClockBarrier { get; }
 
-        private Queue<Context> ContextQueue { get; set; }
+        private Queue<Context> ContextQueue { get; }
 
-        private List<Context> ContextList { get; set; }
+        private List<Context> ContextList { get; }
 
-        public Barrier ProcessorBarrier { get; set; }
+        public Barrier ProcessorBarrier { get; }
         
         public int Quantum { get; set; }
 
+        /// <summary>
+        /// Method in charge of creating and initializing all data structures and objects needed in the simulation
+        /// </summary>
         private void InitializeStructures()
         {
             /** Initialize the data block of main Memory **/
@@ -187,6 +206,10 @@ namespace ProcessorSimulator.processor
             CoreZero = new Core(instructionCacheZero, dataCacheZero);
         }
 
+        /// <summary>
+        /// Method in charge of checking at the end of each cycle if a thread has either ended or it´s quantum has
+        /// expired.
+        /// </summary>
         private void Check()
         {
             // Check if there are threads that have ended execution
@@ -206,11 +229,14 @@ namespace ProcessorSimulator.processor
             
 
             if (CoreOne.RemainingThreadCycles == 0)
-                SwapContext(CoreOne);
-                
-            
+                SwapContext(CoreOne);                           
         }
 
+        /// <summary>
+        /// Picks the core´s current context, places it in a list for statistical purposes and then loads a new context
+        /// in the Core and restores the remaining thread cycles.
+        /// </summary>
+        /// <param name="core"> Thre core whose context finished execution</param>
         private void LoadNewContext(Core core)
         {
             var oldContext = core.Context;
@@ -230,11 +256,19 @@ namespace ProcessorSimulator.processor
             }
         }
 
+        /// <summary>
+        /// Picks off a context from the context queue.
+        /// </summary>
+        /// <returns> Thre next context of the queue or null if the queue is empty.</returns>
         private Context GetNewContext()
         {
             return ContextQueue.Count == 0 ? null : ContextQueue.Dequeue();
         }
-           
+          
+        /// <summary>
+        /// Replaces the context in the core and saves the old one in the queue.
+        /// </summary>
+        /// <param name="core"> The core whose context had a context switch</param>
         private void SwapContext(Core core)
         {
             // If context queue is empty then keep running the same thread
@@ -249,6 +283,10 @@ namespace ProcessorSimulator.processor
             core.RemainingThreadCycles = Quantum; // Restores remaining cycles to the quantum value.
         }
 
+        /// <summary>
+        /// Method call when either of the cores did not have any other remaining threads to run. It has to modify the
+        /// synchronizing mechanisms accordingly.
+        /// </summary>
         private void FinalizeHighLevelThread()
         {
             ClockBarrier.RemoveParticipant();
@@ -258,6 +296,13 @@ namespace ProcessorSimulator.processor
             ClockBarrier.SignalAndWait();
         }
 
+        /// <summary>
+        /// Main method through which the simulation starts. It also prints information of the various structures present
+        /// as well as the results of the running threads.
+        /// </summary>
+        /// <param name="slowMotion"> The mode of the execution. "true" stands for slow mode, it means that each 100 cycles
+        /// the simulation will stop for 2 seconds and print the current state of the clock and cores, at "false" it jumps
+        /// directly to the results.</param>
         public void RunSimulation(bool slowMotion)
         {
             CoreZeroThread.Start();

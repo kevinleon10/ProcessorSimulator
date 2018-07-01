@@ -9,7 +9,7 @@ namespace ProcessorSimulator
         {
             var quantum = 100;
             var validNumber = false;
-            Console.WriteLine("Please insert the thread´s quantum to start the simulation.");
+            Console.WriteLine("Please insert the thread´s quantum to start the simulation (Must be greater or equal than 10).");
             while (!validNumber)
             {
                 try
@@ -17,7 +17,7 @@ namespace ProcessorSimulator
                     var quantumStr = Console.ReadLine();
                     if (quantumStr == null) continue;
                     quantum = int.Parse(quantumStr);
-                    validNumber = true;
+                    validNumber = quantum >= 10;
                 }
                 catch (FormatException e)
                 {

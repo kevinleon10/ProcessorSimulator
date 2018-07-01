@@ -239,7 +239,6 @@ namespace ProcessorSimulator.core
                     {
                         Context.ProgramCounter += (4 * actualInstruction.Inmediate);
                     }
-
                     break;
 
                 case (int) Operation.Bnez:
@@ -247,7 +246,6 @@ namespace ProcessorSimulator.core
                     {
                         Context.ProgramCounter += (4 * actualInstruction.Inmediate);
                     }
-
                     break;
 
                 case (int) Operation.Daddi:
