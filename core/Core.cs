@@ -53,12 +53,12 @@ namespace ProcessorSimulator.core
             {
 
                 ThreadHasEnded = false;
-                //First instruction fetch
+                // First Instruction fetch
                 InstructionRegister = LoadInstruction();
-
                 //Execute every instruction in the thread until it obtains an end instruction
                 while (InstructionRegister.OperationCode != (int) Operation.End)
                 {
+                    // Move the PC 
                     Context.ProgramCounter += Constants.BytesInWord;
                     ExecuteInstruction(InstructionRegister);
                     //Instruction fetch
@@ -300,6 +300,9 @@ namespace ProcessorSimulator.core
                     Console.WriteLine("Instruction " + actualInstruction.OperationCode + " has not been recognized.");
                     break;
             }
+            RemainingThreadCycles--;
+            Processor.Instance.ClockBarrier.SignalAndWait();
+            Processor.Instance.ProcessorBarrier.SignalAndWait();
         }
 
         /// <summary>
@@ -469,7 +472,6 @@ namespace ProcessorSimulator.core
                 }
             }
 
-            RemainingThreadCycles--;
             return wordData;
         }
 
@@ -694,7 +696,6 @@ namespace ProcessorSimulator.core
                 }
             }
 
-            RemainingThreadCycles--;
         }
     }
 }
